@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Reparte unlockLevel para que ~50% este en ≤10 y ~75% en ≤25."""
+"""Reparte unlockLevel por categoría: cada una tiene items en todo 1-50."""
 
-import json, os, math
+import json, os, math, random
 
 OUT = "/home/vaknadesu/Proyectos/isla-nimbo/Docs/Contratos"
 FILES = [
@@ -11,67 +11,59 @@ FILES = [
     "catalogo_acabados.json",
 ]
 
-all_items = []
+random.seed(42)
+
+all_levels = []
 
 for fname in FILES:
-    with open(os.path.join(OUT, fname), "r", encoding="utf-8") as fh:
-        data = json.load(fh)
-    for item in data["items"]:
-        all_items.append((fname, item, data))
-
-# Target: 225 items, ~112 at ≤10, ~169 at ≤25, ~56 at 26-50
-# Assign levels using a curve: levels 1-10 get more items, then thinner spread
-# Strategy: assign quantile-based levels
-
-total = len(all_items)
-target_10 = int(total * 0.50)  # 112
-target_25 = int(total * 0.75)  # 169
-
-# Sort items so lower-priced stuff gets lower levels (makes economic sense)
-all_items.sort(key=lambda x: x[1].get("price", 10))
-
-# Assign levels:
-# - First 50%: spread across 1-10
-# - Next 25%: spread across 11-25
-# - Last 25%: spread across 26-50
-for idx, (fname, item, data) in enumerate(all_items):
-    if idx < target_10:
-        # Evenly spread in 1-10
-        item["unlockLevel"] = max(1, math.ceil((idx + 1) / target_10 * 10))
-    elif idx < target_25:
-        # Evenly spread in 11-25
-        pos = idx - target_10
-        size = target_25 - target_10
-        item["unlockLevel"] = 11 + math.floor(pos / size * 15)
-    else:
-        # Evenly spread in 26-50
-        pos = idx - target_25
-        size = total - target_25
-        item["unlockLevel"] = 26 + math.floor(pos / size * 25)
-
-# Write back
-for fname in FILES:
-    # Rebuild the items list from our global list, preserving order within each file
-    with open(os.path.join(OUT, fname), "r", encoding="utf-8") as fh:
+    path = os.path.join(OUT, fname)
+    with open(path, "r", encoding="utf-8") as fh:
         data = json.load(fh)
 
-    for item in data["items"]:
-        cid = item["catalogId"]
-        # Find matching item in our list
-        for _, our_item, _ in all_items:
-            if our_item["catalogId"] == cid:
-                item["unlockLevel"] = our_item["unlockLevel"]
-                break
+    items = data["items"]
+    n = len(items)
 
-    with open(os.path.join(OUT, fname), "w", encoding="utf-8") as fh:
+    # Target: ~50% at ≤10, ~75% at ≤25 within each file
+    target_10 = max(1, int(n * 0.50))
+    target_25 = max(target_10 + 1, int(n * 0.75))
+
+    # Sort by price so cheaper things unlock earlier (within each category)
+    sorted_items = sorted(enumerate(items), key=lambda x: x[1].get("price", 10))
+
+    for rank, (orig_idx, item) in enumerate(sorted_items):
+        if rank < target_10:
+            # Spread across 1-10
+            lvl = max(1, round(1 + rank / max(1, target_10 - 1) * 9))
+        elif rank < target_25:
+            # Spread across 11-25
+            pos = rank - target_10
+            size = max(1, target_25 - target_10 - 1)
+            lvl = 11 + round(pos / size * 14)
+        else:
+            # Spread across 26-50
+            pos = rank - target_25
+            size = max(1, n - target_25 - 1)
+            lvl = 26 + round(pos / size * 24)
+
+        # Small random jitter to avoid all items landing on same level
+        jitter = random.choice([-1, 0, 0, 1]) if lvl > 1 and lvl < 50 else 0
+        lvl = max(1, min(50, lvl + jitter))
+
+        items[orig_idx]["unlockLevel"] = lvl
+        all_levels.append(lvl)
+
+    with open(path, "w", encoding="utf-8") as fh:
         json.dump(data, fh, ensure_ascii=False, indent=2)
 
-# Quick stats
-levels = [item["unlockLevel"] for _, item, _ in all_items]
-for lo, hi in [(1, 10), (11, 20), (21, 30), (31, 40), (41, 50)]:
-    count = sum(1 for l in levels if lo <= l <= hi)
-    print(f"  Nivel {lo:2d}-{hi:2d}: {count:3d} ({count/total*100:5.1f}%)")
+    # Per-file stats
+    lvls = [i["unlockLevel"] for i in items]
+    print(f"{fname}: {n} items, nivel {min(lvls)}-{max(lvls)}, ≤10={sum(1 for l in lvls if l<=10)} ({sum(1 for l in lvls if l<=10)/n*100:.0f}%), ≤25={sum(1 for l in lvls if l<=25)} ({sum(1 for l in lvls if l<=25)/n*100:.0f}%)")
 
-print(f"  ≤10: {sum(1 for l in levels if l <= 10)} ({sum(1 for l in levels if l <= 10)/total*100:.1f}%)")
-print(f"  ≤25: {sum(1 for l in levels if l <= 25)} ({sum(1 for l in levels if l <= 25)/total*100:.1f}%)")
-print("✅ Niveles redistribuidos.")
+# Global stats
+total = len(all_levels)
+for lo, hi in [(1, 10), (11, 20), (21, 30), (31, 40), (41, 50)]:
+    count = sum(1 for l in all_levels if lo <= l <= hi)
+    print(f"  Global {lo:2d}-{hi:2d}: {count:3d} ({count/total*100:5.1f}%)")
+print(f"  Global ≤10: {sum(1 for l in all_levels if l <= 10)} ({sum(1 for l in all_levels if l <= 10)/total*100:.1f}%)")
+print(f"  Global ≤25: {sum(1 for l in all_levels if l <= 25)} ({sum(1 for l in all_levels if l <= 25)/total*100:.1f}%)")
+print("✅ Niveles redistribuidos por categoría.")

@@ -33,7 +33,7 @@
       "displayName": "Brocheta de frutas nimbo",
       "description": "Frutas que solo crecen en islas flotantes. Ácidas y refrescantes.",
       "price": 6,
-      "unlockLevel": 2,
+      "unlockLevel": 5,
       "tags": [
         "fruta",
         "fresco"
@@ -46,7 +46,7 @@
       "displayName": "Palomitas de cúmulo",
       "description": "Palomitas con sal de nube. El snack oficial del cine flotante.",
       "price": 5,
-      "unlockLevel": 1,
+      "unlockLevel": 3,
       "tags": [
         "salado",
         "cine"
@@ -59,7 +59,7 @@
       "displayName": "Rollito de miel celeste",
       "description": "Miel de abejas que polinizan en las alturas, envuelta en hojaldre.",
       "price": 7,
-      "unlockLevel": 2,
+      "unlockLevel": 8,
       "tags": [
         "dulce",
         "hojaldre"
@@ -72,7 +72,7 @@
       "displayName": "Galletas de la suerte nimba",
       "description": "Cada galleta trae un mensaje. Hoy: 'Alguien te está pensando'.",
       "price": 6,
-      "unlockLevel": 2,
+      "unlockLevel": 5,
       "tags": [
         "dulce",
         "galleta"
@@ -85,7 +85,7 @@
       "displayName": "Churros de corriente",
       "description": "Churros espolvoreados con azúcar de rayo. Energía en cada bocado.",
       "price": 5,
-      "unlockLevel": 1,
+      "unlockLevel": 3,
       "tags": [
         "dulce",
         "frito"
@@ -111,7 +111,7 @@
       "displayName": "Sopa de nube",
       "description": "Caldo humeante con trocitos de verduras de huerto aéreo. Reconforta el alma.",
       "price": 8,
-      "unlockLevel": 3,
+      "unlockLevel": 15,
       "tags": [
         "caliente",
         "casero",
@@ -125,7 +125,7 @@
       "displayName": "Tortilla de la abuela nimba",
       "description": "Con patatas de las islas bajas y un toque de cebolla dorada.",
       "price": 6,
-      "unlockLevel": 2,
+      "unlockLevel": 6,
       "tags": [
         "casero",
         "huevo"
@@ -138,7 +138,7 @@
       "displayName": "Ensalada de zafiro",
       "description": "Lechuga fresca, tomates diminutos y aderezo de hierbas celestiales.",
       "price": 5,
-      "unlockLevel": 1,
+      "unlockLevel": 4,
       "tags": [
         "fresco",
         "casero",
@@ -152,7 +152,7 @@
       "displayName": "Guiso de tres vientos",
       "description": "Legumbres cocinadas a fuego lento con el calor de tres corrientes de aire.",
       "price": 7,
-      "unlockLevel": 2,
+      "unlockLevel": 10,
       "tags": [
         "caliente",
         "casero",
@@ -166,7 +166,7 @@
       "displayName": "Pasta al pesto de albahaca",
       "description": "Albahaca cultivada en macetas colgantes. La receta secreta de la isla.",
       "price": 8,
-      "unlockLevel": 3,
+      "unlockLevel": 15,
       "tags": [
         "casero",
         "pasta",
@@ -180,7 +180,7 @@
       "displayName": "Arroz frito con huevo de altura",
       "description": "Las gallinas de la isla ponen huevos más ligeros. O eso dicen.",
       "price": 6,
-      "unlockLevel": 2,
+      "unlockLevel": 7,
       "tags": [
         "casero",
         "arroz",
@@ -194,7 +194,7 @@
       "displayName": "Croquetas de jamón del cielo",
       "description": "Crujientes por fuera, cremosas por dentro. Vuelan del plato.",
       "price": 7,
-      "unlockLevel": 2,
+      "unlockLevel": 9,
       "tags": [
         "casero",
         "frito",
@@ -208,7 +208,7 @@
       "displayName": "Tostada de aguacate estelar",
       "description": "Aguacate maduro sobre pan de centeno. El desayuno de los soñadores.",
       "price": 5,
-      "unlockLevel": 1,
+      "unlockLevel": 4,
       "tags": [
         "casero",
         "tostada",
@@ -222,7 +222,7 @@
       "displayName": "Lentejas al vapor de géiser",
       "description": "Cocinadas con el vapor natural de los géiseres de la isla. Pura tradición Nimba.",
       "price": 7,
-      "unlockLevel": 3,
+      "unlockLevel": 11,
       "tags": [
         "caliente",
         "casero",
@@ -236,7 +236,7 @@
       "displayName": "Huevos revueltos con queso de cabra",
       "description": "Queso de cabras que pastan en prados flotantes. Cremoso y suave.",
       "price": 6,
-      "unlockLevel": 2,
+      "unlockLevel": 7,
       "tags": [
         "casero",
         "huevo",
@@ -250,7 +250,7 @@
       "displayName": "Tacos de pescado volador",
       "description": "Pescado que salta entre islas, con pico de gallo y lima.",
       "price": 9,
-      "unlockLevel": 3,
+      "unlockLevel": 18,
       "tags": [
         "casero",
         "pescado",
@@ -264,7 +264,7 @@
       "displayName": "Pizza margarita casera",
       "description": "Masa fina, tomate, mozzarella y albahaca. Hecha con amor en horno de piedra.",
       "price": 7,
-      "unlockLevel": 3,
+      "unlockLevel": 10,
       "tags": [
         "casero",
         "pizza",
@@ -278,7 +278,7 @@
       "displayName": "Filete de atún celeste",
       "description": "Atún sellado a la plancha con costra de sésamo. Se deshace en la boca.",
       "price": 18,
-      "unlockLevel": 6,
+      "unlockLevel": 42,
       "tags": [
         "pescado",
         "restaurante",
@@ -292,7 +292,7 @@
       "displayName": "Risotto de setas nimbo",
       "description": "Setas bioluminiscentes que crecen en las cuevas de la isla. Brilla en el plato.",
       "price": 22,
-      "unlockLevel": 7,
+      "unlockLevel": 50,
       "tags": [
         "setas",
         "restaurante",
@@ -306,7 +306,7 @@
       "displayName": "Hamburguesa cumulonimbo",
       "description": "Doble carne, queso fundido, cebolla caramelizada. Para días de tormenta.",
       "price": 16,
-      "unlockLevel": 5,
+      "unlockLevel": 34,
       "tags": [
         "carne",
         "restaurante",
@@ -320,7 +320,7 @@
       "displayName": "Paella de marisco isleño",
       "description": "Arroz con gambas, calamares y mejillones de las aguas bajo las islas.",
       "price": 20,
-      "unlockLevel": 6,
+      "unlockLevel": 48,
       "tags": [
         "arroz",
         "restaurante",
@@ -334,7 +334,7 @@
       "displayName": "Curry de boniatos al coco",
       "description": "Suave, cremoso, con un toque de especias. El plato favorito de los viajeros.",
       "price": 17,
-      "unlockLevel": 5,
+      "unlockLevel": 38,
       "tags": [
         "curry",
         "restaurante",
@@ -348,7 +348,7 @@
       "displayName": "Salmón a la parrilla con verduras",
       "description": "Salmón crujiente por fuera, jugoso por dentro. Acompañado de espárragos.",
       "price": 19,
-      "unlockLevel": 6,
+      "unlockLevel": 46,
       "tags": [
         "pescado",
         "restaurante",
@@ -362,7 +362,7 @@
       "displayName": "Lasaña de la casa",
       "description": "Capas de pasta, carne, bechamel y queso gratinado. La receta del chef.",
       "price": 18,
-      "unlockLevel": 6,
+      "unlockLevel": 42,
       "tags": [
         "pasta",
         "restaurante",
@@ -376,7 +376,7 @@
       "displayName": "Bao de cerdo glaseado",
       "description": "Panecillo al vapor con panceta caramelizada y pepinillos. Pequeño pero bestial.",
       "price": 15,
-      "unlockLevel": 5,
+      "unlockLevel": 33,
       "tags": [
         "carne",
         "restaurante",
@@ -390,7 +390,7 @@
       "displayName": "Ramen de la cumbre",
       "description": "Caldo de cerdo con fideos, huevo marinado y alga nori de las cascadas.",
       "price": 17,
-      "unlockLevel": 6,
+      "unlockLevel": 38,
       "tags": [
         "caliente",
         "restaurante",
@@ -404,7 +404,7 @@
       "displayName": "Wrap de pollo y cilantro",
       "description": "Pollo a la parrilla envuelto en tortilla con salsa de yogur y cilantro fresco.",
       "price": 14,
-      "unlockLevel": 4,
+      "unlockLevel": 30,
       "tags": [
         "pollo",
         "restaurante",
@@ -418,7 +418,7 @@
       "displayName": "Flan de caramelo nimbo",
       "description": "Flan casero con caramelo hecho al momento. Tiembla al tocarlo.",
       "price": 10,
-      "unlockLevel": 4,
+      "unlockLevel": 21,
       "tags": [
         "dulce",
         "postre",
@@ -432,7 +432,7 @@
       "displayName": "Tarta de tres leches",
       "description": "Pastel empapado en tres leches. El postre oficial de las celebraciones.",
       "price": 12,
-      "unlockLevel": 4,
+      "unlockLevel": 28,
       "tags": [
         "dulce",
         "postre",
@@ -446,7 +446,7 @@
       "displayName": "Helado de nube de tormenta",
       "description": "Helado grisáceo con chispas de chocolate que parecen relámpagos.",
       "price": 9,
-      "unlockLevel": 3,
+      "unlockLevel": 19,
       "tags": [
         "dulce",
         "helado",
@@ -460,7 +460,7 @@
       "displayName": "Brownie con nueces del cielo",
       "description": "Chocolate denso con nueces que caen de los árboles celestiales.",
       "price": 11,
-      "unlockLevel": 4,
+      "unlockLevel": 26,
       "tags": [
         "dulce",
         "chocolate",
@@ -474,7 +474,7 @@
       "displayName": "Mousse de maracuyá flotante",
       "description": "Espuma ligera de maracuyá. Tan aireada que casi levita.",
       "price": 10,
-      "unlockLevel": 4,
+      "unlockLevel": 23,
       "tags": [
         "dulce",
         "postre",
@@ -488,7 +488,7 @@
       "displayName": "Crepes de dulce de leche",
       "description": "Crepes finos rellenos de dulce de leche y plátano. Adictivos.",
       "price": 9,
-      "unlockLevel": 4,
+      "unlockLevel": 21,
       "tags": [
         "dulce",
         "postre",
@@ -502,7 +502,7 @@
       "displayName": "Natilla con canela y galleta",
       "description": "Natilla cremosa con galleta triturada. Sabe a infancia en las nubes.",
       "price": 8,
-      "unlockLevel": 3,
+      "unlockLevel": 17,
       "tags": [
         "dulce",
         "postre",
@@ -516,7 +516,7 @@
       "displayName": "Fruta de dragón en almíbar",
       "description": "Pitahaya rosada bañada en almíbar ligero. Tan bonita como rica.",
       "price": 11,
-      "unlockLevel": 4,
+      "unlockLevel": 25,
       "tags": [
         "dulce",
         "postre",
@@ -530,7 +530,7 @@
       "displayName": "Té de menta celeste",
       "description": "Infusión de menta cultivada en los jardines de la cumbre. Relaja y refresca.",
       "price": 5,
-      "unlockLevel": 1,
+      "unlockLevel": 3,
       "tags": [
         "bebida",
         "caliente",
@@ -544,7 +544,7 @@
       "displayName": "Batido de frutas del alba",
       "description": "Mezcla de frutas tropicales con un toque de yogur. Energía líquida.",
       "price": 7,
-      "unlockLevel": 3,
+      "unlockLevel": 10,
       "tags": [
         "bebida",
         "frio",
@@ -572,7 +572,7 @@
       "displayName": "Limonada de nube",
       "description": "Limón, azúcar y agua de lluvia recién recogida. La bebida del verano.",
       "price": 5,
-      "unlockLevel": 1,
+      "unlockLevel": 4,
       "tags": [
         "bebida",
         "frio",
@@ -586,7 +586,7 @@
       "displayName": "Chocolate caliente espeso",
       "description": "Cacao puro con leche y una pizca de canela. Espeso como la niebla.",
       "price": 6,
-      "unlockLevel": 2,
+      "unlockLevel": 7,
       "tags": [
         "bebida",
         "caliente",
@@ -600,7 +600,7 @@
       "displayName": "Zumo de estrella fugaz",
       "description": "Mezcla de naranja, zanahoria y jengibre. Dicen que trae suerte.",
       "price": 7,
-      "unlockLevel": 3,
+      "unlockLevel": 12,
       "tags": [
         "bebida",
         "frio",
@@ -614,7 +614,7 @@
       "displayName": "Refresco de brisa marina",
       "description": "Bebida gaseosa con sabor a algas dulces. El sabor de la isla en botella.",
       "price": 5,
-      "unlockLevel": 1,
+      "unlockLevel": 6,
       "tags": [
         "bebida",
         "frio",
