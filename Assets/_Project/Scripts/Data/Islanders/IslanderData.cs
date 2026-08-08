@@ -64,6 +64,9 @@ namespace Nimbo.Data.Islanders
         /// <summary>Qué está haciendo. Lo escribe solo la simulación.</summary>
         public IslanderActivity Activity = IslanderActivity.Idle;
 
+        /// <summary>En qué trabaja y cómo le va. Lo escribe solo el módulo de trabajo.</summary>
+        public JobState Job = JobState.Unemployed;
+
         /// <summary>Minuto de juego en que llegó a la isla, para "lleva 12 días aquí".</summary>
         public long ArrivalMinute;
 

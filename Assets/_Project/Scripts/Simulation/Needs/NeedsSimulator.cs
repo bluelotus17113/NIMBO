@@ -1,6 +1,7 @@
 using Nimbo.Core.Events;
 using Nimbo.Core.Services.Contracts;
 using Nimbo.Data.Islanders;
+using Nimbo.Simulation.Progression;
 using UnityEngine;
 
 namespace Nimbo.Simulation.Needs
@@ -54,8 +55,27 @@ namespace Nimbo.Simulation.Needs
             UpdateMood(islander, relationshipScore);
         }
 
-        private float SleepRecovery(IslanderData islander) =>
-            islander.Home.HasHome ? _config.SleepRecoveryOwnBed : _config.SleepRecoverySofa;
+        private float SleepRecovery(IslanderData islander)
+        {
+            float baseRate = islander.Home.HasHome
+                ? _config.SleepRecoveryOwnBed
+                : _config.SleepRecoverySofa;
+
+            return baseRate * _restMultiplier;
+        }
+
+        /// <summary>
+        /// Lo pone el servicio de simulación cada día: el domingo se duerme mejor.
+        /// Entra por fuera y no se consulta aquí para que el simulador siga sin
+        /// depender del calendario y se pueda probar solo.
+        /// </summary>
+        public float RestMultiplierToday
+        {
+            get => _restMultiplier;
+            set => _restMultiplier = Mathf.Max(0.1f, value);
+        }
+
+        private float _restMultiplier = 1f;
 
         /// <summary>
         /// Cambia una necesidad y avisa si cruzó de banda. Todo lo que toque necesidades

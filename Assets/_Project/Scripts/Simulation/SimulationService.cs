@@ -108,6 +108,9 @@ namespace Nimbo.Simulation
 
         public void SetSimulationPaused(bool paused) => _paused = paused;
 
+        /// <summary>Lo llama el arranque cada día: el domingo se duerme mejor.</summary>
+        public void SetRestMultiplier(float multiplier) => _needs.RestMultiplierToday = multiplier;
+
         // --- lo que corre por fotograma -------------------------------------
 
         /// <summary>

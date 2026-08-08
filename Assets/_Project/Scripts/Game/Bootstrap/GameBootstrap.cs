@@ -15,7 +15,10 @@ using Nimbo.Island;
 using Nimbo.Personality.Runtime;
 using Nimbo.Simulation;
 using Nimbo.Simulation.Behaviour;
+using Nimbo.Simulation.Jobs;
 using Nimbo.Simulation.Needs;
+using Nimbo.Simulation.Progression;
+using Nimbo.Simulation.Wardrobe;
 using Nimbo.Simulation.Requests;
 using Nimbo.Social;
 using UnityEngine;
@@ -55,6 +58,9 @@ namespace Nimbo.Game.Bootstrap
         private IslandService _island;
         private IslanderBrain _brain;
         private EconomyService _economy;
+        private JobService _jobs;
+        private NimboTree _tree;
+        private WardrobeService _wardrobe;
 
         private IslanderRegistry _registry;
         private long _lastAutosaveMinute;
@@ -87,7 +93,29 @@ namespace Nimbo.Game.Bootstrap
             CatchUpOfflineTime();
 
             _running = true;
+            EventBus.Subscribe<DayPassed>(OnDayPassed);
+            ApplyDayRhythm(_clock.Day);
+
             Debug.Log($"Isla Nimbo lista — {_registry.Count} habitantes, {_clock}");
+        }
+
+        private void OnDayPassed(DayPassed evt) => ApplyDayRhythm(evt.Day);
+
+        /// <summary>
+        /// Le da su carácter al día: el domingo se descansa mejor y el sábado la isla
+        /// amanece de buen humor.
+        /// </summary>
+        private void ApplyDayRhythm(int day)
+        {
+            var weekday = WeeklyRhythm.DayOf(day);
+            _simulation.SetRestMultiplier(WeeklyRhythm.RestMultiplier(weekday));
+
+            float moodBonus = WeeklyRhythm.MoodBonus(weekday);
+            if (moodBonus <= 0f) return;
+
+            var all = _registry.All;
+            for (int i = 0; i < all.Count; i++)
+                _simulation.ApplyHappiness(all[i].Id, moodBonus);
         }
 
         private void Build()
@@ -125,6 +153,9 @@ namespace Nimbo.Game.Bootstrap
             _requests.LoadFrom(_save.Requests);
 
             _brain = new IslanderBrain(registry, _island, personalities, _social, _clock);
+            _jobs = new JobService(registry, _simulation, _island, _clock);
+            _tree = new NimboTree(_save, _clock, registry);
+            _wardrobe = new WardrobeService(registry, _simulation, personalities);
 
             // El orden de registro da igual, pero el de construcción no: EconomyService
             // busca ISimulationService por el registro cuando alguien hace un regalo,
@@ -139,8 +170,15 @@ namespace Nimbo.Game.Bootstrap
             ServiceRegistry.Register<IEconomyService>(_economy);
             ServiceRegistry.Register<IIslandService>(_island);
             ServiceRegistry.Register<IIslanderFactory>(factory);
+            ServiceRegistry.Register<IJobService>(_jobs);
+            ServiceRegistry.Register<NimboTree>(_tree);
+            ServiceRegistry.Register<WardrobeService>(_wardrobe);
 
             if (isNewGame) PopulateNewIsland(registry, factory);
+
+            // Que nadie empiece en paro: la economía no cierra sin sueldos, y buscar
+            // trabajo a mano para doce habitantes no es una decisión interesante.
+            _jobs.EmployEveryone();
 
             _registry = registry;
             _built = true;
@@ -267,6 +305,8 @@ namespace Nimbo.Game.Bootstrap
             _island?.Dispose();
             _brain?.Dispose();
             _economy?.Dispose();
+            _jobs?.Dispose();
+            EventBus.Unsubscribe<DayPassed>(OnDayPassed);
             ServiceRegistry.Clear();
         }
     }

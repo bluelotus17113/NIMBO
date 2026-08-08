@@ -19,6 +19,7 @@ namespace Nimbo.UI.Islander
     /// </remarks>
     public sealed class IslanderPanel
     {
+        private readonly JobSection _job = new JobSection();
         private readonly VisualElement _requests;
         private readonly VisualElement _relationships;
         private readonly Label _name;
@@ -73,6 +74,8 @@ namespace Nimbo.UI.Islander
             requestCard.Add(_requests);
             Root.Add(requestCard);
 
+            Root.Add(_job.Root);
+
             var socialCard = UiTheme.Card();
             socialCard.Add(UiTheme.Title("Con quién anda"));
             _relationships = new VisualElement();
@@ -126,6 +129,7 @@ namespace Nimbo.UI.Islander
             }
 
             RefreshRequests(islander);
+            _job.Refresh(_islanderId);
             RefreshRelationships(islander, registry);
         }
 
