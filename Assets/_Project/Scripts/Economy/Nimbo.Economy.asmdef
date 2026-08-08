@@ -3,7 +3,8 @@
     "rootNamespace": "Nimbo.Economy",
     "references": [
         "Nimbo.Data",
-        "Nimbo.Core"
+        "Nimbo.Core",
+        "Unity.Nuget.Newtonsoft-Json"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

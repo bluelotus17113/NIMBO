@@ -1,0 +1,34 @@
+{
+    "name": "Nimbo.Tests",
+    "rootNamespace": "Nimbo.Tests",
+    "references": [
+        "Nimbo.Data",
+        "Nimbo.Core",
+        "Nimbo.Personality",
+        "Nimbo.Simulation",
+        "Nimbo.Social",
+        "Nimbo.Housing",
+        "Nimbo.Economy",
+        "Nimbo.CharCreator",
+        "Nimbo.Island",
+        "Nimbo.Events",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "Unity.Nuget.Newtonsoft-Json"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

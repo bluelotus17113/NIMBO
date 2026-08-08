@@ -1,0 +1,30 @@
+{
+    "name": "Nimbo.Editor",
+    "rootNamespace": "Nimbo.EditorTools",
+    "references": [
+        "Nimbo.Data",
+        "Nimbo.Core",
+        "Nimbo.Personality",
+        "Nimbo.Simulation",
+        "Nimbo.Social",
+        "Nimbo.Housing",
+        "Nimbo.Economy",
+        "Nimbo.Island",
+        "Nimbo.CharCreator",
+        "Nimbo.Events",
+        "Nimbo.Art",
+        "Nimbo.UI",
+        "Nimbo.Game"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -25,7 +25,14 @@ namespace Nimbo.Core.Time
 
         public long ElapsedMinutes { get; private set; }
 
-        private float _fraction;
+        /// <summary>
+        /// En <c>double</c> y no en <c>float</c>: sumar el delta de cada fotograma en
+        /// float pierde precisión y sesenta sumas de 1/60 dan 0,99999994, que nunca
+        /// llega a cruzar el minuto. En una sesión larga eso se convierte en un reloj
+        /// que se retrasa.
+        /// </summary>
+        private double _fraction;
+
         private bool _paused;
 
         public GameClock(long startMinutes = 8 * MinutesPerHour)
@@ -59,8 +66,8 @@ namespace Nimbo.Core.Time
         {
             if (_paused || deltaSeconds <= 0f) return;
 
-            _fraction += deltaSeconds * MinutesPerRealSecond;
-            if (_fraction < 1f) return;
+            _fraction += (double)deltaSeconds * MinutesPerRealSecond;
+            if (_fraction < 1d) return;
 
             int whole = (int)_fraction;
             _fraction -= whole;
@@ -75,26 +82,30 @@ namespace Nimbo.Core.Time
         {
             if (minutes <= 0) return;
 
-            long before = ElapsedMinutes;
-            ElapsedMinutes += minutes;
+            long target = ElapsedMinutes + minutes;
 
-            // Los avisos se emiten hora a hora aunque el salto sea de días: los módulos
-            // que acumulan (necesidades, relaciones) necesitan cada paso, no el total.
-            long firstHour = before / MinutesPerHour + 1;
-            long lastHour = ElapsedMinutes / MinutesPerHour;
-            for (long h = firstHour; h <= lastHour; h++)
+            // El reloj se pone en cada hora ANTES de avisar de ella, y no salta al
+            // final del tramo. Es lo que hace que ponerse al día tras cerrar el juego
+            // sea idéntico a haber jugado ese rato: los módulos leen la hora al
+            // reaccionar, y si el reloj ya estuviera al final, todas las horas del
+            // salto parecerían la misma — nadie se iría a dormir y nada caducaría.
+            while (ElapsedMinutes / MinutesPerHour < target / MinutesPerHour)
             {
-                int hourOfDay = (int)(h % HoursPerDay);
-                int day = (int)(h / HoursPerDay) + 1;
+                ElapsedMinutes = (ElapsedMinutes / MinutesPerHour + 1) * MinutesPerHour;
+
+                int hourOfDay = Hour;
+                int day = Day;
                 EventBus.Publish(new HourPassed(hourOfDay, day));
                 if (hourOfDay == 0) EventBus.Publish(new DayPassed(day));
             }
+
+            ElapsedMinutes = target;
         }
 
         public void SetElapsed(long minutes)
         {
             ElapsedMinutes = Math.Max(0, minutes);
-            _fraction = 0f;
+            _fraction = 0d;
         }
 
         public string FormatClock() => $"{Hour:00}:{Minute:00}";

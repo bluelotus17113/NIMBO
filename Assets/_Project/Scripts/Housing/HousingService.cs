@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Nimbo.Core.Services.Contracts;
 using Nimbo.Data.Housing;
+using Nimbo.Data.Save;
 using Nimbo.Housing.Catalog;
 using Nimbo.Housing.Grid;
 
@@ -16,27 +17,56 @@ namespace Nimbo.Housing
         readonly Dictionary<RoomLayout, RoomGrid> _grids = new Dictionary<RoomLayout, RoomGrid>();
         int _nextInstanceId;
 
+        readonly SaveGame _save;
+        readonly IIslanderRegistry _registry;
+
         public HousingService() : this(new FurnitureCatalog()) { }
 
-        /// <summary>Constructor para tests con catálogo ya cargado.</summary>
+        /// <summary>Constructor para tests: catálogo sí, partida no.</summary>
         public HousingService(FurnitureCatalog catalog)
         {
             _catalog = catalog;
+        }
+
+        /// <summary>
+        /// Constructor de producción. Necesita la partida porque el interior se guarda
+        /// por apartamento y no por habitante: el habitante se muda y la reforma se
+        /// queda, que es lo que esperaría cualquiera que pagó por esa cocina.
+        /// </summary>
+        public HousingService(FurnitureCatalog catalog, SaveGame save, IIslanderRegistry registry)
+            : this(catalog)
+        {
+            _save = save;
+            _registry = registry;
         }
 
         // ------------------------------------------------------------------- IHousingService
 
         public RoomLayout GetLayout(string buildingId, int unitIndex)
         {
-            // La asignación edificio → apartamento la resuelve el módulo Island.
-            // Por ahora devolvemos null; la habitación se crea bajo demanda en el editor.
-            return null;
+            if (_save == null || string.IsNullOrEmpty(buildingId)) return null;
+
+            var record = _save.FindHome(buildingId, unitIndex);
+            if (record != null) return record.Layout;
+
+            // Se estrena bajo demanda: un apartamento que nadie ha abierto todavía no
+            // tiene por qué ocupar sitio en el guardado.
+            record = new HomeRecord
+            {
+                BuildingId = buildingId,
+                UnitIndex = unitIndex,
+                Layout = RoomLayout.Starter(),
+            };
+            _save.Homes.Add(record);
+            return record.Layout;
         }
 
         public RoomLayout GetHomeOf(string islanderId)
         {
-            // Ídem: la resuelve Island/CharacterCreator.
-            return null;
+            if (_registry == null || !_registry.TryGet(islanderId, out var islander)) return null;
+            return islander.Home.HasHome
+                ? GetLayout(islander.Home.BuildingId, islander.Home.UnitIndex)
+                : null;
         }
 
         public PlacementError CanPlace(RoomLayout room, string catalogId, GridCoord origin, Facing facing)
