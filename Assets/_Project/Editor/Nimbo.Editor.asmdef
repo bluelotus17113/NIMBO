@@ -14,7 +14,9 @@
         "Nimbo.Events",
         "Nimbo.Art",
         "Nimbo.UI",
-        "Nimbo.Game"
+        "Nimbo.Game",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Universal.Editor"
     ],
     "includePlatforms": [
         "Editor"

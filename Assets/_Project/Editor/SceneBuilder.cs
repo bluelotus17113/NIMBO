@@ -1,4 +1,5 @@
 using System.IO;
+using Nimbo.Art.World;
 using Nimbo.Game.Bootstrap;
 using Nimbo.UI;
 using UnityEditor;
@@ -113,6 +114,10 @@ namespace Nimbo.EditorTools
         {
             var go = new GameObject("Isla Nimbo");
             go.AddComponent<GameBootstrap>();
+
+            var worldGo = new GameObject("Mundo");
+            worldGo.transform.SetParent(go.transform);
+            worldGo.AddComponent<WorldView>();
 
             var uiGo = new GameObject("Interfaz");
             uiGo.transform.SetParent(go.transform);

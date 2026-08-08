@@ -56,8 +56,10 @@ namespace Nimbo.Game.Bootstrap
         private IslanderBrain _brain;
         private EconomyService _economy;
 
+        private IslanderRegistry _registry;
         private long _lastAutosaveMinute;
         private bool _running;
+        private bool _built;
 
         public GameClock Clock => _clock;
         public SaveGame Save => _save;
@@ -68,6 +70,24 @@ namespace Nimbo.Game.Bootstrap
             // jugador entre al editor de interiores.
             DontDestroyOnLoad(gameObject);
             Build();
+        }
+
+        /// <summary>
+        /// El aviso de que la partida está lista va en Start y no en Awake, y esto no
+        /// es un detalle: Unity ejecuta Awake y OnEnable objeto por objeto, así que si
+        /// se publicara en Awake, los que se suscriben en su OnEnable —el mundo y la
+        /// interfaz— aún no existirían y se perderían el aviso. La isla arrancaba con
+        /// todos los servicios montados y sin un solo muñeco dibujado.
+        /// </summary>
+        private void Start()
+        {
+            if (!_built) return;
+
+            EventBus.Publish(new GameLoaded());
+            CatchUpOfflineTime();
+
+            _running = true;
+            Debug.Log($"Isla Nimbo lista — {_registry.Count} habitantes, {_clock}");
         }
 
         private void Build()
@@ -122,11 +142,8 @@ namespace Nimbo.Game.Bootstrap
 
             if (isNewGame) PopulateNewIsland(registry, factory);
 
-            CatchUpOfflineTime();
-
-            _running = true;
-            EventBus.Publish(new GameLoaded());
-            Debug.Log($"Isla Nimbo lista — {registry.Count} habitantes, {_clock}");
+            _registry = registry;
+            _built = true;
         }
 
         /// <summary>

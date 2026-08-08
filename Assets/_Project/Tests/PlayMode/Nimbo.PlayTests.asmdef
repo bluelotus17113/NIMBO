@@ -1,0 +1,26 @@
+{
+    "name": "Nimbo.PlayTests",
+    "rootNamespace": "Nimbo.PlayTests",
+    "references": [
+        "Nimbo.Data",
+        "Nimbo.Core",
+        "Nimbo.Art",
+        "Nimbo.UI",
+        "Nimbo.Game",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
