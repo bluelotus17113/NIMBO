@@ -39,11 +39,15 @@ namespace Nimbo.Art.Materials
                 _lit = Shader.Find("Universal Render Pipeline/Lit");
                 if (_lit == null)
                 {
-                    // Sin URP activo el juego seguiría corriendo pero todo saldría
-                    // magenta, y eso confunde más que un aviso claro.
-                    Debug.LogError("ToonPalette: no se encontró el shader de URP. " +
-                                   "¿Está el pipeline asignado en Graphics?");
-                    _lit = Shader.Find("Standard");
+                    // En un ejecutable esto significa casi siempre que el shader se
+                    // quedó fuera del empaquetado: como todos los materiales se crean
+                    // en runtime, ningún asset lo referencia y Unity lo descarta. Se
+                    // arregla con RenderPipelineSetup.EnsureAlwaysIncludedShaders.
+                    Debug.LogError("ToonPalette: no está el shader URP/Lit. En el editor, " +
+                                   "revisa el pipeline en Graphics; en un build, añádelo a " +
+                                   "Always Included Shaders (Isla Nimbo > Configurar URP).");
+
+                    _lit = Shader.Find("Standard") ?? Shader.Find("Sprites/Default");
                 }
                 return _lit;
             }

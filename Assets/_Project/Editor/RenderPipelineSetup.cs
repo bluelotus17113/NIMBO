@@ -51,11 +51,72 @@ namespace Nimbo.EditorTools
             GraphicsSettings.defaultRenderPipeline = pipeline;
             QualitySettings.renderPipeline = pipeline;
 
+            EnsureAlwaysIncludedShaders();
+
             EditorUtility.SetDirty(pipeline);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
             Debug.Log($"URP configurado: {PipelinePath}");
+        }
+
+        /// <summary>
+        /// Mete los shaders de URP en la lista de «siempre incluidos».
+        /// </summary>
+        /// <remarks>
+        /// Sin esto el juego compila pero revienta al arrancar con un
+        /// <c>ArgumentNullException</c> en el primer material. Unity solo empaqueta
+        /// los shaders que algún material del proyecto referencia, y aquí **todos los
+        /// materiales se crean en tiempo de ejecución**: para el empaquetador, nadie
+        /// usa URP/Lit y lo deja fuera. En el editor funciona igual porque el shader
+        /// está cargado de todas formas, así que es de los fallos que solo aparecen
+        /// en el ejecutable.
+        /// </remarks>
+        private static void EnsureAlwaysIncludedShaders()
+        {
+            string[] needed =
+            {
+                "Universal Render Pipeline/Lit",
+                "Universal Render Pipeline/Unlit",
+            };
+
+            var graphics = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset");
+            if (graphics == null || graphics.Length == 0)
+            {
+                Debug.LogError("No se pudo abrir GraphicsSettings para incluir los shaders");
+                return;
+            }
+
+            var settings = new SerializedObject(graphics[0]);
+            var included = settings.FindProperty("m_AlwaysIncludedShaders");
+
+            foreach (string name in needed)
+            {
+                var shader = Shader.Find(name);
+                if (shader == null)
+                {
+                    Debug.LogWarning($"No se encontro el shader {name}");
+                    continue;
+                }
+
+                bool already = false;
+                for (int i = 0; i < included.arraySize; i++)
+                {
+                    if (included.GetArrayElementAtIndex(i).objectReferenceValue == shader)
+                    {
+                        already = true;
+                        break;
+                    }
+                }
+                if (already) continue;
+
+                included.InsertArrayElementAtIndex(included.arraySize);
+                included.GetArrayElementAtIndex(included.arraySize - 1).objectReferenceValue = shader;
+                Debug.Log($"Shader incluido siempre: {name}");
+            }
+
+            settings.ApplyModifiedProperties();
+            AssetDatabase.SaveAssets();
         }
 
         /// <summary>Deja el proyecto listo de una sola vez: pipeline y escena.</summary>
