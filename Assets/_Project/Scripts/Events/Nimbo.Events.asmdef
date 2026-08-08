@@ -1,0 +1,17 @@
+{
+    "name": "Nimbo.Events",
+    "rootNamespace": "Nimbo.Events",
+    "references": [
+        "Nimbo.Data",
+        "Nimbo.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

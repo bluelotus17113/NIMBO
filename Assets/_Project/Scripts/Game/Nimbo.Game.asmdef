@@ -1,0 +1,28 @@
+{
+    "name": "Nimbo.Game",
+    "rootNamespace": "Nimbo.Game",
+    "references": [
+        "Nimbo.Data",
+        "Nimbo.Core",
+        "Nimbo.Personality",
+        "Nimbo.Simulation",
+        "Nimbo.Social",
+        "Nimbo.Housing",
+        "Nimbo.Economy",
+        "Nimbo.Island",
+        "Nimbo.CharCreator",
+        "Nimbo.Events",
+        "Nimbo.Art",
+        "Nimbo.UI",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

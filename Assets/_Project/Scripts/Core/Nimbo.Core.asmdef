@@ -1,0 +1,17 @@
+{
+    "name": "Nimbo.Core",
+    "rootNamespace": "Nimbo.Core",
+    "references": [
+        "Nimbo.Data",
+        "Unity.Nuget.Newtonsoft-Json"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

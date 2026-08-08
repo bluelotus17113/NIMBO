@@ -1,0 +1,17 @@
+{
+    "name": "Nimbo.Art",
+    "rootNamespace": "Nimbo.Art",
+    "references": [
+        "Nimbo.Data",
+        "Nimbo.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

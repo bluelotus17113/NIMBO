@@ -1,0 +1,17 @@
+{
+    "name": "Nimbo.Economy",
+    "rootNamespace": "Nimbo.Economy",
+    "references": [
+        "Nimbo.Data",
+        "Nimbo.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
