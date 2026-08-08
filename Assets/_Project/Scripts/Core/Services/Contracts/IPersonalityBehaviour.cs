@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Nimbo.Core.Util;
 using Nimbo.Data.Islanders;
 using Nimbo.Data.Requests;
@@ -59,6 +60,15 @@ namespace Nimbo.Core.Services.Contracts
 
         /// <summary>Cuánto más deprisa se le vacía esa necesidad. 1 = como todo el mundo.</summary>
         float NeedDecayMultiplier(NeedKind need);
+
+        /// <summary>
+        /// Lo rápido que su ánimo vuelve al nivel que le corresponde. Alto es
+        /// voluble; bajo es de los que se quedan enfurruñados media semana.
+        /// </summary>
+        float MoodDecayMultiplier { get; }
+
+        /// <summary>Sus tres emociones habituales, para las animaciones de reposo.</summary>
+        IReadOnlyList<Emotion> SignatureEmotions { get; }
 
         /// <summary>Cuánto más probable es que pida eso. 0 = nunca lo pide.</summary>
         float RequestWeight(RequestKind kind);

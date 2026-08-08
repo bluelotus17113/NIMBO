@@ -61,6 +61,9 @@ namespace Nimbo.Data.Islanders
         /// <summary>Dónde está ahora mismo en la isla. Lo escribe solo el módulo de isla.</summary>
         public string CurrentZoneId = "";
 
+        /// <summary>Qué está haciendo. Lo escribe solo la simulación.</summary>
+        public IslanderActivity Activity = IslanderActivity.Idle;
+
         /// <summary>Minuto de juego en que llegó a la isla, para "lleva 12 días aquí".</summary>
         public long ArrivalMinute;
 

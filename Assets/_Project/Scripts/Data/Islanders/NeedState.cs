@@ -3,44 +3,54 @@ using UnityEngine;
 
 namespace Nimbo.Data.Islanders
 {
+    /// <summary>
+    /// Las cuatro necesidades que decaen solas.
+    /// </summary>
+    /// <remarks>
+    /// El ánimo no está aquí a propósito: es derivado de estas cuatro más las
+    /// relaciones, y vive en <see cref="MoodState"/>. Si fuese una necesidad más,
+    /// habría dos sitios donde escribirlo y acabarían discrepando.
+    /// </remarks>
     public enum NeedKind
     {
-        Hunger = 0,   // saciedad: 100 = lleno, 0 = hambriento
+        Hunger = 0,   // saciedad: 100 = acaba de comer, 0 = hambriento
         Energy = 1,   // descanso
         Social = 2,   // compañía
         Hygiene = 3,  // aseo
-        Fun = 4,      // entretenimiento
     }
 
     public enum NeedBand
     {
-        Critical = 0, // [0, 15)
-        Low = 1,      // [15, 40)
-        Normal = 2,   // [40, 80)
-        Full = 3,     // [80, 100]
+        Critical = 0, // [0, 15]   no hace nada más hasta resolverlo
+        Low = 1,      // (15, 35]  probabilidad alta de pedir ayuda
+        Normal = 2,   // (35, 80]
+        Full = 3,     // (80, 100] +10% de afinidad ganada
     }
 
     /// <summary>
-    /// Las cinco necesidades de un habitante, cada una de 0 a 100. Alto es bueno:
-    /// 100 de Hunger es "acaba de comer", no "se muere de hambre". Se eligió así
-    /// para que todas las barras de la interfaz se lean igual — llena es buena.
+    /// Las cuatro necesidades de un habitante, de 0 a 100. Alto es bueno: 100 de
+    /// Hunger es "acaba de comer". Se eligió así para que todas las barras de la
+    /// interfaz se lean igual — llena es buena.
     /// </summary>
     [Serializable]
     public struct NeedState
     {
         public const float Min = 0f;
         public const float Max = 100f;
-        public const int Count = 5;
+        public const int Count = 4;
+
+        public const float CriticalThreshold = 15f;
+        public const float LowThreshold = 35f;
+        public const float FullThreshold = 80f;
 
         [Range(Min, Max)] public float Hunger;
         [Range(Min, Max)] public float Energy;
         [Range(Min, Max)] public float Social;
         [Range(Min, Max)] public float Hygiene;
-        [Range(Min, Max)] public float Fun;
 
         public static NeedState Fresh => new NeedState
         {
-            Hunger = 80f, Energy = 90f, Social = 70f, Hygiene = 85f, Fun = 75f,
+            Hunger = 80f, Energy = 90f, Social = 70f, Hygiene = 85f,
         };
 
         public float this[NeedKind kind]
@@ -51,7 +61,6 @@ namespace Nimbo.Data.Islanders
                 NeedKind.Energy => Energy,
                 NeedKind.Social => Social,
                 NeedKind.Hygiene => Hygiene,
-                NeedKind.Fun => Fun,
                 _ => 0f,
             };
             set
@@ -63,16 +72,15 @@ namespace Nimbo.Data.Islanders
                     case NeedKind.Energy: Energy = v; break;
                     case NeedKind.Social: Social = v; break;
                     case NeedKind.Hygiene: Hygiene = v; break;
-                    case NeedKind.Fun: Fun = v; break;
                 }
             }
         }
 
         public static NeedBand BandOf(float value)
         {
-            if (value < 15f) return NeedBand.Critical;
-            if (value < 40f) return NeedBand.Low;
-            if (value < 80f) return NeedBand.Normal;
+            if (value <= CriticalThreshold) return NeedBand.Critical;
+            if (value <= LowThreshold) return NeedBand.Low;
+            if (value <= FullThreshold) return NeedBand.Normal;
             return NeedBand.Full;
         }
 
@@ -92,6 +100,14 @@ namespace Nimbo.Data.Islanders
             return worst;
         }
 
-        public float Average => (Hunger + Energy + Social + Hygiene + Fun) / Count;
+        /// <summary>True si alguna está en rojo. El habitante deja lo que esté haciendo.</summary>
+        public bool HasCritical() =>
+            Hunger <= CriticalThreshold || Energy <= CriticalThreshold ||
+            Social <= CriticalThreshold || Hygiene <= CriticalThreshold;
+
+        public float Average => (Hunger + Energy + Social + Hygiene) / Count;
+
+        /// <summary>Media normalizada a [0, 1]. La usa el cálculo de ánimo.</summary>
+        public float Normalized => Average / Max;
     }
 }

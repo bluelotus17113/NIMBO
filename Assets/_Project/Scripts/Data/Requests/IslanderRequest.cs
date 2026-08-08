@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 
 namespace Nimbo.Data.Requests
 {
@@ -9,46 +8,46 @@ namespace Nimbo.Data.Requests
     /// </summary>
     public enum RequestKind
     {
-        Food = 0,          // "tengo hambre"
-        Item = 1,          // quiere un objeto del catálogo
-        Clothing = 2,      // quiere ropa
-        Advice = 3,        // tiene un problema y pide consejo
-        Favor = 4,         // quiere que le presentes a alguien, que le muevas de casa…
-        Complaint = 5,     // se queja de otro habitante
-        Confession = 6,    // quiere declararse y pide ayuda
-        Reconcile = 7,     // quiere hacer las paces
-        Furniture = 8,     // quiere algo para su casa
-        Outing = 9,        // quiere salir a algún sitio
+        Food = 0,            // "quiero comer algo"
+        Object = 1,          // quiere un objeto del catálogo
+        Clothes = 2,         // quiere una prenda
+        Advice = 3,          // tiene un problema y pide consejo
+        Favor = 4,           // "¿puedes…?"
+        Complaint = 5,       // se queja de otro habitante
+        SocialIntro = 6,     // quiere conocer a alguien
+        Activity = 7,        // quiere hacer algo contigo o con otro
+        IslandBuilding = 8,  // pide una mejora para la isla
+        Confession = 9,      // quiere declararse y pide ayuda
+        Reconcile = 10,      // quiere hacer las paces
     }
 
-    public enum RequestState
+    public enum RequestPriority
+    {
+        Low = 0,       // capricho, no hay prisa
+        Normal = 1,    // necesidad moderada
+        High = 2,      // necesidad urgente
+        Critical = 3,  // una necesidad en banda crítica
+    }
+
+    public enum RequestResolution
     {
         Pending = 0,
-        Resolved = 1,
-        Refused = 2,
-        Expired = 3,
+        Fulfilled = 1,   // el jugador la resolvió
+        Ignored = 2,     // caducó sin que nadie hiciera nada
+        Refused = 3,     // el jugador dijo que no, a la cara
     }
 
-    public enum RequestUrgency
-    {
-        Whim = 0,      // le apetece
-        Wish = 1,      // lo quiere de verdad
-        Urgent = 2,    // una necesidad en rojo
-    }
-
-    /// <summary>
-    /// Una petición concreta en la cola del jugador.
-    /// </summary>
+    /// <summary>Una petición concreta en la cola del jugador.</summary>
     [Serializable]
     public struct IslanderRequest
     {
         public string RequestId;
         public string IslanderId;
         public RequestKind Kind;
-        public RequestUrgency Urgency;
-        public RequestState State;
+        public RequestPriority Priority;
+        public RequestResolution Resolution;
 
-        /// <summary>Qué pide exactamente: id de objeto, de habitante, de zona… según <see cref="Kind"/>.</summary>
+        /// <summary>Qué pide exactamente: id de objeto, de habitante o de zona, según <see cref="Kind"/>.</summary>
         public string TargetId;
 
         /// <summary>La frase que dice al pedirlo, ya resuelta con su personalidad.</summary>
@@ -61,6 +60,18 @@ namespace Nimbo.Data.Requests
         public float ExperienceReward;
         public int CoinReward;
 
-        public bool IsOpen => State == RequestState.Pending;
+        public bool IsOpen => Resolution == RequestResolution.Pending;
+
+        /// <summary>
+        /// Ignorar una petición duele más cuanto más urgente era. Ese coste es lo que
+        /// convierte la cola en decisiones y no en una lista de tareas.
+        /// </summary>
+        public float NeglectPenalty => Priority switch
+        {
+            RequestPriority.Critical => 15f,
+            RequestPriority.High => 8f,
+            RequestPriority.Normal => 4f,
+            _ => 1.5f,
+        };
     }
 }

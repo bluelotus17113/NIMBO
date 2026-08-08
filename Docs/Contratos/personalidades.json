@@ -1,28 +1,78 @@
 {
-  "version": 1,
-  "axes": ["Energy", "Expression", "Attitude", "Outlook"],
+  "version": 2,
+  "axes": [
+    "Energy",
+    "Expression",
+    "Attitude",
+    "Outlook"
+  ],
   "types": [
     {
       "index": 0,
       "id": "PT_ERMITANIO",
       "name": "Ermitaño",
-      "axes": { "Energy": -1, "Expression": -1, "Attitude": -1, "Outlook": -1 },
+      "axes": {
+        "Energy": -1,
+        "Expression": -1,
+        "Attitude": -1,
+        "Outlook": -1
+      },
       "tagline": "La soledad no me pesa; me aligera.",
       "walkSpeed": 0.7,
       "idleDwell": 4.5,
-      "needMultipliers": { "hunger": 0.9, "mood": 1.2, "energy": 0.7, "social": 0.7, "hygiene": 0.9 },
-      "requestWeights": { "food": 1.0, "item": 1.5, "clothing": 0.5, "advice": 0.3, "favor": 0.6, "complaint": 1.0 },
+      "needMultipliers": {
+        "hunger": 0.9,
+        "mood": 1.2,
+        "energy": 0.7,
+        "social": 0.7,
+        "hygiene": 0.9
+      },
+      "requestWeights": {
+        "food": 1.0,
+        "item": 1.5,
+        "clothing": 0.5,
+        "advice": 0.3,
+        "favor": 0.6,
+        "complaint": 1.0,
+        "socialIntro": 0.5,
+        "activity": 0.5,
+        "islandBuilding": 0.6,
+        "confession": 0.5,
+        "reconcile": 1.0
+      },
       "compatible": [
-        { "id": "PT_ARTESANO", "bonus": 5 },
-        { "id": "PT_POETA", "bonus": 7 },
-        { "id": "PT_AFABLE", "bonus": 3 }
+        {
+          "id": "PT_AFABLE",
+          "bonus": 3
+        },
+        {
+          "id": "PT_ARTESANO",
+          "bonus": 5
+        },
+        {
+          "id": "PT_POETA",
+          "bonus": 7
+        }
       ],
       "clashes": [
-        { "id": "PT_FIESTERO", "penalty": -6 },
-        { "id": "PT_ENTUSIASTA", "penalty": -4 }
+        {
+          "id": "PT_ENTUSIASTA",
+          "penalty": -4
+        },
+        {
+          "id": "PT_FIESTERO",
+          "penalty": -6
+        }
       ],
-      "voice": { "pitch": "grave", "pace": "lento" },
-      "emotions": ["serenidad", "introspección", "desconfianza"],
+      "voice": {
+        "pitch": "grave",
+        "pace": "lento"
+      },
+      "emotions": [
+        "serenidad",
+        "introspección",
+        "desconfianza"
+      ],
       "lines": {
         "happy": [
           "Así, en silencio… está bien.",
@@ -46,23 +96,68 @@
       "index": 1,
       "id": "PT_ATLETA",
       "name": "Atleta",
-      "axes": { "Energy": 1, "Expression": -1, "Attitude": -1, "Outlook": -1 },
+      "axes": {
+        "Energy": 1,
+        "Expression": -1,
+        "Attitude": -1,
+        "Outlook": -1
+      },
       "tagline": "Un objetivo, un cuerpo, ningún atajo.",
       "walkSpeed": 1.3,
       "idleDwell": 1.2,
-      "needMultipliers": { "hunger": 1.3, "mood": 1.0, "energy": 1.4, "social": 0.7, "hygiene": 1.1 },
-      "requestWeights": { "food": 1.4, "item": 1.2, "clothing": 0.5, "advice": 0.4, "favor": 0.7, "complaint": 0.5 },
+      "needMultipliers": {
+        "hunger": 1.2,
+        "mood": 1.0,
+        "energy": 1.4,
+        "social": 0.7,
+        "hygiene": 1.1
+      },
+      "requestWeights": {
+        "food": 1.4,
+        "item": 1.2,
+        "clothing": 0.5,
+        "advice": 0.4,
+        "favor": 0.7,
+        "complaint": 0.5,
+        "socialIntro": 0.5,
+        "activity": 1.5,
+        "islandBuilding": 0.6,
+        "confession": 0.5,
+        "reconcile": 0.5
+      },
       "compatible": [
-        { "id": "PT_AUDAZ", "bonus": 6 },
-        { "id": "PT_LIDER", "bonus": 7 },
-        { "id": "PT_VISIONARIO", "bonus": 4 }
+        {
+          "id": "PT_AUDAZ",
+          "bonus": 6
+        },
+        {
+          "id": "PT_LIDER",
+          "bonus": 7
+        },
+        {
+          "id": "PT_VISIONARIO",
+          "bonus": 4
+        }
       ],
       "clashes": [
-        { "id": "PT_CUENTISTA", "penalty": -4 },
-        { "id": "PT_GENIO", "penalty": -3 }
+        {
+          "id": "PT_CUENTISTA",
+          "penalty": -4
+        },
+        {
+          "id": "PT_ROMANTICO",
+          "penalty": -3
+        }
       ],
-      "voice": { "pitch": "medio", "pace": "rapido" },
-      "emotions": ["determinación", "impaciencia", "orgullo"],
+      "voice": {
+        "pitch": "medio",
+        "pace": "rapido"
+      },
+      "emotions": [
+        "determinación",
+        "impaciencia",
+        "orgullo"
+      ],
       "lines": {
         "happy": [
           "¿Viste mi marca? La rompí yo solo.",
@@ -86,23 +181,68 @@
       "index": 2,
       "id": "PT_ARTESANO",
       "name": "Artesano",
-      "axes": { "Energy": -1, "Expression": 1, "Attitude": -1, "Outlook": -1 },
+      "axes": {
+        "Energy": -1,
+        "Expression": 1,
+        "Attitude": -1,
+        "Outlook": -1
+      },
       "tagline": "Cada cosa rota merece una segunda vida.",
       "walkSpeed": 0.8,
       "idleDwell": 3.0,
-      "needMultipliers": { "hunger": 0.9, "mood": 1.0, "energy": 0.8, "social": 0.8, "hygiene": 1.0 },
-      "requestWeights": { "food": 0.8, "item": 1.8, "clothing": 0.9, "advice": 0.6, "favor": 1.0, "complaint": 0.4 },
+      "needMultipliers": {
+        "hunger": 0.9,
+        "mood": 1.0,
+        "energy": 0.8,
+        "social": 0.8,
+        "hygiene": 1.0
+      },
+      "requestWeights": {
+        "food": 0.8,
+        "item": 1.8,
+        "clothing": 0.9,
+        "advice": 0.6,
+        "favor": 1.0,
+        "complaint": 0.4,
+        "socialIntro": 0.5,
+        "activity": 0.5,
+        "islandBuilding": 0.6,
+        "confession": 1.0,
+        "reconcile": 1.0
+      },
       "compatible": [
-        { "id": "PT_ANFITRION", "bonus": 5 },
-        { "id": "PT_ARTISTA", "bonus": 7 },
-        { "id": "PT_ERMITANIO", "bonus": 5 }
+        {
+          "id": "PT_ANFITRION",
+          "bonus": 5
+        },
+        {
+          "id": "PT_ARTISTA",
+          "bonus": 7
+        },
+        {
+          "id": "PT_ERMITANIO",
+          "bonus": 5
+        }
       ],
       "clashes": [
-        { "id": "PT_LIDER", "penalty": -4 },
-        { "id": "PT_EXPLORADOR", "penalty": -3 }
+        {
+          "id": "PT_EXPLORADOR",
+          "penalty": -3
+        },
+        {
+          "id": "PT_LIDER",
+          "penalty": -4
+        }
       ],
-      "voice": { "pitch": "medio", "pace": "normal" },
-      "emotions": ["concentración", "satisfacción", "melancolía"],
+      "voice": {
+        "pitch": "medio",
+        "pace": "normal"
+      },
+      "emotions": [
+        "concentración",
+        "satisfacción",
+        "melancolía"
+      ],
       "lines": {
         "happy": [
           "Quedó justo como lo imaginé. Mira.",
@@ -126,23 +266,68 @@
       "index": 3,
       "id": "PT_AUDAZ",
       "name": "Audaz",
-      "axes": { "Energy": 1, "Expression": 1, "Attitude": -1, "Outlook": -1 },
+      "axes": {
+        "Energy": 1,
+        "Expression": 1,
+        "Attitude": -1,
+        "Outlook": -1
+      },
       "tagline": "El riesgo no se calcula: se prueba.",
       "walkSpeed": 1.2,
       "idleDwell": 1.0,
-      "needMultipliers": { "hunger": 1.1, "mood": 1.1, "energy": 1.3, "social": 0.7, "hygiene": 1.0 },
-      "requestWeights": { "food": 1.2, "item": 1.1, "clothing": 0.4, "advice": 0.3, "favor": 1.4, "complaint": 0.5 },
+      "needMultipliers": {
+        "hunger": 1.0,
+        "mood": 1.1,
+        "energy": 1.3,
+        "social": 0.7,
+        "hygiene": 1.0
+      },
+      "requestWeights": {
+        "food": 1.2,
+        "item": 1.1,
+        "clothing": 0.4,
+        "advice": 0.3,
+        "favor": 1.4,
+        "complaint": 0.5,
+        "socialIntro": 0.5,
+        "activity": 1.5,
+        "islandBuilding": 0.6,
+        "confession": 1.0,
+        "reconcile": 0.5
+      },
       "compatible": [
-        { "id": "PT_FIESTERO", "bonus": 5 },
-        { "id": "PT_GENIO", "bonus": 7 },
-        { "id": "PT_ATLETA", "bonus": 6 }
+        {
+          "id": "PT_ATLETA",
+          "bonus": 6
+        },
+        {
+          "id": "PT_FIESTERO",
+          "bonus": 5
+        },
+        {
+          "id": "PT_GENIO",
+          "bonus": 7
+        }
       ],
       "clashes": [
-        { "id": "PT_ROMANTICO", "penalty": -4 },
-        { "id": "PT_POETA", "penalty": -3 }
+        {
+          "id": "PT_POETA",
+          "penalty": -3
+        },
+        {
+          "id": "PT_ROMANTICO",
+          "penalty": -4
+        }
       ],
-      "voice": { "pitch": "medio", "pace": "rapido" },
-      "emotions": ["euforia", "desafío", "impaciencia"],
+      "voice": {
+        "pitch": "medio",
+        "pace": "rapido"
+      },
+      "emotions": [
+        "euforia",
+        "desafío",
+        "impaciencia"
+      ],
       "lines": {
         "happy": [
           "¡Lo hice! Y parecía imposible. Mejor así.",
@@ -166,23 +351,68 @@
       "index": 4,
       "id": "PT_AFABLE",
       "name": "Afable",
-      "axes": { "Energy": -1, "Expression": -1, "Attitude": 1, "Outlook": -1 },
+      "axes": {
+        "Energy": -1,
+        "Expression": -1,
+        "Attitude": 1,
+        "Outlook": -1
+      },
       "tagline": "Si alguien tiene que ceder, que empiece por mí.",
       "walkSpeed": 0.8,
       "idleDwell": 3.5,
-      "needMultipliers": { "hunger": 0.9, "mood": 0.8, "energy": 0.8, "social": 1.2, "hygiene": 1.0 },
-      "requestWeights": { "food": 1.0, "item": 0.6, "clothing": 0.7, "advice": 1.4, "favor": 1.6, "complaint": 0.2 },
+      "needMultipliers": {
+        "hunger": 0.9,
+        "mood": 0.8,
+        "energy": 0.8,
+        "social": 1.2,
+        "hygiene": 1.0
+      },
+      "requestWeights": {
+        "food": 1.0,
+        "item": 0.6,
+        "clothing": 0.7,
+        "advice": 1.4,
+        "favor": 1.6,
+        "complaint": 0.2,
+        "socialIntro": 1.5,
+        "activity": 0.5,
+        "islandBuilding": 0.6,
+        "confession": 0.5,
+        "reconcile": 1.5
+      },
       "compatible": [
-        { "id": "PT_ANFITRION", "bonus": 5 },
-        { "id": "PT_ROMANTICO", "bonus": 6 },
-        { "id": "PT_ERMITANIO", "bonus": 3 }
+        {
+          "id": "PT_ANFITRION",
+          "bonus": 5
+        },
+        {
+          "id": "PT_ERMITANIO",
+          "bonus": 3
+        },
+        {
+          "id": "PT_ROMANTICO",
+          "bonus": 6
+        }
       ],
       "clashes": [
-        { "id": "PT_VISIONARIO", "penalty": -3 },
-        { "id": "PT_GENIO", "penalty": -4 }
+        {
+          "id": "PT_GENIO",
+          "penalty": -4
+        },
+        {
+          "id": "PT_VISIONARIO",
+          "penalty": -3
+        }
       ],
-      "voice": { "pitch": "medio", "pace": "lento" },
-      "emotions": ["serenidad", "empatía", "preocupación"],
+      "voice": {
+        "pitch": "medio",
+        "pace": "lento"
+      },
+      "emotions": [
+        "serenidad",
+        "empatía",
+        "preocupación"
+      ],
       "lines": {
         "happy": [
           "Todos tan contentos… hoy dormiré tranquilo.",
@@ -206,23 +436,68 @@
       "index": 5,
       "id": "PT_LIDER",
       "name": "Líder",
-      "axes": { "Energy": 1, "Expression": -1, "Attitude": 1, "Outlook": -1 },
+      "axes": {
+        "Energy": 1,
+        "Expression": -1,
+        "Attitude": 1,
+        "Outlook": -1
+      },
       "tagline": "Apunta alto, habla claro, no dejes a nadie atrás.",
       "walkSpeed": 1.2,
       "idleDwell": 1.5,
-      "needMultipliers": { "hunger": 1.2, "mood": 0.9, "energy": 1.2, "social": 1.3, "hygiene": 1.2 },
-      "requestWeights": { "food": 0.9, "item": 1.0, "clothing": 1.1, "advice": 1.6, "favor": 1.3, "complaint": 0.8 },
+      "needMultipliers": {
+        "hunger": 1.2,
+        "mood": 0.9,
+        "energy": 1.2,
+        "social": 1.3,
+        "hygiene": 1.2
+      },
+      "requestWeights": {
+        "food": 0.9,
+        "item": 1.0,
+        "clothing": 1.1,
+        "advice": 1.6,
+        "favor": 1.3,
+        "complaint": 0.8,
+        "socialIntro": 1.5,
+        "activity": 1.5,
+        "islandBuilding": 0.6,
+        "confession": 0.5,
+        "reconcile": 1.0
+      },
       "compatible": [
-        { "id": "PT_FIESTERO", "bonus": 6 },
-        { "id": "PT_EXPLORADOR", "bonus": 5 },
-        { "id": "PT_ATLETA", "bonus": 7 }
+        {
+          "id": "PT_ATLETA",
+          "bonus": 7
+        },
+        {
+          "id": "PT_EXPLORADOR",
+          "bonus": 5
+        },
+        {
+          "id": "PT_FIESTERO",
+          "bonus": 6
+        }
       ],
       "clashes": [
-        { "id": "PT_ARTESANO", "penalty": -4 },
-        { "id": "PT_FIESTERO", "penalty": -5 }
+        {
+          "id": "PT_ARTESANO",
+          "penalty": -4
+        },
+        {
+          "id": "PT_ARTISTA",
+          "penalty": -5
+        }
       ],
-      "voice": { "pitch": "grave", "pace": "normal" },
-      "emotions": ["determinación", "frustración", "orgullo"],
+      "voice": {
+        "pitch": "grave",
+        "pace": "normal"
+      },
+      "emotions": [
+        "determinación",
+        "frustración",
+        "orgullo"
+      ],
       "lines": {
         "happy": [
           "El equipo funcionó. Eso es lo que importa.",
@@ -246,23 +521,68 @@
       "index": 6,
       "id": "PT_ANFITRION",
       "name": "Anfitrión",
-      "axes": { "Energy": -1, "Expression": 1, "Attitude": 1, "Outlook": -1 },
+      "axes": {
+        "Energy": -1,
+        "Expression": 1,
+        "Attitude": 1,
+        "Outlook": -1
+      },
       "tagline": "Mi casa es tuya, y tu historia también.",
       "walkSpeed": 0.9,
       "idleDwell": 2.0,
-      "needMultipliers": { "hunger": 1.0, "mood": 0.8, "energy": 0.9, "social": 1.3, "hygiene": 1.1 },
-      "requestWeights": { "food": 1.4, "item": 0.8, "clothing": 1.0, "advice": 1.0, "favor": 1.3, "complaint": 0.3 },
+      "needMultipliers": {
+        "hunger": 1.0,
+        "mood": 0.8,
+        "energy": 0.9,
+        "social": 1.3,
+        "hygiene": 1.1
+      },
+      "requestWeights": {
+        "food": 1.4,
+        "item": 0.8,
+        "clothing": 1.0,
+        "advice": 1.0,
+        "favor": 1.3,
+        "complaint": 0.3,
+        "socialIntro": 1.5,
+        "activity": 0.5,
+        "islandBuilding": 0.6,
+        "confession": 1.0,
+        "reconcile": 1.5
+      },
       "compatible": [
-        { "id": "PT_CUENTISTA", "bonus": 6 },
-        { "id": "PT_AFABLE", "bonus": 5 },
-        { "id": "PT_ARTESANO", "bonus": 5 }
+        {
+          "id": "PT_AFABLE",
+          "bonus": 5
+        },
+        {
+          "id": "PT_ARTESANO",
+          "bonus": 5
+        },
+        {
+          "id": "PT_CUENTISTA",
+          "bonus": 6
+        }
       ],
       "clashes": [
-        { "id": "PT_ATLETA", "penalty": -3 },
-        { "id": "PT_ENTUSIASTA", "penalty": -4 }
+        {
+          "id": "PT_ARTISTA",
+          "penalty": -3
+        },
+        {
+          "id": "PT_GENIO",
+          "penalty": -3
+        }
       ],
-      "voice": { "pitch": "medio", "pace": "normal" },
-      "emotions": ["calidez", "curiosidad", "decepción"],
+      "voice": {
+        "pitch": "medio",
+        "pace": "normal"
+      },
+      "emotions": [
+        "calidez",
+        "curiosidad",
+        "decepción"
+      ],
       "lines": {
         "happy": [
           "La mesa llena, las risas… así se vive.",
@@ -286,23 +606,68 @@
       "index": 7,
       "id": "PT_FIESTERO",
       "name": "Fiestero",
-      "axes": { "Energy": 1, "Expression": 1, "Attitude": 1, "Outlook": -1 },
+      "axes": {
+        "Energy": 1,
+        "Expression": 1,
+        "Attitude": 1,
+        "Outlook": -1
+      },
       "tagline": "Si no hay música, la pongo; si no hay baile, lo invento.",
       "walkSpeed": 1.3,
       "idleDwell": 1.0,
-      "needMultipliers": { "hunger": 1.3, "mood": 0.7, "energy": 1.4, "social": 1.4, "hygiene": 1.0 },
-      "requestWeights": { "food": 1.3, "item": 0.9, "clothing": 1.2, "advice": 0.5, "favor": 1.2, "complaint": 0.5 },
+      "needMultipliers": {
+        "hunger": 1.2,
+        "mood": 0.7,
+        "energy": 1.4,
+        "social": 1.4,
+        "hygiene": 1.0
+      },
+      "requestWeights": {
+        "food": 1.3,
+        "item": 0.9,
+        "clothing": 1.2,
+        "advice": 0.5,
+        "favor": 1.2,
+        "complaint": 0.5,
+        "socialIntro": 1.5,
+        "activity": 1.5,
+        "islandBuilding": 0.6,
+        "confession": 1.0,
+        "reconcile": 1.0
+      },
       "compatible": [
-        { "id": "PT_ENTUSIASTA", "bonus": 7 },
-        { "id": "PT_LIDER", "bonus": 6 },
-        { "id": "PT_AUDAZ", "bonus": 5 }
+        {
+          "id": "PT_AUDAZ",
+          "bonus": 5
+        },
+        {
+          "id": "PT_ENTUSIASTA",
+          "bonus": 7
+        },
+        {
+          "id": "PT_LIDER",
+          "bonus": 6
+        }
       ],
       "clashes": [
-        { "id": "PT_ERMITANIO", "penalty": -6 },
-        { "id": "PT_LIDER", "penalty": -5 }
+        {
+          "id": "PT_ERMITANIO",
+          "penalty": -6
+        },
+        {
+          "id": "PT_VISIONARIO",
+          "penalty": -4
+        }
       ],
-      "voice": { "pitch": "agudo", "pace": "rapido" },
-      "emotions": ["euforia", "sorpresa", "frustración"],
+      "voice": {
+        "pitch": "agudo",
+        "pace": "rapido"
+      },
+      "emotions": [
+        "euforia",
+        "sorpresa",
+        "frustración"
+      ],
       "lines": {
         "happy": [
           "¡Esto está que arde! ¡Y lo que falta!",
@@ -326,23 +691,68 @@
       "index": 8,
       "id": "PT_POETA",
       "name": "Poeta",
-      "axes": { "Energy": -1, "Expression": -1, "Attitude": -1, "Outlook": 1 },
+      "axes": {
+        "Energy": -1,
+        "Expression": -1,
+        "Attitude": -1,
+        "Outlook": 1
+      },
       "tagline": "Las palabras que no digo son las que más pesan.",
       "walkSpeed": 0.7,
       "idleDwell": 4.0,
-      "needMultipliers": { "hunger": 0.7, "mood": 1.3, "energy": 0.7, "social": 0.7, "hygiene": 0.9 },
-      "requestWeights": { "food": 0.5, "item": 1.6, "clothing": 0.4, "advice": 1.0, "favor": 0.7, "complaint": 1.3 },
+      "needMultipliers": {
+        "hunger": 0.7,
+        "mood": 1.3,
+        "energy": 0.7,
+        "social": 0.7,
+        "hygiene": 0.9
+      },
+      "requestWeights": {
+        "food": 0.5,
+        "item": 1.6,
+        "clothing": 0.4,
+        "advice": 1.0,
+        "favor": 0.7,
+        "complaint": 1.3,
+        "socialIntro": 0.5,
+        "activity": 0.5,
+        "islandBuilding": 1.4,
+        "confession": 1.0,
+        "reconcile": 1.0
+      },
       "compatible": [
-        { "id": "PT_ARTISTA", "bonus": 6 },
-        { "id": "PT_ROMANTICO", "bonus": 4 },
-        { "id": "PT_ERMITANIO", "bonus": 7 }
+        {
+          "id": "PT_ARTISTA",
+          "bonus": 6
+        },
+        {
+          "id": "PT_ERMITANIO",
+          "bonus": 7
+        },
+        {
+          "id": "PT_ROMANTICO",
+          "bonus": 4
+        }
       ],
       "clashes": [
-        { "id": "PT_AUDAZ", "penalty": -3 },
-        { "id": "PT_CUENTISTA", "penalty": -4 }
+        {
+          "id": "PT_AUDAZ",
+          "penalty": -3
+        },
+        {
+          "id": "PT_CUENTISTA",
+          "penalty": -4
+        }
       ],
-      "voice": { "pitch": "grave", "pace": "lento" },
-      "emotions": ["melancolía", "introspección", "asombro"],
+      "voice": {
+        "pitch": "grave",
+        "pace": "lento"
+      },
+      "emotions": [
+        "melancolía",
+        "introspección",
+        "asombro"
+      ],
       "lines": {
         "happy": [
           "Hoy el cielo pesa menos. Algo hice bien.",
@@ -366,23 +776,68 @@
       "index": 9,
       "id": "PT_VISIONARIO",
       "name": "Visionario",
-      "axes": { "Energy": 1, "Expression": -1, "Attitude": -1, "Outlook": 1 },
+      "axes": {
+        "Energy": 1,
+        "Expression": -1,
+        "Attitude": -1,
+        "Outlook": 1
+      },
       "tagline": "Lo que otros ven imposible yo lo estoy construyendo.",
       "walkSpeed": 1.1,
       "idleDwell": 1.8,
-      "needMultipliers": { "hunger": 1.1, "mood": 1.1, "energy": 1.2, "social": 0.7, "hygiene": 0.9 },
-      "requestWeights": { "food": 0.7, "item": 1.7, "clothing": 0.5, "advice": 1.2, "favor": 0.6, "complaint": 0.9 },
+      "needMultipliers": {
+        "hunger": 1.1,
+        "mood": 1.1,
+        "energy": 1.2,
+        "social": 0.7,
+        "hygiene": 0.9
+      },
+      "requestWeights": {
+        "food": 0.7,
+        "item": 1.7,
+        "clothing": 0.5,
+        "advice": 1.2,
+        "favor": 0.6,
+        "complaint": 0.9,
+        "socialIntro": 0.5,
+        "activity": 1.5,
+        "islandBuilding": 1.4,
+        "confession": 1.0,
+        "reconcile": 0.5
+      },
       "compatible": [
-        { "id": "PT_GENIO", "bonus": 7 },
-        { "id": "PT_EXPLORADOR", "bonus": 5 },
-        { "id": "PT_ATLETA", "bonus": 4 }
+        {
+          "id": "PT_ATLETA",
+          "bonus": 4
+        },
+        {
+          "id": "PT_EXPLORADOR",
+          "bonus": 5
+        },
+        {
+          "id": "PT_GENIO",
+          "bonus": 7
+        }
       ],
       "clashes": [
-        { "id": "PT_AFABLE", "penalty": -3 },
-        { "id": "PT_ANFITRION", "penalty": -3 }
+        {
+          "id": "PT_AFABLE",
+          "penalty": -3
+        },
+        {
+          "id": "PT_FIESTERO",
+          "penalty": -4
+        }
       ],
-      "voice": { "pitch": "medio", "pace": "rapido" },
-      "emotions": ["intensidad", "frustración", "asombro"],
+      "voice": {
+        "pitch": "medio",
+        "pace": "rapido"
+      },
+      "emotions": [
+        "intensidad",
+        "frustración",
+        "asombro"
+      ],
       "lines": {
         "happy": [
           "El prototipo funciona. Mañana lo cuento; hoy lo vivo.",
@@ -406,23 +861,68 @@
       "index": 10,
       "id": "PT_ARTISTA",
       "name": "Artista",
-      "axes": { "Energy": -1, "Expression": 1, "Attitude": -1, "Outlook": 1 },
+      "axes": {
+        "Energy": -1,
+        "Expression": 1,
+        "Attitude": -1,
+        "Outlook": 1
+      },
       "tagline": "Lo que siento no cabe en palabras; por eso pinto.",
       "walkSpeed": 0.8,
       "idleDwell": 2.5,
-      "needMultipliers": { "hunger": 0.9, "mood": 1.2, "energy": 0.8, "social": 0.8, "hygiene": 0.9 },
-      "requestWeights": { "food": 0.7, "item": 1.9, "clothing": 1.1, "advice": 0.5, "favor": 0.6, "complaint": 1.1 },
+      "needMultipliers": {
+        "hunger": 0.9,
+        "mood": 1.2,
+        "energy": 0.8,
+        "social": 0.8,
+        "hygiene": 0.9
+      },
+      "requestWeights": {
+        "food": 0.7,
+        "item": 1.9,
+        "clothing": 1.1,
+        "advice": 0.5,
+        "favor": 0.6,
+        "complaint": 1.1,
+        "socialIntro": 0.5,
+        "activity": 0.5,
+        "islandBuilding": 1.4,
+        "confession": 1.5,
+        "reconcile": 1.0
+      },
       "compatible": [
-        { "id": "PT_CUENTISTA", "bonus": 5 },
-        { "id": "PT_POETA", "bonus": 6 },
-        { "id": "PT_ARTESANO", "bonus": 7 }
+        {
+          "id": "PT_ARTESANO",
+          "bonus": 7
+        },
+        {
+          "id": "PT_CUENTISTA",
+          "bonus": 5
+        },
+        {
+          "id": "PT_POETA",
+          "bonus": 6
+        }
       ],
       "clashes": [
-        { "id": "PT_LIDER", "penalty": -5 },
-        { "id": "PT_EXPLORADOR", "penalty": -4 }
+        {
+          "id": "PT_ANFITRION",
+          "penalty": -3
+        },
+        {
+          "id": "PT_LIDER",
+          "penalty": -5
+        }
       ],
-      "voice": { "pitch": "medio", "pace": "normal" },
-      "emotions": ["inspiración", "melancolía", "euforia"],
+      "voice": {
+        "pitch": "medio",
+        "pace": "normal"
+      },
+      "emotions": [
+        "inspiración",
+        "melancolía",
+        "euforia"
+      ],
       "lines": {
         "happy": [
           "El trazo salió solo. Esos son los buenos.",
@@ -446,23 +946,68 @@
       "index": 11,
       "id": "PT_GENIO",
       "name": "Genio",
-      "axes": { "Energy": 1, "Expression": 1, "Attitude": -1, "Outlook": 1 },
+      "axes": {
+        "Energy": 1,
+        "Expression": 1,
+        "Attitude": -1,
+        "Outlook": 1
+      },
       "tagline": "Las reglas son para los que no pueden reescribirlas.",
       "walkSpeed": 1.2,
       "idleDwell": 1.0,
-      "needMultipliers": { "hunger": 1.3, "mood": 1.2, "energy": 1.3, "social": 0.7, "hygiene": 0.9 },
-      "requestWeights": { "food": 0.6, "item": 1.8, "clothing": 0.4, "advice": 0.8, "favor": 0.5, "complaint": 1.4 },
+      "needMultipliers": {
+        "hunger": 1.2,
+        "mood": 1.2,
+        "energy": 1.3,
+        "social": 0.7,
+        "hygiene": 0.9
+      },
+      "requestWeights": {
+        "food": 0.6,
+        "item": 1.8,
+        "clothing": 0.4,
+        "advice": 0.8,
+        "favor": 0.5,
+        "complaint": 1.4,
+        "socialIntro": 0.5,
+        "activity": 1.5,
+        "islandBuilding": 1.4,
+        "confession": 1.5,
+        "reconcile": 0.5
+      },
       "compatible": [
-        { "id": "PT_ENTUSIASTA", "bonus": 6 },
-        { "id": "PT_VISIONARIO", "bonus": 7 },
-        { "id": "PT_AUDAZ", "bonus": 7 }
+        {
+          "id": "PT_AUDAZ",
+          "bonus": 7
+        },
+        {
+          "id": "PT_ENTUSIASTA",
+          "bonus": 6
+        },
+        {
+          "id": "PT_VISIONARIO",
+          "bonus": 7
+        }
       ],
       "clashes": [
-        { "id": "PT_AFABLE", "penalty": -4 },
-        { "id": "PT_ATLETA", "penalty": -3 }
+        {
+          "id": "PT_AFABLE",
+          "penalty": -4
+        },
+        {
+          "id": "PT_ANFITRION",
+          "penalty": -3
+        }
       ],
-      "voice": { "pitch": "medio", "pace": "rapido" },
-      "emotions": ["intensidad", "frustración", "euforia"],
+      "voice": {
+        "pitch": "medio",
+        "pace": "rapido"
+      },
+      "emotions": [
+        "intensidad",
+        "frustración",
+        "euforia"
+      ],
       "lines": {
         "happy": [
           "¡Funciona! Y nadie lo vio venir. Como siempre.",
@@ -486,23 +1031,68 @@
       "index": 12,
       "id": "PT_ROMANTICO",
       "name": "Romántico",
-      "axes": { "Energy": -1, "Expression": -1, "Attitude": 1, "Outlook": 1 },
+      "axes": {
+        "Energy": -1,
+        "Expression": -1,
+        "Attitude": 1,
+        "Outlook": 1
+      },
       "tagline": "El mundo está bien, pero podría estar mejor con dos.",
       "walkSpeed": 0.8,
       "idleDwell": 3.0,
-      "needMultipliers": { "hunger": 0.9, "mood": 1.1, "energy": 0.8, "social": 1.2, "hygiene": 1.1 },
-      "requestWeights": { "food": 0.9, "item": 1.1, "clothing": 1.2, "advice": 1.3, "favor": 1.4, "complaint": 0.6 },
+      "needMultipliers": {
+        "hunger": 0.9,
+        "mood": 1.1,
+        "energy": 0.8,
+        "social": 1.2,
+        "hygiene": 1.1
+      },
+      "requestWeights": {
+        "food": 0.9,
+        "item": 1.1,
+        "clothing": 1.2,
+        "advice": 1.3,
+        "favor": 1.4,
+        "complaint": 0.6,
+        "socialIntro": 1.5,
+        "activity": 0.5,
+        "islandBuilding": 1.4,
+        "confession": 1.0,
+        "reconcile": 1.5
+      },
       "compatible": [
-        { "id": "PT_CUENTISTA", "bonus": 5 },
-        { "id": "PT_AFABLE", "bonus": 6 },
-        { "id": "PT_POETA", "bonus": 4 }
+        {
+          "id": "PT_AFABLE",
+          "bonus": 6
+        },
+        {
+          "id": "PT_CUENTISTA",
+          "bonus": 5
+        },
+        {
+          "id": "PT_POETA",
+          "bonus": 4
+        }
       ],
       "clashes": [
-        { "id": "PT_AUDAZ", "penalty": -4 },
-        { "id": "PT_ATLETA", "penalty": -3 }
+        {
+          "id": "PT_ATLETA",
+          "penalty": -3
+        },
+        {
+          "id": "PT_AUDAZ",
+          "penalty": -4
+        }
       ],
-      "voice": { "pitch": "medio", "pace": "lento" },
-      "emotions": ["ternura", "melancolía", "esperanza"],
+      "voice": {
+        "pitch": "medio",
+        "pace": "lento"
+      },
+      "emotions": [
+        "ternura",
+        "melancolía",
+        "esperanza"
+      ],
       "lines": {
         "happy": [
           "Me miró distinto. Con eso ya duermo.",
@@ -526,23 +1116,68 @@
       "index": 13,
       "id": "PT_EXPLORADOR",
       "name": "Explorador",
-      "axes": { "Energy": 1, "Expression": -1, "Attitude": 1, "Outlook": 1 },
+      "axes": {
+        "Energy": 1,
+        "Expression": -1,
+        "Attitude": 1,
+        "Outlook": 1
+      },
       "tagline": "El mapa se acaba donde empieza mi curiosidad.",
       "walkSpeed": 1.2,
       "idleDwell": 1.3,
-      "needMultipliers": { "hunger": 1.1, "mood": 0.9, "energy": 1.3, "social": 1.1, "hygiene": 0.9 },
-      "requestWeights": { "food": 1.1, "item": 1.5, "clothing": 0.7, "advice": 1.0, "favor": 1.0, "complaint": 0.4 },
+      "needMultipliers": {
+        "hunger": 1.1,
+        "mood": 0.9,
+        "energy": 1.3,
+        "social": 1.1,
+        "hygiene": 0.9
+      },
+      "requestWeights": {
+        "food": 1.1,
+        "item": 1.5,
+        "clothing": 0.7,
+        "advice": 1.0,
+        "favor": 1.0,
+        "complaint": 0.4,
+        "socialIntro": 1.5,
+        "activity": 1.5,
+        "islandBuilding": 1.4,
+        "confession": 1.0,
+        "reconcile": 1.0
+      },
       "compatible": [
-        { "id": "PT_ENTUSIASTA", "bonus": 6 },
-        { "id": "PT_LIDER", "bonus": 5 },
-        { "id": "PT_VISIONARIO", "bonus": 5 }
+        {
+          "id": "PT_ENTUSIASTA",
+          "bonus": 6
+        },
+        {
+          "id": "PT_LIDER",
+          "bonus": 5
+        },
+        {
+          "id": "PT_VISIONARIO",
+          "bonus": 5
+        }
       ],
       "clashes": [
-        { "id": "PT_ARTESANO", "penalty": -3 },
-        { "id": "PT_ARTISTA", "penalty": -4 }
+        {
+          "id": "PT_ARTESANO",
+          "penalty": -3
+        },
+        {
+          "id": "PT_CUENTISTA",
+          "penalty": -3
+        }
       ],
-      "voice": { "pitch": "grave", "pace": "normal" },
-      "emotions": ["curiosidad", "asombro", "inquietud"],
+      "voice": {
+        "pitch": "grave",
+        "pace": "normal"
+      },
+      "emotions": [
+        "curiosidad",
+        "asombro",
+        "inquietud"
+      ],
       "lines": {
         "happy": [
           "Encontré un sitio que no está en los mapas.",
@@ -566,23 +1201,72 @@
       "index": 14,
       "id": "PT_CUENTISTA",
       "name": "Cuentista",
-      "axes": { "Energy": -1, "Expression": 1, "Attitude": 1, "Outlook": 1 },
+      "axes": {
+        "Energy": -1,
+        "Expression": 1,
+        "Attitude": 1,
+        "Outlook": 1
+      },
       "tagline": "Cada persona es una historia; yo solo la leo en voz alta.",
       "walkSpeed": 0.9,
       "idleDwell": 2.0,
-      "needMultipliers": { "hunger": 1.0, "mood": 0.9, "energy": 0.9, "social": 1.3, "hygiene": 1.0 },
-      "requestWeights": { "food": 0.8, "item": 0.9, "clothing": 1.0, "advice": 1.5, "favor": 1.3, "complaint": 0.7 },
+      "needMultipliers": {
+        "hunger": 1.0,
+        "mood": 0.9,
+        "energy": 0.9,
+        "social": 1.3,
+        "hygiene": 1.0
+      },
+      "requestWeights": {
+        "food": 0.8,
+        "item": 0.9,
+        "clothing": 1.0,
+        "advice": 1.5,
+        "favor": 1.3,
+        "complaint": 0.7,
+        "socialIntro": 1.5,
+        "activity": 0.5,
+        "islandBuilding": 1.4,
+        "confession": 1.5,
+        "reconcile": 1.5
+      },
       "compatible": [
-        { "id": "PT_ROMANTICO", "bonus": 5 },
-        { "id": "PT_ARTISTA", "bonus": 5 },
-        { "id": "PT_ANFITRION", "bonus": 6 }
+        {
+          "id": "PT_ANFITRION",
+          "bonus": 6
+        },
+        {
+          "id": "PT_ARTISTA",
+          "bonus": 5
+        },
+        {
+          "id": "PT_ROMANTICO",
+          "bonus": 5
+        }
       ],
       "clashes": [
-        { "id": "PT_ATLETA", "penalty": -4 },
-        { "id": "PT_POETA", "penalty": -4 }
+        {
+          "id": "PT_ATLETA",
+          "penalty": -4
+        },
+        {
+          "id": "PT_EXPLORADOR",
+          "penalty": -3
+        },
+        {
+          "id": "PT_POETA",
+          "penalty": -4
+        }
       ],
-      "voice": { "pitch": "medio", "pace": "normal" },
-      "emotions": ["curiosidad", "calidez", "nostalgia"],
+      "voice": {
+        "pitch": "medio",
+        "pace": "normal"
+      },
+      "emotions": [
+        "curiosidad",
+        "calidez",
+        "nostalgia"
+      ],
       "lines": {
         "happy": [
           "Me contaron una historia… y ahora es nuestra.",
@@ -606,23 +1290,64 @@
       "index": 15,
       "id": "PT_ENTUSIASTA",
       "name": "Entusiasta",
-      "axes": { "Energy": 1, "Expression": 1, "Attitude": 1, "Outlook": 1 },
+      "axes": {
+        "Energy": 1,
+        "Expression": 1,
+        "Attitude": 1,
+        "Outlook": 1
+      },
       "tagline": "Cada día es un regalo, ¡y pienso desenvolverlo!",
       "walkSpeed": 1.2,
       "idleDwell": 1.0,
-      "needMultipliers": { "hunger": 1.3, "mood": 0.8, "energy": 1.3, "social": 1.3, "hygiene": 1.1 },
-      "requestWeights": { "food": 1.2, "item": 1.0, "clothing": 1.3, "advice": 1.0, "favor": 1.4, "complaint": 0.3 },
+      "needMultipliers": {
+        "hunger": 1.2,
+        "mood": 0.8,
+        "energy": 1.3,
+        "social": 1.3,
+        "hygiene": 1.1
+      },
+      "requestWeights": {
+        "food": 1.2,
+        "item": 1.0,
+        "clothing": 1.3,
+        "advice": 1.0,
+        "favor": 1.4,
+        "complaint": 0.3,
+        "socialIntro": 1.5,
+        "activity": 1.5,
+        "islandBuilding": 1.4,
+        "confession": 1.5,
+        "reconcile": 1.0
+      },
       "compatible": [
-        { "id": "PT_FIESTERO", "bonus": 7 },
-        { "id": "PT_GENIO", "bonus": 6 },
-        { "id": "PT_EXPLORADOR", "bonus": 6 }
+        {
+          "id": "PT_EXPLORADOR",
+          "bonus": 6
+        },
+        {
+          "id": "PT_FIESTERO",
+          "bonus": 7
+        },
+        {
+          "id": "PT_GENIO",
+          "bonus": 6
+        }
       ],
       "clashes": [
-        { "id": "PT_ERMITANIO", "penalty": -4 },
-        { "id": "PT_ANFITRION", "penalty": -4 }
+        {
+          "id": "PT_ERMITANIO",
+          "penalty": -4
+        }
       ],
-      "voice": { "pitch": "agudo", "pace": "rapido" },
-      "emotions": ["euforia", "asombro", "decepción"],
+      "voice": {
+        "pitch": "agudo",
+        "pace": "rapido"
+      },
+      "emotions": [
+        "euforia",
+        "asombro",
+        "decepción"
+      ],
       "lines": {
         "happy": [
           "¡Qué día! ¡Qué sol! ¡Qué gente! ¡Qué todo!",
@@ -642,5 +1367,6 @@
         ]
       }
     }
-  ]
+  ],
+  "notas": "Simetria de afinidades y pesos derivados cerrados por Docs/Agentes/cerrar-personalidades.py"
 }

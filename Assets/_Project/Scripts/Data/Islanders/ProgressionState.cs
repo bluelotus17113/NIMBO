@@ -20,10 +20,10 @@ namespace Nimbo.Data.Islanders
 
         /// <summary>Experiencia para pasar de <paramref name="level"/> al siguiente.</summary>
         /// <remarks>
-        /// Cuadrática suave: nivel 1→2 cuesta 100, y el 49→50 unos 3.700. Con las
-        /// fuentes de experiencia del diseño eso son semanas de juego, no meses.
+        /// <c>100·n·√n</c>, la curva de <c>Docs/Contratos/progresion.md</c>: el 1→2
+        /// cuesta 100 y el 49→50 unos 34.000, con unos 353.000 en total hasta el 50.
         /// </remarks>
-        public static float RequiredFor(int level) => 100f + 1.5f * level * level + 20f * level;
+        public static float RequiredFor(int level) => 100f * level * Mathf.Sqrt(level);
 
         public float RequiredNext => RequiredFor(Level);
 
