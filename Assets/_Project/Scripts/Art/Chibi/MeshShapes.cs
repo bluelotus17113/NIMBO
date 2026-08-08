@@ -58,6 +58,61 @@ namespace Nimbo.Art.Chibi
             return Build("esfera", vertices, normals, uv, triangles);
         }
 
+        /// <summary>
+        /// Un casquete: la parte de arriba de una esfera, sin cerrar por abajo.
+        /// </summary>
+        /// <param name="coverage">
+        /// Cuánta esfera se conserva, de 0 a 1. <c>0.5</c> es media esfera exacta;
+        /// por encima empieza a bajar por los lados de la cabeza.
+        /// </param>
+        /// <remarks>
+        /// Existe por el pelo. Con una esfera entera, el casquete envolvía también la
+        /// cara y tapaba los ojos y la boca — todos los habitantes parecían llevar
+        /// pasamontañas. Un casquete solo cubre cráneo y nuca, que es lo que hace el
+        /// pelo de verdad.
+        /// </remarks>
+        public static Mesh SphericalCap(int segments = 18, int rings = 10, float coverage = 0.55f)
+        {
+            var vertices = new List<Vector3>();
+            var normals = new List<Vector3>();
+            var uv = new List<Vector2>();
+            var triangles = new List<int>();
+
+            float maxPhi = Mathf.Clamp01(coverage) * Mathf.PI;
+
+            for (int ring = 0; ring <= rings; ring++)
+            {
+                float v = (float)ring / rings;
+                float phi = v * maxPhi;
+                float y = Mathf.Cos(phi);
+                float r = Mathf.Sin(phi);
+
+                for (int seg = 0; seg <= segments; seg++)
+                {
+                    float u = (float)seg / segments;
+                    float theta = u * Mathf.PI * 2f;
+                    var unit = new Vector3(Mathf.Cos(theta) * r, y, Mathf.Sin(theta) * r);
+
+                    vertices.Add(unit * 0.5f);
+                    normals.Add(unit);
+                    uv.Add(new Vector2(u, 1f - v));
+                }
+            }
+
+            int stride = segments + 1;
+            for (int ring = 0; ring < rings; ring++)
+            for (int seg = 0; seg < segments; seg++)
+            {
+                int a = ring * stride + seg;
+                int b = a + stride;
+
+                triangles.Add(a); triangles.Add(b); triangles.Add(a + 1);
+                triangles.Add(a + 1); triangles.Add(b); triangles.Add(b + 1);
+            }
+
+            return Build("casquete", vertices, normals, uv, triangles);
+        }
+
         /// <summary>Cilindro con tapas, con el eje en Y y centrado en el origen.</summary>
         public static Mesh Cylinder(int segments = 14, float topRadius = 0.5f,
                                     float bottomRadius = 0.5f, float height = 1f)
@@ -176,7 +231,11 @@ namespace Nimbo.Art.Chibi
 
             var combined = new Mesh { name = name };
             combined.CombineMeshes(combines, mergeSubMeshes: true, useMatrices: true);
-            combined.RecalculateNormals();
+
+            // NO se recalculan las normales: Sphere y Cylinder ya las traen suaves y
+            // correctas, y RecalculateNormals las promedia por posición — mezclando
+            // las del costado de un cilindro con las de su tapa. El resultado es que
+            // brazos y piernas se sombrean como paneles planos en vez de como tubos.
             combined.RecalculateBounds();
             return combined;
         }

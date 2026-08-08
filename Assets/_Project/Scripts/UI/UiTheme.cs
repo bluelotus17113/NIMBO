@@ -5,6 +5,7 @@ namespace Nimbo.UI
 {
     /// <summary>
     /// La paleta y los estilos de toda la interfaz, en un sitio.
+    /// Cada color sale de <c>Docs/Contratos/estilo_ui.md</c> y de ningún otro lado.
     /// </summary>
     /// <remarks>
     /// La hoja de estilos se construye en código y no en un <c>.uss</c> a propósito:
@@ -14,44 +15,86 @@ namespace Nimbo.UI
     /// </remarks>
     public static class UiTheme
     {
-        // Cielo y nubes: la isla flota, y la interfaz tiene que sonar a eso.
-        public static readonly Color Sky = new Color32(0x7E, 0xC8, 0xE3, 255);
-        public static readonly Color Cloud = new Color32(0xFA, 0xFC, 0xFF, 255);
-        public static readonly Color Panel = new Color32(0xFF, 0xFF, 0xFF, 0xF2);
-        public static readonly Color PanelDark = new Color32(0x2B, 0x3A, 0x4A, 0xF2);
-        public static readonly Color Ink = new Color32(0x2B, 0x3A, 0x4A, 255);
-        public static readonly Color InkSoft = new Color32(0x6B, 0x7D, 0x8F, 255);
-        public static readonly Color Accent = new Color32(0xFF, 0xB0, 0x4A, 255);
-        public static readonly Color AccentDeep = new Color32(0xE8, 0x8C, 0x1F, 255);
+        // ═══════════════════════════════════════════════════════════════════
+        //  Fondos y superficies — Docs/Contratos/estilo_ui.md §1
+        // ═══════════════════════════════════════════════════════════════════
+
+        public static readonly Color Cream     = (Color)new Color32(0xFF, 0xF8, 0xF0, 255);
+        public static readonly Color CreamDeep = (Color)new Color32(0xF6, 0xEC, 0xE0, 255);
+        public static readonly Color Sky       = (Color)new Color32(0xBD, 0xE3, 0xF2, 255);
+        public static readonly Color SkySoft   = (Color)new Color32(0xDC, 0xF0, 0xF7, 255);
+
+        // ═══════════════════════════════════════════════════════════════════
+        //  Tinta — §1
+        // ═══════════════════════════════════════════════════════════════════
+
+        public static readonly Color Ink      = (Color)new Color32(0x5C, 0x4A, 0x42, 255);
+        public static readonly Color InkSoft  = (Color)new Color32(0x9A, 0x8B, 0x82, 255);
+        public static readonly Color InkFaint = (Color)new Color32(0xC9, 0xBD, 0xB4, 255);
+
+        // ═══════════════════════════════════════════════════════════════════
+        //  Acentos pastel — §1
+        // ═══════════════════════════════════════════════════════════════════
+
+        public static readonly Color Peach    = (Color)new Color32(0xFF, 0xC7, 0xA8, 255);
+        public static readonly Color PeachDeep = (Color)new Color32(0xF0, 0xA4, 0x7D, 255);
+        public static readonly Color Mint     = (Color)new Color32(0xB8, 0xE6, 0xC8, 255);
+        public static readonly Color Lavender = (Color)new Color32(0xD6, 0xC7, 0xF0, 255);
+        public static readonly Color Butter   = (Color)new Color32(0xFC, 0xE8, 0xA8, 255);
+        public static readonly Color Rose     = (Color)new Color32(0xF5, 0xC0, 0xCB, 255);
+        public static readonly Color Sage     = (Color)new Color32(0xCB, 0xDD, 0xB4, 255);
+
+        // ═══════════════════════════════════════════════════════════════════
+        //  Compatibilidad con las pantallas que ya existen
+        //  (referencian estos nombres y no puedo tocarlas)
+        // ═══════════════════════════════════════════════════════════════════
+
+        public static readonly Color Accent     = Peach;
+        public static readonly Color AccentDeep = PeachDeep;
+        public static readonly Color Panel      = Cream;
+        public static readonly Color PanelDark  = CreamDeep;
+        public static readonly Color Cloud      = SkySoft;
 
         // Una barra por necesidad, con su color propio para leerlas de un vistazo.
-        public static readonly Color Hunger = new Color32(0xF2, 0x8B, 0x5C, 255);
-        public static readonly Color Energy = new Color32(0xF5, 0xD0, 0x5E, 255);
-        public static readonly Color Social = new Color32(0x7A, 0xC9, 0x8B, 255);
-        public static readonly Color Hygiene = new Color32(0x74, 0xB9, 0xE8, 255);
-        public static readonly Color Mood = new Color32(0xE0, 0x8A, 0xC4, 255);
+        public static readonly Color Hunger  = Peach;
+        public static readonly Color Energy  = Butter;
+        public static readonly Color Social  = Mint;
+        public static readonly Color Hygiene = Sky;
+        public static readonly Color Mood    = Lavender;
 
-        public static readonly Color Critical = new Color32(0xE0, 0x50, 0x50, 255);
-        public static readonly Color Low = new Color32(0xE8, 0x92, 0x3C, 255);
+        public static readonly Color Critical = Rose;
+        public static readonly Color Low      = Butter;
 
-        public const int Radius = 14;
-        public const int Gap = 10;
+        // ═══════════════════════════════════════════════════════════════════
+        //  Radios — §2
+        // ═══════════════════════════════════════════════════════════════════
 
-        /// <summary>El color de una barra según lo llena que esté. El rojo solo en rojo.</summary>
+        public const int RadiusPanel = 28;
+        public const int RadiusCard  = 18;
+        public const int RadiusPill  = 999;
+
+        public const int Radius = 14; // el que ya usaban las pantallas viejas
+        public const int Gap    = 10;
+
+        // ═══════════════════════════════════════════════════════════════════
+        //  Métodos públicos — mismas firmas que antes
+        // ═══════════════════════════════════════════════════════════════════
+
+        /// <summary>El color de una barra según lo llena que esté. El rosa solo en crítico.</summary>
         public static Color BarColor(Color baseColor, float normalized) =>
             normalized <= 0.15f ? Critical :
             normalized <= 0.35f ? Low :
             baseColor;
 
-        /// <summary>Un panel con esquinas redondeadas y sombra, el bloque básico de todo.</summary>
+        /// <summary>Un panel con esquinas redondeadas, el bloque básico de todo.</summary>
         public static VisualElement Card(string name = null)
         {
             var card = new VisualElement { name = name };
             var s = card.style;
-            s.backgroundColor = Panel;
-            s.paddingLeft = s.paddingRight = s.paddingTop = s.paddingBottom = 14;
+            s.backgroundColor = Cream;
+            s.paddingLeft = s.paddingRight = s.paddingTop = s.paddingBottom = 16;
             s.marginBottom = Gap;
-            SetRadius(card, Radius);
+            SetRadius(card, RadiusCard);
             return card;
         }
 
@@ -76,7 +119,7 @@ namespace Nimbo.UI
         {
             var label = new Label(text);
             label.style.color = soft ? InkSoft : Ink;
-            label.style.fontSize = 14;
+            label.style.fontSize = soft ? 13 : 14;
             label.style.whiteSpace = WhiteSpace.Normal;
             return label;
         }
@@ -85,15 +128,15 @@ namespace Nimbo.UI
         {
             var button = new Button(onClick) { text = text };
             var s = button.style;
-            s.backgroundColor = Accent;
-            s.color = Color.white;
+            s.backgroundColor = Peach;
+            s.color = Ink;
             s.fontSize = 15;
             s.unityFontStyleAndWeight = FontStyle.Bold;
             s.paddingTop = s.paddingBottom = 8;
             s.paddingLeft = s.paddingRight = 16;
             s.borderTopWidth = s.borderBottomWidth = s.borderLeftWidth = s.borderRightWidth = 0;
             s.marginLeft = s.marginRight = 0;
-            SetRadius(button, 10);
+            SetRadius(button, Radius);
             return button;
         }
 
@@ -117,7 +160,7 @@ namespace Nimbo.UI
             var track = new VisualElement();
             track.style.flexGrow = 1;
             track.style.height = 12;
-            track.style.backgroundColor = (Color)new Color32(0xE4, 0xEA, 0xF0, 255);
+            track.style.backgroundColor = InkFaint;
             SetRadius(track, 6);
             track.style.overflow = Overflow.Hidden;
 
@@ -132,20 +175,97 @@ namespace Nimbo.UI
             return row;
         }
 
-        /// <summary>Una etiqueta pequeña de color, para el tipo de personalidad o el estado.</summary>
+        /// <summary>
+        /// Una etiqueta pequeña de color, para el tipo de personalidad o el estado.
+        /// </summary>
         public static Label Chip(string text, Color color)
         {
             var chip = new Label(text);
             var s = chip.style;
             s.backgroundColor = color;
-            s.color = Color.white;
+            s.color = Ink;
             s.fontSize = 12;
             s.unityFontStyleAndWeight = FontStyle.Bold;
             s.paddingLeft = s.paddingRight = 10;
             s.paddingTop = s.paddingBottom = 4;
             s.marginRight = 6;
-            SetRadius(chip, 9);
+            SetRadius(chip, RadiusPill);
             return chip;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        //  Nuevos métodos — encargo §1
+        // ═══════════════════════════════════════════════════════════════════
+
+        /// <summary>Botón secundario: fondo crema profundo, texto tinta. El resto de las acciones.</summary>
+        public static Button Secondary(string text, System.Action onClick)
+        {
+            var button = new Button(onClick) { text = text };
+            var s = button.style;
+            s.backgroundColor = CreamDeep;
+            s.color = Ink;
+            s.fontSize = 15;
+            s.unityFontStyleAndWeight = FontStyle.Bold;
+            s.paddingTop = s.paddingBottom = 8;
+            s.paddingLeft = s.paddingRight = 16;
+            s.borderTopWidth = s.borderBottomWidth = s.borderLeftWidth = s.borderRightWidth = 0;
+            s.marginLeft = s.marginRight = 0;
+            SetRadius(button, Radius);
+            return button;
+        }
+
+        /// <summary>
+        /// Botón apagado: se queda en su sitio pero no se puede pulsar.
+        /// Ver lo que aún no puedes hacer es información, y esconderlo la borra.
+        /// </summary>
+        public static Button Disabled(string text)
+        {
+            var button = new Button() { text = text };
+            var s = button.style;
+            s.backgroundColor = CreamDeep;
+            s.color = InkFaint;
+            s.fontSize = 15;
+            s.unityFontStyleAndWeight = FontStyle.Bold;
+            s.paddingTop = s.paddingBottom = 8;
+            s.paddingLeft = s.paddingRight = 16;
+            s.borderTopWidth = s.borderBottomWidth = s.borderLeftWidth = s.borderRightWidth = 0;
+            s.marginLeft = s.marginRight = 0;
+            SetRadius(button, Radius);
+            button.SetEnabled(false);
+            return button;
+        }
+
+        /// <summary>
+        /// Una fila de lista. Si <paramref name="alternate"/> es true, lleva fondo
+        /// <c>CreamDeep</c> para separar visualmente sin bordes.
+        /// </summary>
+        public static VisualElement Row(bool alternate)
+        {
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+            row.style.paddingLeft = row.style.paddingRight = 12;
+            row.style.paddingTop = row.style.paddingBottom = 8;
+            if (alternate) row.style.backgroundColor = CreamDeep;
+            return row;
+        }
+
+        /// <summary>
+        /// Una cápsula de radio completo. Para contadores, etiquetas y estados.
+        /// </summary>
+        public static Label Pill(string text, Color color)
+        {
+            var pill = new Label(text);
+            var s = pill.style;
+            s.backgroundColor = color;
+            s.color = Ink;
+            s.fontSize = 12;
+            s.unityFontStyleAndWeight = FontStyle.Bold;
+            s.paddingLeft = s.paddingRight = 12;
+            s.paddingTop = s.paddingBottom = 4;
+            s.marginRight = 6;
+            SetRadius(pill, RadiusPill);
+            return pill;
         }
     }
 }

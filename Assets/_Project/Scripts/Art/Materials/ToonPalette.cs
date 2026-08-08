@@ -65,7 +65,15 @@ namespace Nimbo.Art.Materials
             return material;
         }
 
-        /// <summary>Un material con textura, para las caras. Estos no se cachean: cada cara es única.</summary>
+        /// <summary>
+        /// El material de una cara: con textura y transparente, porque los rasgos se
+        /// pintan sobre la esfera de la cabeza y todo lo demás tiene que dejarla ver.
+        /// </summary>
+        /// <remarks>
+        /// No se cachea — cada cara es única — y hay que configurar la mezcla a mano:
+        /// en URP, poner Surface Type a transparente desde código es esto, y si se
+        /// olvida alguna de las líneas el resultado es una cara opaca o una invisible.
+        /// </remarks>
         public static Material Textured(Texture2D texture)
         {
             var material = new Material(Lit) { name = $"Nimbo_{texture.name}" };
@@ -73,6 +81,17 @@ namespace Nimbo.Art.Materials
             material.SetColor(BaseColorId, Color.white);
             material.SetFloat(SmoothnessId, 0.05f);
             material.SetFloat(MetallicId, 0f);
+
+            material.SetFloat(SurfaceId, 1f);                 // 1 = transparente
+            material.SetFloat(BlendId, 0f);                   // alfa clásico
+            material.SetFloat(SrcBlendId, (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetFloat(DstBlendId, (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetFloat(ZWriteId, 0f);
+            material.SetFloat(AlphaClipId, 0f);
+            material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.DisableKeyword("_ALPHATEST_ON");
+
             return material;
         }
 
@@ -87,5 +106,11 @@ namespace Nimbo.Art.Materials
         private static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
         private static readonly int SmoothnessId = Shader.PropertyToID("_Smoothness");
         private static readonly int MetallicId = Shader.PropertyToID("_Metallic");
+        private static readonly int SurfaceId = Shader.PropertyToID("_Surface");
+        private static readonly int BlendId = Shader.PropertyToID("_Blend");
+        private static readonly int SrcBlendId = Shader.PropertyToID("_SrcBlend");
+        private static readonly int DstBlendId = Shader.PropertyToID("_DstBlend");
+        private static readonly int ZWriteId = Shader.PropertyToID("_ZWrite");
+        private static readonly int AlphaClipId = Shader.PropertyToID("_AlphaClip");
     }
 }

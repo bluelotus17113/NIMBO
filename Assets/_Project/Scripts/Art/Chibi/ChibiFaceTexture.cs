@@ -44,9 +44,13 @@ namespace Nimbo.Art.Chibi
             if (emotion == _drawn) return;
             _drawn = emotion;
 
-            var skin = (Color32)new Color(_appearance.SkinTone.r / 255f, _appearance.SkinTone.g / 255f,
-                                          _appearance.SkinTone.b / 255f, 1f);
-            for (int i = 0; i < _pixels.Length; i++) _pixels[i] = skin;
+            // Transparente, no color de piel: la cara se pinta ENCIMA de la esfera
+            // de la cabeza. Con fondo opaco se veía el rectángulo del plano recortado
+            // sobre el cráneo, porque el plano y la esfera reciben la luz distinto y
+            // el mismo tono no basta para disimular el borde.
+            var clear = new Color32(_appearance.SkinTone.r, _appearance.SkinTone.g,
+                                    _appearance.SkinTone.b, 0);
+            for (int i = 0; i < _pixels.Length; i++) _pixels[i] = clear;
 
             DrawBlush();
             DrawEyes(emotion);
@@ -77,7 +81,8 @@ namespace Nimbo.Art.Chibi
             for (int x = minX; x <= maxX; x++)
             {
                 float dx = (x - cx) / rx, dy = (y - cy) / ry;
-                if (dx * dx + dy * dy <= 1f) Set(x, y, color);
+                if (dx * dx + dy * dy <= 1f)
+                    Set(x, y, new Color32(color.r, color.g, color.b, 255));
             }
         }
 
@@ -254,7 +259,12 @@ namespace Nimbo.Art.Chibi
 
                 float strength = t * (1f - d);   // se difumina hacia el borde
                 int i = y * Size + x;
-                _pixels[i] = Color32.Lerp(_pixels[i], color, strength);
+
+                var mixed = Color32.Lerp(_pixels[i], color, strength);
+                // El alfa se suma en vez de interpolarse: sobre fondo transparente,
+                // interpolarlo dejaría el colorete casi invisible.
+                mixed.a = (byte)Mathf.Min(255f, _pixels[i].a + 255f * strength);
+                _pixels[i] = mixed;
             }
         }
     }
