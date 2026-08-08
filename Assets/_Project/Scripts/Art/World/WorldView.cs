@@ -26,6 +26,7 @@ namespace Nimbo.Art.World
 
         private readonly Dictionary<string, IslanderView> _views = new();
         private readonly Dictionary<string, Vector3> _zoneCentres = new();
+        private readonly HashSet<string> _built = new();
 
         private Transform _islanders;
         private IIslanderRegistry _registry;
@@ -43,6 +44,16 @@ namespace Nimbo.Art.World
             EventBus.Unsubscribe<IslanderCreated>(OnIslanderCreated);
             EventBus.Unsubscribe<IslanderLeft>(OnIslanderLeft);
             EventBus.Unsubscribe<EmotionShown>(OnEmotionShown);
+            EventBus.Unsubscribe<BuildingUnlocked>(OnBuildingUnlocked);
+        }
+
+        /// <summary>Se acaba de abrir una zona: se levanta ahí mismo, sin recargar.</summary>
+        private void OnBuildingUnlocked(BuildingUnlocked evt)
+        {
+            var zones = transform.Find("Zonas");
+            if (zones == null) return;
+            if (_island.TryGetSpawnPoint(evt.BuildingId, out var centre))
+                BuildZone(zones, evt.BuildingId, centre);
         }
 
         private void OnGameLoaded(GameLoaded _)
@@ -62,6 +73,7 @@ namespace Nimbo.Art.World
             EventBus.Subscribe<IslanderCreated>(OnIslanderCreated);
             EventBus.Subscribe<IslanderLeft>(OnIslanderLeft);
             EventBus.Subscribe<EmotionShown>(OnEmotionShown);
+            EventBus.Subscribe<BuildingUnlocked>(OnBuildingUnlocked);
         }
 
         private void BuildIsland()
@@ -112,9 +124,47 @@ namespace Nimbo.Art.World
 
         private void BuildZones()
         {
+            var zones = new GameObject("Zonas").transform;
+            zones.SetParent(transform, worldPositionStays: false);
+
             foreach (var zoneId in _island.ZoneIds)
-                if (_island.TryGetSpawnPoint(zoneId, out var centre))
-                    _zoneCentres[zoneId] = centre;
+            {
+                if (!_island.TryGetSpawnPoint(zoneId, out var centre)) continue;
+                _zoneCentres[zoneId] = centre;
+
+                // Solo se levanta lo que está abierto. Una zona cerrada es un claro
+                // de hierba, y ver ese hueco es lo que hace querer desbloquearla.
+                if (_island.IsUnlocked(zoneId)) BuildZone(zones, zoneId, centre);
+            }
+        }
+
+        private void BuildZone(Transform parent, string zoneId, Vector3 centre)
+        {
+            if (_built.Contains(zoneId)) return;
+            _built.Add(zoneId);
+
+            var purpose = _island.PurposeOf(zoneId);
+            var meshes = BuildingMeshBuilder.Build(purpose);
+
+            var zone = new GameObject(zoneId).transform;
+            zone.SetParent(parent, worldPositionStays: false);
+            zone.localPosition = centre;
+
+            // Cada zona mira al centro de la isla: así las fachadas dan a la plaza y
+            // no a la nada, sin tener que anotar una rotación por zona a mano.
+            var toCentre = new Vector3(-centre.x, 0f, -centre.z);
+            if (toCentre.sqrMagnitude > 0.01f)
+                zone.localRotation = Quaternion.LookRotation(toCentre.normalized);
+
+            if (meshes.Walls != null)
+                AddMesh(zone, "muros", meshes.Walls, ToonPalette.Solid(ToonPalette.WallCream));
+            if (meshes.Roof != null)
+                AddMesh(zone, "tejado", meshes.Roof,
+                        ToonPalette.Solid(BuildingMeshBuilder.RoofColor(purpose)));
+            if (meshes.Trim != null)
+                AddMesh(zone, "detalle", meshes.Trim,
+                        ToonPalette.Solid(purpose == ZonePurpose.Nature
+                            ? ToonPalette.Water : ToonPalette.TrunkBrown));
         }
 
         private static void AddMesh(Transform parent, string name, Mesh mesh, Material material)

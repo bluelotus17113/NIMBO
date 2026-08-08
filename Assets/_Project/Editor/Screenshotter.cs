@@ -4,6 +4,7 @@ using Nimbo.Art.Materials;
 using Nimbo.Art.World;
 using Nimbo.CharacterCreator;
 using Nimbo.CharacterCreator.Appearance;
+using Nimbo.Core.Services.Contracts;
 using Nimbo.Core.Util;
 using Nimbo.Data.Islanders;
 using UnityEditor;
@@ -80,6 +81,41 @@ namespace Nimbo.EditorTools
                     Mathf.Cos(angle) * distance, rng.Range(-depth * 0.85f, -4f),
                     Mathf.Sin(angle) * distance);
                 cloud.transform.localScale = Vector3.one * rng.Range(14f, 38f);
+            }
+
+            // Las zonas que estarían abiertas con seis habitantes: plaza, dos
+            // residenciales, tres tiendas y el parque.
+            var zones = new (ZonePurpose purpose, Vector3 at)[]
+            {
+                (ZonePurpose.Social,   new Vector3(0f, 0f, 0f)),
+                (ZonePurpose.Home,     new Vector3(-42f, 0f, 28f)),
+                (ZonePurpose.Food,     new Vector3(34f, 0f, 22f)),
+                (ZonePurpose.Home,     new Vector3(-52f, 0f, -14f)),
+                (ZonePurpose.Shopping, new Vector3(44f, 0f, -8f)),
+                (ZonePurpose.Shopping, new Vector3(30f, 0f, -36f)),
+                (ZonePurpose.Nature,   new Vector3(-8f, 0f, -44f)),
+            };
+
+            foreach (var (purpose, at) in zones)
+            {
+                var meshes = BuildingMeshBuilder.Build(purpose);
+                var zone = new GameObject($"zona_{purpose}").transform;
+                zone.SetParent(parent, false);
+                zone.localPosition = at;
+
+                var toCentre = new Vector3(-at.x, 0f, -at.z);
+                if (toCentre.sqrMagnitude > 0.01f)
+                    zone.localRotation = Quaternion.LookRotation(toCentre.normalized);
+
+                if (meshes.Walls != null)
+                    Add(zone, "muros", meshes.Walls, ToonPalette.Solid(ToonPalette.WallCream));
+                if (meshes.Roof != null)
+                    Add(zone, "tejado", meshes.Roof,
+                        ToonPalette.Solid(BuildingMeshBuilder.RoofColor(purpose)));
+                if (meshes.Trim != null)
+                    Add(zone, "detalle", meshes.Trim,
+                        ToonPalette.Solid(purpose == ZonePurpose.Nature
+                            ? ToonPalette.Water : ToonPalette.TrunkBrown));
             }
 
             // Unos cuantos habitantes al pie del árbol, para dar escala.
