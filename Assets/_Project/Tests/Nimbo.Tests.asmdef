@@ -12,6 +12,7 @@
         "Nimbo.CharCreator",
         "Nimbo.Island",
         "Nimbo.Events",
+        "Nimbo.Art",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Unity.Nuget.Newtonsoft-Json"

@@ -1,4 +1,5 @@
 using System.IO;
+using Nimbo.Art.Audio;
 using Nimbo.Art.World;
 using Nimbo.Game.Bootstrap;
 using Nimbo.UI;
@@ -118,6 +119,11 @@ namespace Nimbo.EditorTools
             var worldGo = new GameObject("Mundo");
             worldGo.transform.SetParent(go.transform);
             worldGo.AddComponent<WorldView>();
+
+            var audioGo = new GameObject("Sonido");
+            audioGo.transform.SetParent(go.transform);
+            audioGo.AddComponent<AudioSource>();
+            audioGo.AddComponent<AudioDirector>();
 
             var uiGo = new GameObject("Interfaz");
             uiGo.transform.SetParent(go.transform);

@@ -97,10 +97,22 @@ namespace Nimbo.Art.Materials
 
         public static void ClearCache()
         {
-            foreach (var material in Cache.Values)
-                if (material != null) Object.Destroy(material);
+            foreach (var material in Cache.Values) Discard(material);
             Cache.Clear();
         }
+
+        /// <summary>
+        /// Destruye de la forma que toque. <c>Destroy</c> no hace nada fuera de modo
+        /// juego y además suelta un error: en el editor y en los tests hay que usar
+        /// <c>DestroyImmediate</c>, y sin esto los materiales se quedaban colgados.
+        /// </summary>
+        private static void Discard(Object asset)
+        {
+            if (asset == null) return;
+            if (Application.isPlaying) Object.Destroy(asset);
+            else Object.DestroyImmediate(asset);
+        }
+
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         private static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");

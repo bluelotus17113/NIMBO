@@ -579,27 +579,27 @@ funcional. Lo de `[SI DA TIEMPO]` puede llegar en un parche post-lanzamiento.
 ### 12.1 `[NÚCLEO]` — Sin esto no hay juego
 
 - [x] Arquitectura base (EventBus, ServiceRegistry, guardado, reloj, RNG).
-- [ ] 1 isla flotante (Nimbo) con 10 zonas.
-- [ ] Creador de personajes completo (cuerpo, cara, voz, ropa, personalidad).
-- [ ] 12 isleños máximo en la isla.
-- [ ] Sistema de necesidades (hambre, energía, higiene, social, ocio, vejiga).
-- [ ] Los 16 tipos de personalidad con comportamientos diferenciados.
-- [ ] Agenda diaria autónoma por isleño.
-- [ ] Modo construcción de vivienda (rejilla, muebles, paredes, suelos).
-- [ ] 40 muebles del catálogo base + pool de 200 en tienda rotatoria.
-- [ ] Sistema de relaciones con los 10 niveles y 9 estados.
-- [ ] Economía con monedas, tiendas, trabajo y balance diario.
-- [ ] 3 minijuegos (cocina, pesca, ritmo).
-- [ ] Eventos: sucesos diarios, sueños, conciertos, noticias, festivales.
-- [ ] El Árbol Nimbo funcional.
-- [ ] Semana de juego estructurada (lunes a domingo con bonos).
-- [ ] Guardado y carga de partida (JSON versionado, copia atómica).
-- [ ] UI completa (menú principal, HUD, tiendas, creador, construcción).
+- [x] 1 isla flotante (Nimbo) con 10 zonas.
+- [x] Creador de personajes completo (cuerpo, cara, voz, ropa, personalidad).
+- [x] 12 isleños máximo en la isla.
+- [x] Sistema de necesidades: hambre, energía, higiene y social. Ocio y vejiga se cayeron — el ánimo es derivado y no una necesidad más, y la vejiga no aporta decisiones al jugador, solo ruido.
+- [x] Los 16 tipos de personalidad con comportamientos diferenciados.
+- [x] Agenda diaria autónoma por isleño.
+- [x] Modo construcción de vivienda (rejilla, muebles, paredes, suelos).
+- [x] 40 muebles del catálogo base + pool de 200 en tienda rotatoria.
+- [x] Sistema de relaciones con los 10 niveles y 9 estados.
+- [x] Economía con monedas, tiendas, trabajo y balance diario.
+- [x] 3 minijuegos (cocina, pesca, ritmo).
+- [x] Eventos: sucesos diarios, sueños, conciertos, noticias, festivales.
+- [x] El Árbol Nimbo funcional.
+- [x] Semana de juego estructurada (lunes a domingo con bonos).
+- [x] Guardado y carga de partida (JSON versionado, copia atómica).
+- [~] UI: HUD, ficha, tienda, creador y construcción están. Falta el menú principal.
 - [ ] Sonido: voces sintetizadas, música adaptativa (calma/evento), efectos.
 
 ### 12.2 `[IMPORTANTE]` — El juego cojea sin esto
 
-- [ ] 8 prendas base + pool de 150 en tienda de ropa rotatoria.
+- [x] 8 prendas base + pool de 150 en tienda de ropa rotatoria.
 - [ ] 32 peinados base + 8 desbloqueables.
 - [ ] Conjuntos de muebles temáticos (rústico, moderno, japonés).
 - [ ] Eventos de "visita misteriosa" y "expedición".
