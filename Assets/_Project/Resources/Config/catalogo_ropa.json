@@ -1,0 +1,906 @@
+{
+  "version": 1,
+  "category": "Clothing",
+  "items": [
+    {
+      "catalogId": "cloth_camiseta_basica_nimbo",
+      "displayName": "Camiseta basica nimbo",
+      "description": "La camiseta oficial de la isla. Cómoda, suave, con el logo del Nimbo.",
+      "price": 30,
+      "unlockLevel": 5,
+      "tags": [],
+      "slot": "outfit",
+      "style": "casual",
+      "palette": [
+        "#D4E4F7",
+        "#FFFFFF",
+        "#87A8D0"
+      ]
+    },
+    {
+      "catalogId": "cloth_vestido_de_algodon_celeste",
+      "displayName": "Vestido de algodon celeste",
+      "description": "Vestido ligero color cielo. Ideal para los dias de brisa.",
+      "price": 50,
+      "unlockLevel": 17,
+      "tags": [],
+      "slot": "outfit",
+      "style": "casual",
+      "palette": [
+        "#B8D4E8",
+        "#FFFFFF",
+        "#7BA3C9"
+      ]
+    },
+    {
+      "catalogId": "cloth_camisa_de_lino_blanca",
+      "displayName": "Camisa de lino blanca",
+      "description": "Camisa de lino fresco. El uniforme no oficial del buen vivir isleño.",
+      "price": 40,
+      "unlockLevel": 9,
+      "tags": [],
+      "slot": "outfit",
+      "style": "casual",
+      "palette": [
+        "#FFFFFF",
+        "#F0EDE8",
+        "#E0D8CC"
+      ]
+    },
+    {
+      "catalogId": "cloth_pantalones_cargo_marrones",
+      "displayName": "Pantalones cargo marrones",
+      "description": "Pantalones con bolsillos para guardar semillas, piedras y sueños.",
+      "price": 35,
+      "unlockLevel": 8,
+      "tags": [],
+      "slot": "outfit",
+      "style": "casual",
+      "palette": [
+        "#8B7355",
+        "#A0896E",
+        "#6B5640"
+      ]
+    },
+    {
+      "catalogId": "cloth_mono_de_trabajo_azul",
+      "displayName": "Mono de trabajo azul",
+      "description": "Mono resistente para construir y reparar. El overol del manitas.",
+      "price": 45,
+      "unlockLevel": 14,
+      "tags": [],
+      "slot": "outfit",
+      "style": "deportivo",
+      "palette": [
+        "#4A6FA5",
+        "#3D5C8A",
+        "#2C4A70"
+      ]
+    },
+    {
+      "catalogId": "cloth_chaqueta_de_punto_crema",
+      "displayName": "Chaqueta de punto crema",
+      "description": "Chaqueta tejida a mano por las abuelas de la isla. Abriga y abraza.",
+      "price": 60,
+      "unlockLevel": 24,
+      "tags": [],
+      "slot": "outfit",
+      "style": "casual",
+      "palette": [
+        "#F5E6D3",
+        "#E8D5BC",
+        "#D4C0A5"
+      ]
+    },
+    {
+      "catalogId": "cloth_pantalon_de_vestir_gris",
+      "displayName": "Pantalon de vestir gris",
+      "description": "Para las ocasiones que lo merecen. Elegante sin ser estirado.",
+      "price": 55,
+      "unlockLevel": 22,
+      "tags": [],
+      "slot": "outfit",
+      "style": "formal",
+      "palette": [
+        "#A0A0A0",
+        "#808080",
+        "#C0C0C0"
+      ]
+    },
+    {
+      "catalogId": "cloth_traje_de_dos_piezas_azul_marino",
+      "displayName": "Traje de dos piezas azul marino",
+      "description": "Americana y pantalon a juego. Para entrevistas, bodas y negocios nimios.",
+      "price": 120,
+      "unlockLevel": 43,
+      "tags": [],
+      "slot": "outfit",
+      "style": "formal",
+      "palette": [
+        "#1B2A4A",
+        "#2C4270",
+        "#152040"
+      ]
+    },
+    {
+      "catalogId": "cloth_vestido_de_gala_plateado",
+      "displayName": "Vestido de gala plateado",
+      "description": "Lentejuelas que brillan como estrellas. La envidia de cualquier fiesta.",
+      "price": 150,
+      "unlockLevel": 47,
+      "tags": [],
+      "slot": "outfit",
+      "style": "formal",
+      "palette": [
+        "#C8C8D0",
+        "#E8E8F0",
+        "#A0A0B0"
+      ]
+    },
+    {
+      "catalogId": "cloth_chandal_deportivo_naranja",
+      "displayName": "Chandal deportivo naranja",
+      "description": "Chaqueta y pantalon transpirables. Para correr entre islas.",
+      "price": 50,
+      "unlockLevel": 18,
+      "tags": [],
+      "slot": "outfit",
+      "style": "deportivo",
+      "palette": [
+        "#FF8C42",
+        "#FF6B1A",
+        "#CC5500"
+      ]
+    },
+    {
+      "catalogId": "cloth_leggings_y_top_morados",
+      "displayName": "Leggings y top morados",
+      "description": "Conjunto elastico para yoga al amanecer en la cumbre.",
+      "price": 45,
+      "unlockLevel": 14,
+      "tags": [],
+      "slot": "outfit",
+      "style": "deportivo",
+      "palette": [
+        "#7B4FBF",
+        "#9B6FDF",
+        "#5B2F9F"
+      ]
+    },
+    {
+      "catalogId": "cloth_uniforme_escolar_clasico",
+      "displayName": "Uniforme escolar clasico",
+      "description": "Falda plisada y blazer con el escudo de la isla.",
+      "price": 70,
+      "unlockLevel": 30,
+      "tags": [],
+      "slot": "outfit",
+      "style": "formal",
+      "palette": [
+        "#2C3E50",
+        "#FFFFFF",
+        "#34495E"
+      ]
+    },
+    {
+      "catalogId": "cloth_traje_de_aventurero_caqui",
+      "displayName": "Traje de aventurero caqui",
+      "description": "Chaleco multibolsillo y pantalon reforzado. Para explorar islas nuevas.",
+      "price": 65,
+      "unlockLevel": 26,
+      "tags": [],
+      "slot": "outfit",
+      "style": "deportivo",
+      "palette": [
+        "#C3A87C",
+        "#A08860",
+        "#8B7355"
+      ]
+    },
+    {
+      "catalogId": "cloth_kimono_de_seda_cerezo",
+      "displayName": "Kimono de seda cerezo",
+      "description": "Kimono ligero con estampado de flores. Pura elegancia flotante.",
+      "price": 100,
+      "unlockLevel": 39,
+      "tags": [],
+      "slot": "outfit",
+      "style": "fantasia",
+      "palette": [
+        "#FFB7C5",
+        "#FF8FA3",
+        "#E57388"
+      ]
+    },
+    {
+      "catalogId": "cloth_tunica_de_druida_del_viento",
+      "displayName": "Tunica de druida del viento",
+      "description": "Tunica verde musgo con bordados de runas. Para canalizar corrientes.",
+      "price": 90,
+      "unlockLevel": 37,
+      "tags": [],
+      "slot": "outfit",
+      "style": "fantasia",
+      "palette": [
+        "#6B8E6B",
+        "#4A7A4A",
+        "#8BAA8B"
+      ]
+    },
+    {
+      "catalogId": "cloth_traje_de_capitan_nimbo",
+      "displayName": "Traje de capitan nimbo",
+      "description": "Uniforme naval con hombreras doradas. Al mando del navio flotante.",
+      "price": 130,
+      "unlockLevel": 45,
+      "tags": [],
+      "slot": "outfit",
+      "style": "fantasia",
+      "palette": [
+        "#1A3A5C",
+        "#D4AF37",
+        "#0D2640"
+      ]
+    },
+    {
+      "catalogId": "cloth_pijama_de_franela_a_cuadros",
+      "displayName": "Pijama de franela a cuadros",
+      "description": "Pantalon y camisa de franela suave. Para soñar con ovejas de las nubes.",
+      "price": 35,
+      "unlockLevel": 8,
+      "tags": [],
+      "slot": "outfit",
+      "style": "pijama",
+      "palette": [
+        "#CC4444",
+        "#226644",
+        "#DDDDDD"
+      ]
+    },
+    {
+      "catalogId": "cloth_bata_de_estar_por_casa",
+      "displayName": "Bata de estar por casa",
+      "description": "Bata mullida color crema. El uniforme de los domingos perezosos.",
+      "price": 40,
+      "unlockLevel": 9,
+      "tags": [],
+      "slot": "outfit",
+      "style": "pijama",
+      "palette": [
+        "#F5ECD7",
+        "#E8DCC8",
+        "#D8CCB4"
+      ]
+    },
+    {
+      "catalogId": "cloth_traje_de_gala_festivo_rojo",
+      "displayName": "Traje de gala festivo rojo",
+      "description": "Para la gran fiesta anual del Nimbo. Rojo como el atardecer.",
+      "price": 140,
+      "unlockLevel": 48,
+      "tags": [],
+      "slot": "outfit",
+      "style": "festivo",
+      "palette": [
+        "#CC2233",
+        "#FF3344",
+        "#881122"
+      ]
+    },
+    {
+      "catalogId": "cloth_vestido_de_flores_primaveral",
+      "displayName": "Vestido de flores primaveral",
+      "description": "Estampado de margaritas silvestres. La primavera hecha vestido.",
+      "price": 80,
+      "unlockLevel": 33,
+      "tags": [],
+      "slot": "outfit",
+      "style": "festivo",
+      "palette": [
+        "#FFE4B5",
+        "#FFB6C1",
+        "#98D8C8"
+      ]
+    },
+    {
+      "catalogId": "cloth_traje_de_buceo_nimbo",
+      "displayName": "Traje de buceo nimbo",
+      "description": "Neopreno azul para explorar las cascadas que caen de la isla.",
+      "price": 75,
+      "unlockLevel": 31,
+      "tags": [],
+      "slot": "outfit",
+      "style": "deportivo",
+      "palette": [
+        "#1E90FF",
+        "#00BFFF",
+        "#00598B"
+      ]
+    },
+    {
+      "catalogId": "cloth_abrigo_de_lana_de_llama",
+      "displayName": "Abrigo de lana de llama",
+      "description": "Lana de llama de las islas altas. Cálido como un abrazo andino.",
+      "price": 95,
+      "unlockLevel": 37,
+      "tags": [],
+      "slot": "outfit",
+      "style": "casual",
+      "palette": [
+        "#C87533",
+        "#E8985B",
+        "#A05520"
+      ]
+    },
+    {
+      "catalogId": "cloth_poncho_de_los_vientos",
+      "displayName": "Poncho de los vientos",
+      "description": "Poncho tradicional de la isla. Cada franja cuenta una historia.",
+      "price": 55,
+      "unlockLevel": 22,
+      "tags": [],
+      "slot": "outfit",
+      "style": "casual",
+      "palette": [
+        "#B87333",
+        "#D4956B",
+        "#8B4513"
+      ]
+    },
+    {
+      "catalogId": "cloth_vestido_sirena_turquesa",
+      "displayName": "Vestido sirena turquesa",
+      "description": "Vestido largo con cola de sirena. Brilla como el mar bajo las islas.",
+      "price": 110,
+      "unlockLevel": 40,
+      "tags": [],
+      "slot": "outfit",
+      "style": "fantasia",
+      "palette": [
+        "#40E0D0",
+        "#00CED1",
+        "#008B8B"
+      ]
+    },
+    {
+      "catalogId": "cloth_traje_de_astronauta_nimbo",
+      "displayName": "Traje de astronauta nimbo",
+      "description": "Mono blanco con casco de burbuja. Para explorar islas aún más altas.",
+      "price": 160,
+      "unlockLevel": 50,
+      "tags": [],
+      "slot": "outfit",
+      "style": "fantasia",
+      "palette": [
+        "#FFFFFF",
+        "#E0E0E0",
+        "#C0C0C0"
+      ]
+    },
+    {
+      "catalogId": "cloth_camiseta_de_rayas_marineras",
+      "displayName": "Camiseta de rayas marineras",
+      "description": "Rayas azules y blancas. Clásico marinero de las islas flotantes.",
+      "price": 30,
+      "unlockLevel": 5,
+      "tags": [],
+      "slot": "outfit",
+      "style": "casual",
+      "palette": [
+        "#3366AA",
+        "#FFFFFF",
+        "#225588"
+      ]
+    },
+    {
+      "catalogId": "cloth_jersey_de_ochos_verde_bosque",
+      "displayName": "Jersey de ochos verde bosque",
+      "description": "Jersey de lana gruesa con trenzado de ochos. Abriga tres inviernos.",
+      "price": 65,
+      "unlockLevel": 29,
+      "tags": [],
+      "slot": "outfit",
+      "style": "casual",
+      "palette": [
+        "#3D6B3D",
+        "#2D5B2D",
+        "#5D8B5D"
+      ]
+    },
+    {
+      "catalogId": "cloth_sudadera_con_capucha_gris",
+      "displayName": "Sudadera con capucha gris",
+      "description": "Capucha forrada de pelito. Para los dias de niebla espesa.",
+      "price": 40,
+      "unlockLevel": 9,
+      "tags": [],
+      "slot": "outfit",
+      "style": "deportivo",
+      "palette": [
+        "#A0A0A0",
+        "#C0C0C0",
+        "#808080"
+      ]
+    },
+    {
+      "catalogId": "cloth_capa_de_explorador_nimbo",
+      "displayName": "Capa de explorador nimbo",
+      "description": "Capa impermeable verde musgo. Para adentrarse en la niebla.",
+      "price": 60,
+      "unlockLevel": 25,
+      "tags": [],
+      "slot": "outfit",
+      "style": "deportivo",
+      "palette": [
+        "#5D7B4D",
+        "#4D6B3D",
+        "#7D9B5D"
+      ]
+    },
+    {
+      "catalogId": "cloth_traje_tipico_de_la_isla",
+      "displayName": "Traje tipico de la isla",
+      "description": "Traje tradicional con bordados de nubes y vientos. Patrimonio nimbo.",
+      "price": 85,
+      "unlockLevel": 35,
+      "tags": [],
+      "slot": "outfit",
+      "style": "festivo",
+      "palette": [
+        "#E8A840",
+        "#C83030",
+        "#3068C8"
+      ]
+    },
+    {
+      "catalogId": "cloth_gorra_nimbo_clasica",
+      "displayName": "Gorra nimbo clasica",
+      "description": "Gorra azul con el logo de la isla. Hacia atras o hacia delante.",
+      "price": 20,
+      "unlockLevel": 1,
+      "tags": [],
+      "slot": "hat",
+      "style": "casual",
+      "palette": [
+        "#4488CC",
+        "#2266AA",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "catalogId": "cloth_sombrero_de_paja",
+      "displayName": "Sombrero de paja",
+      "description": "Sombrero de ala ancha tejido con paja de los campos flotantes.",
+      "price": 25,
+      "unlockLevel": 3,
+      "tags": [],
+      "slot": "hat",
+      "style": "casual",
+      "palette": [
+        "#D4B896",
+        "#C4A886",
+        "#E4C8A6"
+      ]
+    },
+    {
+      "catalogId": "cloth_boina_francesa_roja",
+      "displayName": "Boina francesa roja",
+      "description": "Boina de lana roja. Un toque de estilo parisino en las nubes.",
+      "price": 30,
+      "unlockLevel": 6,
+      "tags": [],
+      "slot": "hat",
+      "style": "formal",
+      "palette": [
+        "#CC3333",
+        "#AA2222",
+        "#EE4444"
+      ]
+    },
+    {
+      "catalogId": "cloth_gorro_de_lana_con_pompom",
+      "displayName": "Gorro de lana con pompom",
+      "description": "Gorro de lana gruesa con pompom blanco. Para los inviernos de altura.",
+      "price": 25,
+      "unlockLevel": 3,
+      "tags": [],
+      "slot": "hat",
+      "style": "casual",
+      "palette": [
+        "#885544",
+        "#FFDDAA",
+        "#664433"
+      ]
+    },
+    {
+      "catalogId": "cloth_diadema_de_flores",
+      "displayName": "Diadema de flores",
+      "description": "Corona de flores frescas. Cambia con cada estacion.",
+      "price": 20,
+      "unlockLevel": 1,
+      "tags": [],
+      "slot": "hat",
+      "style": "festivo",
+      "palette": [
+        "#FF69B4",
+        "#FFB6C1",
+        "#FF1493"
+      ]
+    },
+    {
+      "catalogId": "cloth_sombrero_de_copa_magico",
+      "displayName": "Sombrero de copa magico",
+      "description": "Chistera negra con cinta morada. Dicen que saca conejos.",
+      "price": 40,
+      "unlockLevel": 10,
+      "tags": [],
+      "slot": "hat",
+      "style": "fantasia",
+      "palette": [
+        "#1A1A2E",
+        "#6B3FA0",
+        "#0D0D1A"
+      ]
+    },
+    {
+      "catalogId": "cloth_casco_de_constructor",
+      "displayName": "Casco de constructor",
+      "description": "Casco amarillo de seguridad. La isla esta en obras.",
+      "price": 22,
+      "unlockLevel": 2,
+      "tags": [],
+      "slot": "hat",
+      "style": "deportivo",
+      "palette": [
+        "#FFD700",
+        "#FFC107",
+        "#CC9900"
+      ]
+    },
+    {
+      "catalogId": "cloth_orejas_de_gato_celestes",
+      "displayName": "Orejas de gato celestes",
+      "description": "Diadema con orejas de gato. Miau.",
+      "price": 35,
+      "unlockLevel": 9,
+      "tags": [],
+      "slot": "hat",
+      "style": "fantasia",
+      "palette": [
+        "#FFB6C1",
+        "#FFC0CB",
+        "#DB7093"
+      ]
+    },
+    {
+      "catalogId": "cloth_tiara_de_princesa_nimba",
+      "displayName": "Tiara de princesa nimba",
+      "description": "Tiara plateada con cristales que reflejan la luz de las estrellas.",
+      "price": 50,
+      "unlockLevel": 20,
+      "tags": [],
+      "slot": "hat",
+      "style": "fantasia",
+      "palette": [
+        "#C0C0C0",
+        "#E8E8E8",
+        "#A0D8F0"
+      ]
+    },
+    {
+      "catalogId": "cloth_bandana_pirata_roja",
+      "displayName": "Bandana pirata roja",
+      "description": "Bandana de lunares. Para navegar los mares de nubes.",
+      "price": 20,
+      "unlockLevel": 3,
+      "tags": [],
+      "slot": "hat",
+      "style": "fantasia",
+      "palette": [
+        "#CC1111",
+        "#FFFFFF",
+        "#AA0000"
+      ]
+    },
+    {
+      "catalogId": "cloth_gorro_de_chef_blanco",
+      "displayName": "Gorro de chef blanco",
+      "description": "Gorro alto de cocinero. Para los maestros de los fogones.",
+      "price": 25,
+      "unlockLevel": 5,
+      "tags": [],
+      "slot": "hat",
+      "style": "formal",
+      "palette": [
+        "#FFFFFF",
+        "#F0F0F0",
+        "#E0E0E0"
+      ]
+    },
+    {
+      "catalogId": "cloth_sombrero_vaquero_marron",
+      "displayName": "Sombrero vaquero marrón",
+      "description": "Sombrero de ala ancha. Para pastorear cabras en los prados altos.",
+      "price": 30,
+      "unlockLevel": 6,
+      "tags": [],
+      "slot": "hat",
+      "style": "casual",
+      "palette": [
+        "#8B6B4A",
+        "#6B4B2A",
+        "#AB8B6A"
+      ]
+    },
+    {
+      "catalogId": "cloth_corona_de_rey_nimbo",
+      "displayName": "Corona de rey nimbo",
+      "description": "Corona dorada con gemas. Para el rey o reina de la fiesta.",
+      "price": 55,
+      "unlockLevel": 23,
+      "tags": [],
+      "slot": "hat",
+      "style": "festivo",
+      "palette": [
+        "#FFD700",
+        "#FFA500",
+        "#FF8C00"
+      ]
+    },
+    {
+      "catalogId": "cloth_visera_deportiva_verde",
+      "displayName": "Visera deportiva verde",
+      "description": "Visera transpirable. Para correr sin que el sol te gane.",
+      "price": 18,
+      "unlockLevel": 2,
+      "tags": [],
+      "slot": "hat",
+      "style": "deportivo",
+      "palette": [
+        "#33AA55",
+        "#228844",
+        "#44CC66"
+      ]
+    },
+    {
+      "catalogId": "cloth_capucha_de_seta_magica",
+      "displayName": "Capucha de seta magica",
+      "description": "Capucha roja con puntos blancos. Parece sacada de un cuento.",
+      "price": 30,
+      "unlockLevel": 6,
+      "tags": [],
+      "slot": "hat",
+      "style": "fantasia",
+      "palette": [
+        "#FF3333",
+        "#FFFFFF",
+        "#CC0000"
+      ]
+    },
+    {
+      "catalogId": "cloth_bufanda_de_seda_celeste",
+      "displayName": "Bufanda de seda celeste",
+      "description": "Bufanda ligera que flota con la brisa. Hecha con seda de gusano nimbo.",
+      "price": 30,
+      "unlockLevel": 7,
+      "tags": [],
+      "slot": "accessory",
+      "style": "casual",
+      "palette": [
+        "#88CCEE",
+        "#AAE0F8",
+        "#66AADD"
+      ]
+    },
+    {
+      "catalogId": "cloth_gafas_de_sol_redondas",
+      "displayName": "Gafas de sol redondas",
+      "description": "Cristales ahumados y montura dorada. Para mirar al sol sin fruncir el ceño.",
+      "price": 25,
+      "unlockLevel": 4,
+      "tags": [],
+      "slot": "accessory",
+      "style": "casual",
+      "palette": [
+        "#D4AF37",
+        "#332211",
+        "#FFFFFF"
+      ]
+    },
+    {
+      "catalogId": "cloth_collar_de_conchas_marinas",
+      "displayName": "Collar de conchas marinas",
+      "description": "Conchas recogidas en las playas bajo las islas. Cada una es unica.",
+      "price": 20,
+      "unlockLevel": 3,
+      "tags": [],
+      "slot": "accessory",
+      "style": "casual",
+      "palette": [
+        "#F5DEB3",
+        "#E8D8A0",
+        "#D2B48C"
+      ]
+    },
+    {
+      "catalogId": "cloth_reloj_de_bolsillo_antiguo",
+      "displayName": "Reloj de bolsillo antiguo",
+      "description": "Reloj de cuerda heredado de los primeros pobladores. Aun funciona.",
+      "price": 40,
+      "unlockLevel": 10,
+      "tags": [],
+      "slot": "accessory",
+      "style": "formal",
+      "palette": [
+        "#D4AF37",
+        "#B8960A",
+        "#8B7332"
+      ]
+    },
+    {
+      "catalogId": "cloth_mochila_de_explorador",
+      "displayName": "Mochila de explorador",
+      "description": "Mochila de cuero reforzado. Para llevar tesoros de isla en isla.",
+      "price": 35,
+      "unlockLevel": 9,
+      "tags": [],
+      "slot": "accessory",
+      "style": "deportivo",
+      "palette": [
+        "#8B6B4A",
+        "#6B4B2A",
+        "#AB8B6A"
+      ]
+    },
+    {
+      "catalogId": "cloth_alas_de_hada_tornasol",
+      "displayName": "Alas de hada tornasol",
+      "description": "Alas de tul iridiscente. No vuelan, pero la ilusion cuenta.",
+      "price": 45,
+      "unlockLevel": 14,
+      "tags": [],
+      "slot": "accessory",
+      "style": "fantasia",
+      "palette": [
+        "#E8F0FF",
+        "#C8E0FF",
+        "#FFD8E8"
+      ]
+    },
+    {
+      "catalogId": "cloth_pajarita_de_seda_negra",
+      "displayName": "Pajarita de seda negra",
+      "description": "Pajarita clasica. El toque final de cualquier traje.",
+      "price": 25,
+      "unlockLevel": 6,
+      "tags": [],
+      "slot": "accessory",
+      "style": "formal",
+      "palette": [
+        "#111111",
+        "#333333",
+        "#000000"
+      ]
+    },
+    {
+      "catalogId": "cloth_pulsera_de_la_amistad",
+      "displayName": "Pulsera de la amistad",
+      "description": "Hilos trenzados con los colores de la isla. La llevan los mejores amigos.",
+      "price": 15,
+      "unlockLevel": 1,
+      "tags": [],
+      "slot": "accessory",
+      "style": "casual",
+      "palette": [
+        "#FF6699",
+        "#66AADD",
+        "#FFCC44"
+      ]
+    },
+    {
+      "catalogId": "cloth_mascara_de_carnaval_veneciano",
+      "displayName": "Mascara de carnaval veneciano",
+      "description": "Mascara dorada con plumas. Misteriosa y elegante.",
+      "price": 35,
+      "unlockLevel": 9,
+      "tags": [],
+      "slot": "accessory",
+      "style": "festivo",
+      "palette": [
+        "#D4AF37",
+        "#FFD700",
+        "#8B6914"
+      ]
+    },
+    {
+      "catalogId": "cloth_cinturon_de_herramientas",
+      "displayName": "Cinturon de herramientas",
+      "description": "Cinturon de cuero con martillo y llave inglesa. Para el manitas de la isla.",
+      "price": 30,
+      "unlockLevel": 6,
+      "tags": [],
+      "slot": "accessory",
+      "style": "deportivo",
+      "palette": [
+        "#6B4226",
+        "#8B5A2E",
+        "#4A2A14"
+      ]
+    },
+    {
+      "catalogId": "cloth_bolso_de_mano_elegante",
+      "displayName": "Bolso de mano elegante",
+      "description": "Bolso de charol con cierre dorado. Cabe lo justo y necesario.",
+      "price": 50,
+      "unlockLevel": 21,
+      "tags": [],
+      "slot": "accessory",
+      "style": "formal",
+      "palette": [
+        "#222222",
+        "#FFD700",
+        "#111111"
+      ]
+    },
+    {
+      "catalogId": "cloth_paraguas_de_burbujas",
+      "displayName": "Paraguas de burbujas",
+      "description": "Paraguas transparente con pompas de jabon dentro. Magico y practico.",
+      "price": 40,
+      "unlockLevel": 12,
+      "tags": [],
+      "slot": "accessory",
+      "style": "fantasia",
+      "palette": [
+        "#E0F0FF",
+        "#FFFFFF",
+        "#B0D0F0"
+      ]
+    },
+    {
+      "catalogId": "cloth_guantes_de_encaje_blanco",
+      "displayName": "Guantes de encaje blanco",
+      "description": "Guantes finos que llegan hasta la muñeca. Pura distincion.",
+      "price": 30,
+      "unlockLevel": 7,
+      "tags": [],
+      "slot": "accessory",
+      "style": "formal",
+      "palette": [
+        "#FFFFFF",
+        "#F8F0E8",
+        "#F0E8E0"
+      ]
+    },
+    {
+      "catalogId": "cloth_silbato_de_viento",
+      "displayName": "Silbato de viento",
+      "description": "Silbato que imita el sonido de la brisa. Los pajaros responden.",
+      "price": 15,
+      "unlockLevel": 1,
+      "tags": [],
+      "slot": "accessory",
+      "style": "casual",
+      "palette": [
+        "#C0C0C0",
+        "#A0A0A0",
+        "#808080"
+      ]
+    },
+    {
+      "catalogId": "cloth_baston_de_paseo_tallado",
+      "displayName": "Baston de paseo tallado",
+      "description": "Baston de madera de arbol nimbo con empuñadura de pajaro tallado.",
+      "price": 45,
+      "unlockLevel": 16,
+      "tags": [],
+      "slot": "accessory",
+      "style": "formal",
+      "palette": [
+        "#6B4226",
+        "#8B6B4A",
+        "#3A1A0A"
+      ]
+    }
+  ]
+}

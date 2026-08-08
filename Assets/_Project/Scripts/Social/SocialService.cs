@@ -1,0 +1,361 @@
+using System;
+using System.Collections.Generic;
+using Nimbo.Core.Events;
+using Nimbo.Core.Services.Contracts;
+using Nimbo.Core.Time;
+using Nimbo.Data.Islanders;
+using Nimbo.Data.Social;
+using Nimbo.Social.Relationships;
+using Nimbo.Social.Romance;
+using UnityEngine;
+
+namespace Nimbo.Social
+{
+    /// <summary>
+    /// El grafo social de la isla: quién conoce a quién, quién se lleva bien con quién,
+    /// quién está reñido y quién acaba casándose.
+    /// </summary>
+    /// <remarks>
+    /// Toda relación es bilateral pero **asimétrica**: A puede querer a B más de lo que
+    /// B quiere a A, y ahí están los amores no correspondidos. Por eso cada cambio
+    /// escribe en las dos agendas por separado en vez de en una tabla compartida.
+    /// </remarks>
+    public sealed class SocialService : ISocialService, IDisposable
+    {
+        private readonly IIslanderRegistry _registry;
+        private readonly IPersonalityService _personalities;
+        private readonly ISimulationService _simulation;
+        private readonly IIslanderFactory _factory;
+        private readonly GameClock _clock;
+        private readonly SocialConfig _config;
+
+        private readonly StageEvaluator _stages;
+        private readonly RomanceEvaluator _romance;
+
+        /// <summary>Cuántas veces han hecho hoy cada cosa, para los límites diarios.</summary>
+        private readonly Dictionary<(string, string, SocialInteraction), int> _todayCounts = new();
+        private int _countedDay = -1;
+
+        public SocialService(IIslanderRegistry registry, IPersonalityService personalities,
+                             ISimulationService simulation, IIslanderFactory factory,
+                             GameClock clock, SocialConfig config)
+        {
+            _registry = registry;
+            _personalities = personalities;
+            _simulation = simulation;
+            _factory = factory;
+            _clock = clock;
+            _config = config;
+
+            _stages = new StageEvaluator(config);
+            _romance = new RomanceEvaluator(config);
+
+            EventBus.Subscribe<DayPassed>(OnDayPassed);
+        }
+
+        public void Dispose() => EventBus.Unsubscribe<DayPassed>(OnDayPassed);
+
+        private void OnDayPassed(DayPassed evt)
+        {
+            _todayCounts.Clear();
+            _countedDay = evt.Day;
+            CoolDownAndEvaluate();
+        }
+
+        /// <summary>
+        /// Cada día las relaciones se enfrían un poco hacia cero y se reevalúan los
+        /// romances. Sin esto, dos habitantes que se cayeron bien una vez seguirían
+        /// siendo mejores amigos aunque no volvieran a cruzarse nunca.
+        /// </summary>
+        private void CoolDownAndEvaluate()
+        {
+            var all = _registry.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                var islander = all[i];
+                var records = islander.Relationships.Records;
+
+                for (int j = 0; j < records.Count; j++)
+                {
+                    var record = records[j];
+                    if (record.IsFamily || record.Romance == RomanceStage.Married) continue;
+
+                    record.Affinity = Mathf.MoveTowards(record.Affinity, 0f, _config.DailyDecay);
+                    record = _stages.Evaluate(islander.Id, record);
+
+                    if (_registry.TryGet(record.OtherId, out var other) &&
+                        other.Relationships.TryGet(islander.Id, out var back))
+                        record = _romance.Evaluate(islander.Id, record, back);
+
+                    records[j] = record;
+                }
+            }
+
+            DevelopCrushes();
+        }
+
+        /// <summary>Le nacen flechazos a quien le toque, una vez al día.</summary>
+        private void DevelopCrushes()
+        {
+            var all = _registry.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                var islander = all[i];
+                if (HasPartner(islander)) continue;
+
+                var records = islander.Relationships.Records;
+                for (int j = 0; j < records.Count; j++)
+                {
+                    var record = records[j];
+                    if (!_registry.TryGet(record.OtherId, out var other)) continue;
+
+                    float compatibility = CompatibilityOf(islander, other);
+                    if (!_romance.ShouldDevelopCrush(record, compatibility)) continue;
+
+                    record.Romance = RomanceStage.Crush;
+                    records[j] = record;
+                    EventBus.Publish(new RomanceStageChanged(islander.Id, record.OtherId,
+                                                             RomanceStage.Crush));
+                    break; // uno por día: si no, se enamoraría de media isla el martes
+                }
+            }
+        }
+
+        private float CompatibilityOf(IslanderData a, IslanderData b)
+        {
+            int bias = _personalities.CompatibilityBetween(
+                a.Personality.TypeIndex, b.Personality.TypeIndex);
+            return Compatibility.Full(a.Personality, b.Personality, bias);
+        }
+
+        private static bool HasPartner(IslanderData islander)
+        {
+            var records = islander.Relationships.Records;
+            for (int i = 0; i < records.Count; i++)
+                if (records[i].Romance >= RomanceStage.Dating &&
+                    records[i].Romance != RomanceStage.Separated) return true;
+            return false;
+        }
+
+        // --- ISocialService --------------------------------------------------
+
+        public RelationshipRecord GetRelationship(string fromId, string toId)
+        {
+            if (!_registry.TryGet(fromId, out var from)) return default;
+            return from.Relationships.GetOrCreate(toId);
+        }
+
+        public void ApplyAffinity(string aId, string bId, float delta)
+        {
+            ApplyOneWay(aId, bId, delta);
+            ApplyOneWay(bId, aId, delta);
+        }
+
+        /// <summary>
+        /// Mueve lo que A siente por B, modulado por lo bien que pegan sus tipos.
+        /// Un cambio entre incompatibles vale la mitad; entre compatibles, hasta 1.5×.
+        /// </summary>
+        private void ApplyOneWay(string fromId, string toId, float delta)
+        {
+            if (!_registry.TryGet(fromId, out var from) || !_registry.TryGet(toId, out var to))
+                return;
+
+            var record = from.Relationships.GetOrCreate(toId);
+
+            float compatibility = CompatibilityOf(from, to);
+            float scaled = delta * (0.5f + Mathf.Clamp01((compatibility + 1f) * 0.5f) *
+                                            (_config.CompatibilityWeight * 2f));
+
+            float before = record.Affinity;
+            record.Affinity = Mathf.Clamp(before + scaled,
+                                          RelationshipRecord.MinAffinity,
+                                          RelationshipRecord.MaxAffinity);
+            record.Interactions++;
+            record.LastInteractionMinute = _clock.ElapsedMinutes;
+
+            record = _stages.Evaluate(fromId, record);
+            from.Relationships.Set(record);
+
+            EventBus.Publish(new AffinityChanged(fromId, toId,
+                                                 record.Affinity - before, record.Affinity));
+        }
+
+        public void Interact(string aId, string bId, SocialInteraction interaction)
+        {
+            if (aId == bId) return;
+
+            var effect = _config.EffectOf(interaction);
+            if (!WithinDailyCap(aId, bId, interaction, effect.DailyCap)) return;
+
+            ApplyAffinity(aId, bId, effect.Affinity);
+
+            // La cara que ponen la decide su personalidad, no la interacción.
+            var reaction = ReactionFor(interaction);
+            ShowReaction(aId, reaction);
+            ShowReaction(bId, reaction);
+
+            if (interaction == SocialInteraction.Chat || interaction == SocialInteraction.Joke)
+            {
+                _simulation.ApplyNeed(aId, NeedKind.Social, 5f);
+                _simulation.ApplyNeed(bId, NeedKind.Social, 5f);
+            }
+        }
+
+        private void ShowReaction(string islanderId, PersonalityReaction reaction)
+        {
+            if (!_registry.TryGet(islanderId, out var islander)) return;
+            var behaviour = _personalities.For(islander.Personality);
+            _simulation.ShowEmotion(islanderId, behaviour.ReactTo(reaction), 4f);
+        }
+
+        private static PersonalityReaction ReactionFor(SocialInteraction interaction) => interaction switch
+        {
+            SocialInteraction.Argue => PersonalityReaction.QuarrelStarted,
+            SocialInteraction.Apologize => PersonalityReaction.Reconciled,
+            SocialInteraction.Compliment => PersonalityReaction.Complimented,
+            SocialInteraction.Ignore => PersonalityReaction.Ignored,
+            SocialInteraction.Gift => PersonalityReaction.GiftLoved,
+            _ => PersonalityReaction.Introduced,
+        };
+
+        /// <summary>
+        /// Los límites diarios existen para que el jugador no pueda subir una amistad a
+        /// tope repitiendo «charlar» cuarenta veces seguidas.
+        /// </summary>
+        private bool WithinDailyCap(string aId, string bId, SocialInteraction interaction, int cap)
+        {
+            if (cap <= 0) return true;
+
+            if (_countedDay != _clock.Day)
+            {
+                _todayCounts.Clear();
+                _countedDay = _clock.Day;
+            }
+
+            // Ordenado, para que charlar A→B y B→A cuenten como la misma charla.
+            var key = string.CompareOrdinal(aId, bId) <= 0
+                ? (aId, bId, interaction)
+                : (bId, aId, interaction);
+
+            _todayCounts.TryGetValue(key, out int used);
+            if (used >= cap) return false;
+
+            _todayCounts[key] = used + 1;
+            return true;
+        }
+
+        public void Introduce(string aId, string bId)
+        {
+            if (aId == bId) return;
+            if (!_registry.TryGet(aId, out var a) || !_registry.TryGet(bId, out var b)) return;
+
+            SeedAcquaintance(a, bId);
+            SeedAcquaintance(b, aId);
+
+            // Los tipos que pegan empiezan ya con algo de ventaja, y los que chocan al revés.
+            int bias = _personalities.CompatibilityBetween(
+                a.Personality.TypeIndex, b.Personality.TypeIndex);
+            if (bias != 0) ApplyAffinity(aId, bId, bias);
+        }
+
+        private void SeedAcquaintance(IslanderData islander, string otherId)
+        {
+            var record = islander.Relationships.GetOrCreate(otherId);
+            if (record.Friendship != FriendshipStage.Stranger) return;
+
+            record.Interactions = Mathf.Max(1, record.Interactions);
+            record.LastInteractionMinute = _clock.ElapsedMinutes;
+            record = _stages.Evaluate(islander.Id, record);
+            islander.Relationships.Set(record);
+        }
+
+        public IEnumerable<RelationshipRecord> FriendsOf(string islanderId)
+        {
+            if (!_registry.TryGet(islanderId, out var islander)) yield break;
+
+            var records = islander.Relationships.Records;
+            for (int i = 0; i < records.Count; i++)
+                if (records[i].Friendship >= FriendshipStage.Friend) yield return records[i];
+        }
+
+        public IEnumerable<RelationshipRecord> ConflictsOf(string islanderId)
+        {
+            if (!_registry.TryGet(islanderId, out var islander)) yield break;
+
+            var records = islander.Relationships.Records;
+            for (int i = 0; i < records.Count; i++)
+                if (records[i].Conflict != ConflictStage.None) yield return records[i];
+        }
+
+        public string PartnerOf(string islanderId)
+        {
+            if (!_registry.TryGet(islanderId, out var islander)) return null;
+
+            var records = islander.Relationships.Records;
+            for (int i = 0; i < records.Count; i++)
+                if (records[i].IsRomantic) return records[i].OtherId;
+            return null;
+        }
+
+        public bool TryMarry(string aId, string bId)
+        {
+            if (!_registry.TryGet(aId, out var a) || !_registry.TryGet(bId, out var b)) return false;
+            if (PartnerOf(aId) != bId || PartnerOf(bId) != aId) return false;
+
+            var fromA = a.Relationships.GetOrCreate(bId);
+            var fromB = b.Relationships.GetOrCreate(aId);
+            if (!_romance.CanMarry(fromA, fromB)) return false;
+
+            Wed(a, ref fromA);
+            Wed(b, ref fromB);
+
+            _simulation.ApplyHappiness(aId, 25f);
+            _simulation.ApplyHappiness(bId, 25f);
+            _simulation.ShowEmotion(aId, Emotion.Love, 8f);
+            _simulation.ShowEmotion(bId, Emotion.Love, 8f);
+            return true;
+        }
+
+        private void Wed(IslanderData islander, ref RelationshipRecord record)
+        {
+            record.Romance = RomanceStage.Married;
+            record.Family = FamilyTie.Spouse;
+            islander.Relationships.Set(record);
+            EventBus.Publish(new RomanceStageChanged(islander.Id, record.OtherId,
+                                                     RomanceStage.Married));
+        }
+
+        public string TryHaveBaby(string aId, string bId)
+        {
+            if (!_registry.TryGet(aId, out var a) || !_registry.TryGet(bId, out var b)) return null;
+
+            var fromA = a.Relationships.GetOrCreate(bId);
+            var fromB = b.Relationships.GetOrCreate(aId);
+            if (!_romance.CanHaveBaby(fromA, fromB)) return null;
+
+            var child = _factory.CreateChild(a, b);
+            if (child == null) return null;
+
+            _registry.Add(child);
+            LinkFamily(a, child, FamilyTie.Child);
+            LinkFamily(b, child, FamilyTie.Child);
+            LinkFamily(child, a, FamilyTie.Parent);
+            LinkFamily(child, b, FamilyTie.Parent);
+
+            EventBus.Publish(new IslanderCreated(child.Id));
+            EventBus.Publish(new BabyBorn(aId, bId, child.Id));
+            return child.Id;
+        }
+
+        /// <summary>La familia arranca ya queriéndose: nadie conoce a su hijo desde cero.</summary>
+        private void LinkFamily(IslanderData from, IslanderData to, FamilyTie tie)
+        {
+            var record = from.Relationships.GetOrCreate(to.Id);
+            record.Family = tie;
+            record.Affinity = Mathf.Max(record.Affinity, 60f);
+            record.Interactions = Mathf.Max(1, record.Interactions);
+            record = _stages.Evaluate(from.Id, record);
+            from.Relationships.Set(record);
+        }
+    }
+}

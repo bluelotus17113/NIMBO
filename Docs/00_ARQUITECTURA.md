@@ -71,7 +71,11 @@ partir de `Nimbo.Data`. Eso permite dejar el arte para el final sin bloquear nad
 - Un tipo público por fichero, y el fichero se llama como el tipo.
 - Nada de `static` mutable fuera de `Nimbo.Core`. Nada de singletons propios: se usa
   `ServiceRegistry`.
-- Nada de `GameObject.Find`, `SendMessage` ni `Resources.Load` en runtime.
+- Nada de `GameObject.Find` ni `SendMessage`.
+- `Resources.Load` **solo al arrancar**, y solo para los JSON de configuración de
+  `Resources/Config`. Nunca en el bucle de juego ni a mitad de partida. Se permite
+  porque los catálogos son datos de diseño que los agentes escriben a mano, y un
+  `ScriptableObject` obligaría a abrir el editor para cambiar una coma.
 - Todo lo que se guarde va en `Nimbo.Data` y lleva `[Serializable]`.
 - Los números que un diseñador querría tocar van en un `ScriptableObject` de
   configuración, nunca escritos a pelo en el código.

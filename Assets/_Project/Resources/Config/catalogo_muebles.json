@@ -1,0 +1,1136 @@
+{
+  "version": 1,
+  "category": "Furniture",
+  "items": [
+    {
+      "catalogId": "furn_cama_individual_nimbo",
+      "displayName": "Cama individual nimbo",
+      "description": "Cama de una plaza con colchon de plumas de ave celeste. Sueños garantizados.",
+      "price": 120,
+      "unlockLevel": 21,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 2,
+      "function": "bed",
+      "needBonus": {
+        "energy": 12
+      }
+    },
+    {
+      "catalogId": "furn_cama_doble_acogedora",
+      "displayName": "Cama doble acogedora",
+      "description": "Cama de matrimonio con dosel de gasa. Para dormir abrazado a una nube.",
+      "price": 250,
+      "unlockLevel": 37,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 2,
+      "function": "bed",
+      "needBonus": {
+        "energy": 14
+      }
+    },
+    {
+      "catalogId": "furn_hamaca_de_isla_flotante",
+      "displayName": "Hamaca de isla flotante",
+      "description": "Hamaca de lona que se mece con la brisa. La siesta perfecta.",
+      "price": 80,
+      "unlockLevel": 9,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "bed",
+      "needBonus": {
+        "energy": 8
+      }
+    },
+    {
+      "catalogId": "furn_litera_de_madera_rustica",
+      "displayName": "Litera de madera rustica",
+      "description": "Dos camas en una. Para hermanos, amigos o visitantes inesperados.",
+      "price": 200,
+      "unlockLevel": 34,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "bed",
+      "needBonus": {
+        "energy": 11
+      }
+    },
+    {
+      "catalogId": "furn_cama_king_size_celestial",
+      "displayName": "Cama king size celestial",
+      "description": "Tres plazas de puro lujo. Con almohadas que parecen nubes de verdad.",
+      "price": 450,
+      "unlockLevel": 48,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 3,
+      "footprintY": 2,
+      "function": "bed",
+      "needBonus": {
+        "energy": 16
+      }
+    },
+    {
+      "catalogId": "furn_cuna_de_bebe_nimbo",
+      "displayName": "Cuna de bebe nimbo",
+      "description": "Cuna de madera con movil de estrellas. Para los habitantes mas pequeños.",
+      "price": 100,
+      "unlockLevel": 18,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "bed",
+      "needBonus": {
+        "energy": 10
+      }
+    },
+    {
+      "catalogId": "furn_futon_japones",
+      "displayName": "Futon japones",
+      "description": "Colchoneta de algodon que se guarda de dia. Minimalismo isleño.",
+      "price": 90,
+      "unlockLevel": 15,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "bed",
+      "needBonus": {
+        "energy": 9
+      }
+    },
+    {
+      "catalogId": "furn_nido_colgante_de_nubes",
+      "displayName": "Nido colgante de nubes",
+      "description": "Cama redonda que cuelga del techo. Mecerse hasta dormirse.",
+      "price": 300,
+      "unlockLevel": 43,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 2,
+      "function": "bed",
+      "needBonus": {
+        "energy": 13
+      }
+    },
+    {
+      "catalogId": "furn_silla_de_madera_sencilla",
+      "displayName": "Silla de madera sencilla",
+      "description": "Silla de pino nimbo. Hace su trabajo sin quejarse.",
+      "price": 25,
+      "unlockLevel": 1,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "seat",
+      "needBonus": {
+        "energy": 2
+      }
+    },
+    {
+      "catalogId": "furn_sillon_orejero_verde",
+      "displayName": "Sillon orejero verde",
+      "description": "Butacon mullido con orejas laterales. Leer aqui es perderse del mundo.",
+      "price": 100,
+      "unlockLevel": 19,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "seat",
+      "needBonus": {
+        "energy": 4
+      }
+    },
+    {
+      "catalogId": "furn_taburete_de_barra_alto",
+      "displayName": "Taburete de barra alto",
+      "description": "Taburete de metal y madera. Ideal para islas de cocina.",
+      "price": 35,
+      "unlockLevel": 3,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "seat",
+      "needBonus": {
+        "energy": 2
+      }
+    },
+    {
+      "catalogId": "furn_sofa_de_dos_plazas_gris",
+      "displayName": "Sofa de dos plazas gris",
+      "description": "Sofa comodo para dos. Caben tres si se quieren.",
+      "price": 150,
+      "unlockLevel": 24,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "seat",
+      "needBonus": {
+        "energy": 5,
+        "social": 3
+      }
+    },
+    {
+      "catalogId": "furn_sofa_rinconero_modular",
+      "displayName": "Sofa rinconero modular",
+      "description": "Sofa en forma de L. Para familias grandes o muy buenos amigos.",
+      "price": 280,
+      "unlockLevel": 41,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 3,
+      "footprintY": 2,
+      "function": "seat",
+      "needBonus": {
+        "energy": 6,
+        "social": 5
+      }
+    },
+    {
+      "catalogId": "furn_puf_gigante_naranja",
+      "displayName": "Puf gigante naranja",
+      "description": "Puf informe y blandisimo. Te tragas y no quieres salir.",
+      "price": 60,
+      "unlockLevel": 7,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "seat",
+      "needBonus": {
+        "energy": 3
+      }
+    },
+    {
+      "catalogId": "furn_banco_de_jardin_interior",
+      "displayName": "Banco de jardin interior",
+      "description": "Banco de madera tratada. Un trocito de parque dentro de casa.",
+      "price": 40,
+      "unlockLevel": 4,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "seat",
+      "needBonus": {
+        "energy": 2,
+        "social": 2
+      }
+    },
+    {
+      "catalogId": "furn_mecedora_de_mimbre",
+      "displayName": "Mecedora de mimbre",
+      "description": "Mecedora que cruje al ritmo del viento. Ideal para atardeceres.",
+      "price": 70,
+      "unlockLevel": 8,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "seat",
+      "needBonus": {
+        "energy": 3
+      }
+    },
+    {
+      "catalogId": "furn_silla_de_escritorio_giratoria",
+      "displayName": "Silla de escritorio giratoria",
+      "description": "Silla con ruedas y respaldo ajustable. Gira, sube, baja. Productividad total.",
+      "price": 80,
+      "unlockLevel": 10,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "seat",
+      "needBonus": {
+        "energy": 2
+      }
+    },
+    {
+      "catalogId": "furn_banqueta_acolchada",
+      "displayName": "Banqueta acolchada",
+      "description": "Banqueta baja con tela estampada. Para los pies o para visitas extra.",
+      "price": 30,
+      "unlockLevel": 2,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "seat",
+      "needBonus": {
+        "energy": 1
+      }
+    },
+    {
+      "catalogId": "furn_sofa_cama_convertible",
+      "displayName": "Sofa cama convertible",
+      "description": "De dia sofa, de noche cama. Magia sin varita.",
+      "price": 180,
+      "unlockLevel": 26,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "seat",
+      "needBonus": {
+        "energy": 5
+      }
+    },
+    {
+      "catalogId": "furn_columpio_de_interior",
+      "displayName": "Columpio de interior",
+      "description": "Columpio colgado del techo. La casa es un parque si tu quieres.",
+      "price": 90,
+      "unlockLevel": 15,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "seat",
+      "needBonus": {
+        "energy": 2,
+        "social": 2
+      }
+    },
+    {
+      "catalogId": "furn_mesa_de_centro_redonda",
+      "displayName": "Mesa de centro redonda",
+      "description": "Mesa baja de madera. Para el te, las galletas y las revistas.",
+      "price": 50,
+      "unlockLevel": 6,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "table",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_mesa_de_comedor_cuadrada",
+      "displayName": "Mesa de comedor cuadrada",
+      "description": "Mesa para cuatro. Donde ocurren las cenas importantes.",
+      "price": 90,
+      "unlockLevel": 15,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 2,
+      "function": "table",
+      "needBonus": {
+        "social": 4
+      }
+    },
+    {
+      "catalogId": "furn_escritorio_de_estudio",
+      "displayName": "Escritorio de estudio",
+      "description": "Mesa con cajones y espacio para libros. Aqui se escriben las ideas.",
+      "price": 70,
+      "unlockLevel": 8,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "table",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_mesa_alta_de_cocina",
+      "displayName": "Mesa alta de cocina",
+      "description": "Mesa estrecha y alta. Para desayunos rapidos y charlas de pie.",
+      "price": 60,
+      "unlockLevel": 8,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "table",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_mesa_de_billar",
+      "displayName": "Mesa de billar",
+      "description": "Mesa de billar con tapete verde. El juego favorito del club de la isla.",
+      "price": 300,
+      "unlockLevel": 44,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 3,
+      "footprintY": 2,
+      "function": "table",
+      "needBonus": {
+        "social": 8
+      }
+    },
+    {
+      "catalogId": "furn_mesita_de_noche",
+      "displayName": "Mesita de noche",
+      "description": "Mesa pequena para el despertador y el libro que nunca terminas.",
+      "price": 35,
+      "unlockLevel": 3,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "table",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_mesa_plegable_multiusos",
+      "displayName": "Mesa plegable multiusos",
+      "description": "Se pliega y se guarda. Util para manualidades, banquetes y emergencias.",
+      "price": 45,
+      "unlockLevel": 5,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "table",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_mesa_de_dibujo_inclinable",
+      "displayName": "Mesa de dibujo inclinable",
+      "description": "Tablero inclinable para artistas. Con porta lapices incorporado.",
+      "price": 65,
+      "unlockLevel": 8,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "table",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_mesa_redonda_de_terraza",
+      "displayName": "Mesa redonda de terraza",
+      "description": "Mesa de hierro forjado con dibujos de nubes. Para cafes al aire libre.",
+      "price": 100,
+      "unlockLevel": 20,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 2,
+      "function": "table",
+      "needBonus": {
+        "social": 3
+      }
+    },
+    {
+      "catalogId": "furn_tocador_con_espejo",
+      "displayName": "Tocador con espejo",
+      "description": "Mesa con espejo ovalado y luces. Prepararse nunca fue tan glamuroso.",
+      "price": 130,
+      "unlockLevel": 23,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "table",
+      "needBonus": {
+        "hygiene": 2
+      }
+    },
+    {
+      "catalogId": "furn_armario_ropero_sencillo",
+      "displayName": "Armario ropero sencillo",
+      "description": "Armario de madera con puertas batientes. Guarda ropa, secretos y polillas.",
+      "price": 70,
+      "unlockLevel": 9,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 2,
+      "function": "storage",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_comoda_de_tres_cajones",
+      "displayName": "Comoda de tres cajones",
+      "description": "Comoda baja con tiradores dorados. Calcetines arriba, sueños abajo.",
+      "price": 60,
+      "unlockLevel": 6,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "storage",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_estanteria_alta_de_madera",
+      "displayName": "Estanteria alta de madera",
+      "description": "Cinco baldas para libros, fotos y objetos de otras islas.",
+      "price": 55,
+      "unlockLevel": 7,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 2,
+      "function": "storage",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_biblioteca_de_pared_completa",
+      "displayName": "Biblioteca de pared completa",
+      "description": "Estanteria que cubre toda la pared. Para los que leen hasta volar.",
+      "price": 180,
+      "unlockLevel": 28,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 3,
+      "footprintY": 1,
+      "function": "storage",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_armario_empotrado_blanco",
+      "displayName": "Armario empotrado blanco",
+      "description": "Armario de suelo a techo con puertas correderas. Minimalista y amplio.",
+      "price": 200,
+      "unlockLevel": 34,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 2,
+      "function": "storage",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_baul_de_los_recuerdos",
+      "displayName": "Baul de los recuerdos",
+      "description": "Baul de madera reforzada con herrajes. Guarda tesoros de aventuras pasadas.",
+      "price": 90,
+      "unlockLevel": 16,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "storage",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_cajonera_de_plastico_colorida",
+      "displayName": "Cajonera de plastico colorida",
+      "description": "Cajones apilables de colores. Organizar nunca fue tan alegre.",
+      "price": 35,
+      "unlockLevel": 3,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "storage",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_perchero_de_pie_elegante",
+      "displayName": "Perchero de pie elegante",
+      "description": "Perchero de madera torneada. Para colgar abrigos, bufandas y sombreros.",
+      "price": 50,
+      "unlockLevel": 6,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "storage",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_zapatero_inclinado",
+      "displayName": "Zapatero inclinado",
+      "description": "Mueble estrecho para zapatos. Cada par tiene su sitio por fin.",
+      "price": 45,
+      "unlockLevel": 5,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "storage",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_caja_fuerte_nimba",
+      "displayName": "Caja fuerte nimba",
+      "description": "Caja de seguridad con combinacion. Para guardar ahorros y objetos valiosos.",
+      "price": 120,
+      "unlockLevel": 21,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "storage",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_fogon_de_dos_fuegos",
+      "displayName": "Fogon de dos fuegos",
+      "description": "Cocina de gas con dos fuegos. Donde nacen las sopas de nube.",
+      "price": 150,
+      "unlockLevel": 25,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "kitchen",
+      "needBonus": {
+        "hunger": 15
+      }
+    },
+    {
+      "catalogId": "furn_nevera_compacta_azul",
+      "displayName": "Nevera compacta azul",
+      "description": "Frigorifico de una puerta. Frio como la cima del Nimbo.",
+      "price": 200,
+      "unlockLevel": 36,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "kitchen",
+      "needBonus": {
+        "hunger": 10
+      }
+    },
+    {
+      "catalogId": "furn_horno_de_piedra_tradicional",
+      "displayName": "Horno de piedra tradicional",
+      "description": "Horno de piedra volcanica. El pan sale con corteza de otro mundo.",
+      "price": 250,
+      "unlockLevel": 40,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "kitchen",
+      "needBonus": {
+        "hunger": 20
+      }
+    },
+    {
+      "catalogId": "furn_encimera_de_marmol_nimbo",
+      "displayName": "Encimera de marmol nimbo",
+      "description": "Encimera de marmol blanco veteado. Donde la magia culinaria sucede.",
+      "price": 180,
+      "unlockLevel": 30,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "kitchen",
+      "needBonus": {
+        "hunger": 5
+      }
+    },
+    {
+      "catalogId": "furn_lavavajillas_magico",
+      "displayName": "Lavavajillas magico",
+      "description": "Lavavajillas que susurra mientras limpia. Nadie sabe como funciona.",
+      "price": 300,
+      "unlockLevel": 46,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "kitchen",
+      "needBonus": {
+        "hygiene": 3
+      }
+    },
+    {
+      "catalogId": "furn_despensa_de_especias_giratoria",
+      "displayName": "Despensa de especias giratoria",
+      "description": "Estante giratorio con botes de especias exoticas. Aroma a aventura.",
+      "price": 80,
+      "unlockLevel": 11,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "kitchen",
+      "needBonus": {
+        "hunger": 5
+      }
+    },
+    {
+      "catalogId": "furn_microondas_compacto",
+      "displayName": "Microondas compacto",
+      "description": "Calienta en segundos. No preguntes como.",
+      "price": 70,
+      "unlockLevel": 8,
+      "tags": [],
+      "layer": "Counter",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "kitchen",
+      "needBonus": {
+        "hunger": 8
+      }
+    },
+    {
+      "catalogId": "furn_tostadora_con_disenos_de_nubes",
+      "displayName": "Tostadora con disenos de nubes",
+      "description": "Tostadora que graba nubecitas en el pan. El desayuno mas mono.",
+      "price": 40,
+      "unlockLevel": 5,
+      "tags": [],
+      "layer": "Counter",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "kitchen",
+      "needBonus": {
+        "hunger": 3
+      }
+    },
+    {
+      "catalogId": "furn_ducha_de_cascada",
+      "displayName": "Ducha de cascada",
+      "description": "Ducha con efecto cascada. El agua cae como en las cascadas de la isla.",
+      "price": 180,
+      "unlockLevel": 30,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "bath",
+      "needBonus": {
+        "hygiene": 60
+      }
+    },
+    {
+      "catalogId": "furn_banera_de_hidromasaje",
+      "displayName": "Banera de hidromasaje",
+      "description": "Banera con burbujas y cromoterapia. El lujo de los dioses de la nube.",
+      "price": 450,
+      "unlockLevel": 50,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 2,
+      "function": "bath",
+      "needBonus": {
+        "hygiene": 100
+      }
+    },
+    {
+      "catalogId": "furn_lavabo_sobre_encimera",
+      "displayName": "Lavabo sobre encimera",
+      "description": "Lavabo de ceramica blanca con grifo dorado. Elegancia basica.",
+      "price": 100,
+      "unlockLevel": 19,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "bath",
+      "needBonus": {
+        "hygiene": 15
+      }
+    },
+    {
+      "catalogId": "furn_inodoro_compacto",
+      "displayName": "Inodoro compacto",
+      "description": "Inodoro blanco con cisterna silenciosa. Funcional y discreto.",
+      "price": 80,
+      "unlockLevel": 13,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "bath",
+      "needBonus": {
+        "hygiene": 10
+      }
+    },
+    {
+      "catalogId": "furn_tocador_de_bano_con_espejo",
+      "displayName": "Tocador de baño con espejo",
+      "description": "Espejo con luces calidas y estante para cremas. Rutina facial completa.",
+      "price": 130,
+      "unlockLevel": 23,
+      "tags": [],
+      "layer": "WallMounted",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "bath",
+      "needBonus": {
+        "hygiene": 5
+      }
+    },
+    {
+      "catalogId": "furn_toallero_calefactor",
+      "displayName": "Toallero calefactor",
+      "description": "Toallero electrico. Salir de la ducha y envolverse en calor no tiene precio.",
+      "price": 60,
+      "unlockLevel": 7,
+      "tags": [],
+      "layer": "WallMounted",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "bath",
+      "needBonus": {
+        "hygiene": 3
+      }
+    },
+    {
+      "catalogId": "furn_televisor_de_pantalla_plana",
+      "displayName": "Televisor de pantalla plana",
+      "description": "Tele de 42 pulgadas. Para ver el canal del clima de la isla en HD.",
+      "price": 250,
+      "unlockLevel": 40,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "entertainment",
+      "needBonus": {
+        "social": 3
+      }
+    },
+    {
+      "catalogId": "furn_equipo_de_musica_vintage",
+      "displayName": "Equipo de musica vintage",
+      "description": "Tocadiscos con altavoces de madera. El vinilo suena mejor en las alturas.",
+      "price": 180,
+      "unlockLevel": 31,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "entertainment",
+      "needBonus": {
+        "social": 4
+      }
+    },
+    {
+      "catalogId": "furn_consola_de_videojuegos_nimbo",
+      "displayName": "Consola de videojuegos nimbo",
+      "description": "La ultima consola con mandos flotantes. Juegos en la nube, literalmente.",
+      "price": 300,
+      "unlockLevel": 47,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "entertainment",
+      "needBonus": {
+        "social": 5
+      }
+    },
+    {
+      "catalogId": "furn_maquina_recreativa_retro",
+      "displayName": "Maquina recreativa retro",
+      "description": "Arcade con 100 juegos clasicos. La nostalgia tambien flota.",
+      "price": 400,
+      "unlockLevel": 47,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 2,
+      "function": "entertainment",
+      "needBonus": {
+        "social": 6
+      }
+    },
+    {
+      "catalogId": "furn_tablero_de_ajedrez_de_mesa",
+      "displayName": "Tablero de ajedrez de mesa",
+      "description": "Tablero de madera noble con piezas talladas a mano. Jaque mate entre nubes.",
+      "price": 60,
+      "unlockLevel": 8,
+      "tags": [],
+      "layer": "Counter",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "entertainment",
+      "needBonus": {
+        "social": 2
+      }
+    },
+    {
+      "catalogId": "furn_caballete_de_pintura",
+      "displayName": "Caballete de pintura",
+      "description": "Caballete de madera con lienzo. Para pintar atardeceres nimbo.",
+      "price": 70,
+      "unlockLevel": 8,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "entertainment",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_planta_colgante_de_helecho",
+      "displayName": "Planta colgante de helecho",
+      "description": "Helecho frondoso que cae en cascada verde. Purifica el aire y el alma.",
+      "price": 25,
+      "unlockLevel": 3,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "decor",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_cuadro_de_paisaje_nimbo",
+      "displayName": "Cuadro de paisaje nimbo",
+      "description": "Pintura al oleo de la isla al atardecer. La firma un artista local.",
+      "price": 40,
+      "unlockLevel": 4,
+      "tags": [],
+      "layer": "WallMounted",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "decor",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_jarron_de_ceramica_artesanal",
+      "displayName": "Jarron de ceramica artesanal",
+      "description": "Jarron hecho a mano con esmalte azul y blanco. Para flores o para mirarlo.",
+      "price": 35,
+      "unlockLevel": 4,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "decor",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_reloj_de_pared_cuco",
+      "displayName": "Reloj de pared cuco",
+      "description": "Reloj de madera con un pajarito que sale cada hora. Canta la hora nimba.",
+      "price": 55,
+      "unlockLevel": 6,
+      "tags": [],
+      "layer": "WallMounted",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "decor",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_espejo_de_cuerpo_entero",
+      "displayName": "Espejo de cuerpo entero",
+      "description": "Espejo con marco dorado. Refleja la mejor version de ti.",
+      "price": 80,
+      "unlockLevel": 12,
+      "tags": [],
+      "layer": "WallMounted",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "decor",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_globo_terraqueo_flotante",
+      "displayName": "Globo terraqueo flotante",
+      "description": "Globo que levita y gira solo. Muestra islas que aun no existen.",
+      "price": 100,
+      "unlockLevel": 21,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "decor",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_atrapasuenos_artesanal",
+      "displayName": "Atrapasueños artesanal",
+      "description": "Atrapasueños tejido con plumas y cuentas. Filtra las pesadillas.",
+      "price": 30,
+      "unlockLevel": 2,
+      "tags": [],
+      "layer": "WallMounted",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "decor",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_acuario_de_bolsillo_nimbo",
+      "displayName": "Acuario de bolsillo nimbo",
+      "description": "Pecera diminuta con peces que brillan en la oscuridad. Hipnotiza.",
+      "price": 70,
+      "unlockLevel": 11,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "decor",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_movil_de_estrellas_colgante",
+      "displayName": "Movil de estrellas colgante",
+      "description": "Estrellas de papel que giran con el viento. Un cielo en miniatura.",
+      "price": 25,
+      "unlockLevel": 3,
+      "tags": [],
+      "layer": "Ceiling",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "decor",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_mapa_antiguo_de_las_islas",
+      "displayName": "Mapa antiguo de las islas",
+      "description": "Mapa en pergamino con rutas de navegacion aerea. Historia enmarcada.",
+      "price": 50,
+      "unlockLevel": 6,
+      "tags": [],
+      "layer": "WallMounted",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "decor",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_maceta_de_girasol_radiante",
+      "displayName": "Maceta de girasol radiante",
+      "description": "Girasol que gira siguiendo la luz. Un trocito de sol dentro de casa.",
+      "price": 20,
+      "unlockLevel": 1,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "decor",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_coleccion_de_caracolas_gigantes",
+      "displayName": "Coleccion de caracolas gigantes",
+      "description": "Tres caracolas de las playas bajas. Si acercas el oido, oyes el viento.",
+      "price": 45,
+      "unlockLevel": 4,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "decor",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_lampara_de_mesa_nimbo",
+      "displayName": "Lampara de mesa nimbo",
+      "description": "Lampara con pantalla de nube. Luz calida y envolvente.",
+      "price": 30,
+      "unlockLevel": 2,
+      "tags": [],
+      "layer": "Counter",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "light",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_arbol_de_luz_de_pie",
+      "displayName": "Arbol de luz de pie",
+      "description": "Lampara de pie con ramas luminosas. Un arbol que da luz en vez de fruta.",
+      "price": 80,
+      "unlockLevel": 13,
+      "tags": [],
+      "layer": "Furniture",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "light",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_guirnalda_de_luces_calidas",
+      "displayName": "Guirnalda de luces calidas",
+      "description": "Cable con bombillas diminutas. Ambiente magico instantaneo.",
+      "price": 25,
+      "unlockLevel": 3,
+      "tags": [],
+      "layer": "Ceiling",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "light",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_lampara_de_techo_arana",
+      "displayName": "Lampara de techo araña",
+      "description": "Arraña de cristal con gotas que brillan. Para los que quieren brillar.",
+      "price": 150,
+      "unlockLevel": 25,
+      "tags": [],
+      "layer": "Ceiling",
+      "footprintX": 2,
+      "footprintY": 2,
+      "function": "light",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_farolillo_de_papel_flotante",
+      "displayName": "Farolillo de papel flotante",
+      "description": "Farolillo que flota sin cuerda. Luz que desafia la gravedad.",
+      "price": 45,
+      "unlockLevel": 6,
+      "tags": [],
+      "layer": "Ceiling",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "light",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_flexo_de_escritorio_articulado",
+      "displayName": "Flexo de escritorio articulado",
+      "description": "Lampara de brazo flexible. Apuntas donde necesitas leer.",
+      "price": 35,
+      "unlockLevel": 5,
+      "tags": [],
+      "layer": "Counter",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "light",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_vela_infinita_nimba",
+      "displayName": "Vela infinita nimba",
+      "description": "Vela que nunca se consume. La cera se recicla sola. Magia nimba.",
+      "price": 20,
+      "unlockLevel": 1,
+      "tags": [],
+      "layer": "Counter",
+      "footprintX": 1,
+      "footprintY": 1,
+      "function": "light",
+      "needBonus": {}
+    },
+    {
+      "catalogId": "furn_neon_de_nube_para_pared",
+      "displayName": "Neon de nube para pared",
+      "description": "Letrero de neon con forma de nube. Rosa, azul o blanco segun el humor.",
+      "price": 90,
+      "unlockLevel": 18,
+      "tags": [],
+      "layer": "WallMounted",
+      "footprintX": 2,
+      "footprintY": 1,
+      "function": "light",
+      "needBonus": {}
+    }
+  ]
+}
