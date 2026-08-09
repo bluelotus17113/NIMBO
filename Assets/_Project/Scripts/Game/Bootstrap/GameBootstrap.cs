@@ -68,6 +68,7 @@ namespace Nimbo.Game.Bootstrap
         private JobService _jobs;
         private NimboTree _tree;
         private WardrobeService _wardrobe;
+        private AchievementService _achievements;
 
         private IslanderRegistry _registry;
         private long _lastAutosaveMinute;
@@ -123,12 +124,25 @@ namespace Nimbo.Game.Bootstrap
 
             _running = true;
             EventBus.Subscribe<DayPassed>(OnDayPassed);
+            EventBus.Subscribe<AchievementUnlocked>(OnAchievementUnlocked);
             ApplyDayRhythm(_clock.Day);
 
             Debug.Log($"Isla Nimbo lista — {_registry.Count} habitantes, {_clock}");
         }
 
         private void OnDayPassed(DayPassed evt) => ApplyDayRhythm(evt.Day);
+
+        /// <summary>
+        /// Paga el logro. Lo hace el arranque y no el servicio de logros a propósito:
+        /// un módulo que lleva la cuenta de lo que haces no tiene por qué saber
+        /// ingresar dinero, y si lo supiera habría dos sitios desde los que entran
+        /// nimbos en la partida.
+        /// </summary>
+        private void OnAchievementUnlocked(AchievementUnlocked evt)
+        {
+            if (evt.Reward <= 0) return;
+            _economy.AddCoins(evt.Reward, $"logro {evt.AchievementId}");
+        }
 
         /// <summary>
         /// Le da su carácter al día: el domingo se descansa mejor y el sábado la isla
@@ -186,6 +200,11 @@ namespace Nimbo.Game.Bootstrap
             // abierta: decorar un sitio que todavía no existe no tiene sentido.
             var decor = new DecorService(new DecorCatalog(), _save, _island);
 
+            // Los logros se enteran de todo por el EventBus y no los llama nadie.
+            // Se construyen los últimos para no perderse nada de lo que publiquen
+            // los demás al montarse.
+            _achievements = new AchievementService(new AchievementCatalog(), _save, _clock);
+
             var generator = new RequestGenerator(registry, personalities, _requestConfig);
             _requests = new RequestService(registry, _simulation, generator, _requestConfig, _clock);
             _requests.LoadFrom(_save.Requests);
@@ -208,6 +227,7 @@ namespace Nimbo.Game.Bootstrap
             ServiceRegistry.Register<IEconomyService>(_economy);
             ServiceRegistry.Register<IIslandService>(_island);
             ServiceRegistry.Register<IDecorService>(decor);
+            ServiceRegistry.Register<IAchievementService>(_achievements);
             ServiceRegistry.Register<IIslanderFactory>(factory);
             ServiceRegistry.Register<IJobService>(_jobs);
             ServiceRegistry.Register<NimboTree>(_tree);
@@ -345,7 +365,9 @@ namespace Nimbo.Game.Bootstrap
             _brain?.Dispose();
             _economy?.Dispose();
             _jobs?.Dispose();
+            _achievements?.Dispose();
             EventBus.Unsubscribe<DayPassed>(OnDayPassed);
+            EventBus.Unsubscribe<AchievementUnlocked>(OnAchievementUnlocked);
             ServiceRegistry.Clear();
         }
     }

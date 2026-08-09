@@ -1,0 +1,407 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "achievementId": "logro_primer_amanecer",
+      "displayName": "Primer amanecer",
+      "description": "Has pasado tu primer día en la isla sin que nada haya salido ardiendo.",
+      "kind": "Life",
+      "goal": 1,
+      "reward": 50,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_semana_viva",
+      "displayName": "Una semana viva",
+      "description": "Siete días y la isla sigue girando. Bienvenido a casa.",
+      "kind": "Life",
+      "goal": 7,
+      "reward": 200,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_un_mes_en_la_isla",
+      "displayName": "Un mes en la isla",
+      "description": "Treinta días. Los isleños ya te llaman por tu nombre.",
+      "kind": "Life",
+      "goal": 30,
+      "reward": 500,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_centenario",
+      "displayName": "Centenario",
+      "description": "Cien días. Si esto fuera un trabajo serías funcionario.",
+      "kind": "Life",
+      "goal": 100,
+      "reward": 1200,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_nivel_cinco",
+      "displayName": "Con oficio",
+      "description": "Uno de los tuyos ha llegado a nivel 5. Se nota el oficio.",
+      "kind": "Life",
+      "goal": 5,
+      "reward": 150,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_nivel_diez",
+      "displayName": "Maestro de maestros",
+      "description": "Nivel 10. Este isleño podría dar clase.",
+      "kind": "Life",
+      "goal": 10,
+      "reward": 400,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_caras_nuevas",
+      "displayName": "Caras nuevas",
+      "description": "Cinco isleños han llegado a la isla. Esto se anima.",
+      "kind": "Life",
+      "goal": 5,
+      "reward": 200,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_isla_poblada",
+      "displayName": "Isla poblada",
+      "description": "Diez isleños se han mudado. La isla ya tiene vida propia.",
+      "kind": "Life",
+      "goal": 10,
+      "reward": 500,
+      "hidden": false
+    },
+
+    {
+      "achievementId": "logro_primer_amigo",
+      "displayName": "Primer amigo",
+      "description": "Has hecho un amigo. La isla es más cálida cuando no estás solo.",
+      "kind": "Social",
+      "goal": 1,
+      "reward": 100,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_amistades",
+      "displayName": "Amistades que crecen",
+      "description": "Cinco lazos de amistad han crecido. Eres el pegamento de la isla.",
+      "kind": "Social",
+      "goal": 5,
+      "reward": 300,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_tejedor_social",
+      "displayName": "Tejedor social",
+      "description": "Veinte veces has visto crecer una amistad. La isla es un tapiz y tú el telar.",
+      "kind": "Social",
+      "goal": 20,
+      "reward": 600,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_primer_flechazo",
+      "displayName": "Primer flechazo",
+      "description": "Dos isleños se han enamorado. Cupido tiene tu cara.",
+      "kind": "Social",
+      "goal": 1,
+      "reward": 200,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_mariposas",
+      "displayName": "Mariposas en el estómago",
+      "description": "Tres romances han brotado en la isla. El aire huele a azahar.",
+      "kind": "Social",
+      "goal": 3,
+      "reward": 500,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_casanova",
+      "displayName": "Casanova",
+      "description": "Ocho romances. A este paso abres una capilla en la isla.",
+      "kind": "Social",
+      "goal": 8,
+      "reward": 1000,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_primer_bebe",
+      "displayName": "Primer bebé",
+      "description": "Ha nacido un bebé en la isla. Ya hay quien herede tus nimbos.",
+      "kind": "Social",
+      "goal": 1,
+      "reward": 600,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_guarderia",
+      "displayName": "Guardería improvisada",
+      "description": "Tres bebés. La isla va a necesitar colegio.",
+      "kind": "Social",
+      "goal": 3,
+      "reward": 1200,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_cumplidor",
+      "displayName": "Cumplidor",
+      "description": "Has resuelto diez peticiones. Si alguien necesita algo, te busca a ti.",
+      "kind": "Social",
+      "goal": 10,
+      "reward": 400,
+      "hidden": false
+    },
+
+    {
+      "achievementId": "logro_primer_toque",
+      "displayName": "Primer toque",
+      "description": "Has reformado una habitación por primera vez. Ya es tuya.",
+      "kind": "Home",
+      "goal": 1,
+      "reward": 100,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_decorador",
+      "displayName": "Decorador",
+      "description": "Cinco reformas. Las paredes te obedecen.",
+      "kind": "Home",
+      "goal": 5,
+      "reward": 300,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_arquitecto",
+      "displayName": "Arquitecto",
+      "description": "Veinte reformas. Esta isla lleva tu firma.",
+      "kind": "Home",
+      "goal": 20,
+      "reward": 600,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_primer_objeto",
+      "displayName": "Primer objeto",
+      "description": "Has conseguido tu primer objeto. El síndrome de Diógenes empieza así.",
+      "kind": "Home",
+      "goal": 1,
+      "reward": 50,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_coleccionista",
+      "displayName": "Coleccionista",
+      "description": "Quince objetos en el inventario. Ya tienes más cosas que espacio.",
+      "kind": "Home",
+      "goal": 15,
+      "reward": 300,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_acaparador",
+      "displayName": "Acaparador",
+      "description": "Cincuenta objetos. Los armarios de la isla te temen.",
+      "kind": "Home",
+      "goal": 50,
+      "reward": 700,
+      "hidden": false
+    },
+
+    {
+      "achievementId": "logro_primer_ingreso",
+      "displayName": "Primer ingreso",
+      "description": "Has ganado tus primeros nimbos. Huelen a independencia.",
+      "kind": "Money",
+      "goal": 1,
+      "reward": 50,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_jornalero",
+      "displayName": "Jornalero",
+      "description": "Veinte ingresos. El dinero ya no es visita, es inquilino.",
+      "kind": "Money",
+      "goal": 20,
+      "reward": 300,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_ahorros",
+      "displayName": "Ahorros",
+      "description": "Mil nimbos en la cartera. Empiezas a mirar los precios de otra manera.",
+      "kind": "Money",
+      "goal": 1000,
+      "reward": 300,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_fortuna",
+      "displayName": "Fortuna",
+      "description": "Diez mil nimbos. Los árboles dan nimbos en esta isla, ¿verdad?",
+      "kind": "Money",
+      "goal": 10000,
+      "reward": 1200,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_gastos",
+      "displayName": "Gastos",
+      "description": "Has vaciado la cartera diez veces. El dinero va y viene, la isla se queda.",
+      "kind": "Money",
+      "goal": 10,
+      "reward": 200,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_derrochador",
+      "displayName": "Derrochador",
+      "description": "Cincuenta compras. La economía de la isla depende de ti.",
+      "kind": "Money",
+      "goal": 50,
+      "reward": 600,
+      "hidden": false
+    },
+
+    {
+      "achievementId": "logro_primer_regalo",
+      "displayName": "Primer regalo",
+      "description": "Has hecho tu primer regalo. La cara del isleño lo dice todo.",
+      "kind": "Play",
+      "goal": 1,
+      "reward": 100,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_generoso",
+      "displayName": "Generoso",
+      "description": "Diez regalos. En la isla te conocen por lo que das, no por lo que tienes.",
+      "kind": "Play",
+      "goal": 10,
+      "reward": 400,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_rey_regalos",
+      "displayName": "El rey de los regalos",
+      "description": "Treinta regalos. Papá Noel te pide consejo.",
+      "kind": "Play",
+      "goal": 30,
+      "reward": 800,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_emocion",
+      "displayName": "Empatía",
+      "description": "Has presenciado cinco emociones. La isla siente y tú lo ves.",
+      "kind": "Play",
+      "goal": 5,
+      "reward": 100,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_teatro_isla",
+      "displayName": "Teatro de isla",
+      "description": "Veinticinco emociones. Esto es más dramático que una telenovela.",
+      "kind": "Play",
+      "goal": 25,
+      "reward": 300,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_felicidad_contagiosa",
+      "displayName": "Felicidad contagiosa",
+      "description": "Un isleño ha alcanzado la felicidad plena. Y tú lo has hecho posible.",
+      "kind": "Play",
+      "goal": 90,
+      "reward": 400,
+      "hidden": false
+    },
+
+    {
+      "achievementId": "logro_primer_edificio",
+      "displayName": "Primer edificio",
+      "description": "Has abierto un edificio nuevo. La isla crece.",
+      "kind": "Island",
+      "goal": 1,
+      "reward": 100,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_expansion",
+      "displayName": "Expansión",
+      "description": "Cinco edificios abiertos. Esto ya parece un pueblo.",
+      "kind": "Island",
+      "goal": 5,
+      "reward": 300,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_isla_completa",
+      "displayName": "Isla completa",
+      "description": "Doce edificios. La isla tiene de todo menos tráfico.",
+      "kind": "Island",
+      "goal": 12,
+      "reward": 700,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_primer_adorno",
+      "displayName": "Primer adorno",
+      "description": "Has puesto un adorno en la isla. El espacio público también es tuyo.",
+      "kind": "Island",
+      "goal": 1,
+      "reward": 100,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_isla_hermosa",
+      "displayName": "Isla hermosa",
+      "description": "Diez adornos. La isla está quedando preciosa.",
+      "kind": "Island",
+      "goal": 10,
+      "reward": 400,
+      "hidden": false
+    },
+    {
+      "achievementId": "logro_isla_de_ensueno",
+      "displayName": "Isla de ensueño",
+      "description": "Treinta adornos. Los turistas harían cola si hubiera turistas.",
+      "kind": "Island",
+      "goal": 30,
+      "reward": 800,
+      "hidden": false
+    },
+
+    {
+      "achievementId": "logro_mal_regalo",
+      "displayName": "El peor regalo del mundo",
+      "description": "Le has regalado algo que detestaba tres veces. O no le conoces o le conoces demasiado bien.",
+      "kind": "Odd",
+      "goal": 3,
+      "reward": 400,
+      "hidden": true
+    },
+    {
+      "achievementId": "logro_abandono",
+      "displayName": "Abandono",
+      "description": "Alguien ha hecho las maletas y se ha ido. No todas las islas son para todos.",
+      "kind": "Odd",
+      "goal": 1,
+      "reward": 600,
+      "hidden": true
+    },
+    {
+      "achievementId": "logro_dormilon",
+      "displayName": "Dormilón",
+      "description": "Has visto a un isleño dormirse donde no debía. Cinco cabezadas y ni una cama.",
+      "kind": "Odd",
+      "goal": 5,
+      "reward": 500,
+      "hidden": true
+    }
+  ]
+}

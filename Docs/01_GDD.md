@@ -605,12 +605,12 @@ funcional. Lo de `[SI DA TIEMPO]` puede llegar en un parche post-lanzamiento.
 - [ ] 32 peinados base + 8 desbloqueables.
 - [ ] Conjuntos de muebles temáticos (rústico, moderno, japonés).
 - [ ] Eventos de "visita misteriosa" y "expedición".
-- [ ] Sistema de logros (30–50 logros, con recompensa en monedas).
+- [x] Sistema de logros: 44 logros con recompensa en nimbos, pantalla y aviso.
 - [ ] Ampliación de apartamento (2 niveles de mejora).
 - [ ] El Espejo de introspección (reajuste de personalidad).
 - [ ] Sueños con escenas visuales (no solo texto).
 - [ ] Sala de la fama (isleños nivel 50).
-- [ ] Personalización de la isla (bancos, farolas, estatuas en zonas comunes).
+- [x] Personalización de la isla: 32 adornos con plano cenital por zona.
 
 ### 12.3 `[SI DA TIEMPO]` — El juego no lo necesita para ser bueno
 
