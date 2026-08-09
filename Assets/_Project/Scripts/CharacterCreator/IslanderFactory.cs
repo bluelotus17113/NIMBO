@@ -87,7 +87,7 @@ namespace Nimbo.CharacterCreator
             Identity = new IslanderIdentity
             {
                 Id = Guid.NewGuid().ToString("N"),
-                Nickname = NameBank.RandomNickname(ref rng),
+                Nickname = NameBank.UnusedNickname(ref rng, IsNicknameTaken),
                 Birthday = NameBank.RandomBirthday(ref rng),
                 IsPlayerAvatar = false,
             },
@@ -103,6 +103,21 @@ namespace Nimbo.CharacterCreator
             var all = _registry.All;
             for (int i = 0; i < all.Count; i++)
                 if (all[i].Identity.DisplayName == name) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// El apodo también tiene que ser único, y no es un capricho: la lista de
+        /// habitantes enseña <c>ShortName</c>, que es el apodo cuando lo hay. Dos
+        /// apodos iguales son dos botones iguales para dos personas distintas.
+        /// </summary>
+        private bool IsNicknameTaken(string nickname)
+        {
+            if (string.IsNullOrEmpty(nickname)) return false;
+
+            var all = _registry.All;
+            for (int i = 0; i < all.Count; i++)
+                if (all[i].Identity.Nickname == nickname) return true;
             return false;
         }
 

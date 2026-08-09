@@ -217,15 +217,25 @@ namespace Nimbo.Tests
         [Test]
         public void Place_TooMany_ReturnsTooMany()
         {
-            // llenar la zona con 20 arbustos (footprint pequeño para que no solapen)
-            for (int i = 0; i < 20; i++)
+            // llenar la zona con 20 arbustos en una cuadrícula 5×4 dentro del
+            // radio de 12 m (footprint 0.5, separación 2 m entre ellos)
+            int placed = 0;
+            for (int col = 0; col < 5 && placed < 20; col++)
             {
-                string id = _service.Place("test_arbusto", "plaza",
-                    Pos(i * 1.5f, 0), 0f);
-                Assert.IsNotEmpty(id, $"el adorno {i} debería haberse colocado");
+                for (int row = 0; row < 4 && placed < 20; row++)
+                {
+                    string id = _service.Place("test_arbusto", "plaza",
+                        Pos(col * 2f, row * 2f), 0f);
+                    Assert.IsNotEmpty(id,
+                        $"el adorno {placed} debería haberse colocado en ({col*2},{row*2})");
+                    placed++;
+                }
             }
 
-            var rejection = _service.CanPlace("test_arbusto", "plaza", Pos(30, 0));
+            // la posición (0, 0) ya está ocupada, pero el orden de las reglas pone
+            // TooMany antes que Overlaps: con 20 piezas, cualquier intento dentro del
+            // radio de 12 m y en zona desbloqueada debe devolver TooMany
+            var rejection = _service.CanPlace("test_arbusto", "plaza", Pos(11, 0));
             Assert.AreEqual(DecorRejection.TooMany, rejection);
         }
 
@@ -260,11 +270,38 @@ namespace Nimbo.Tests
         [Test]
         public void CharmOf_CappedAtOne()
         {
-            // test_fuente tiene charm 0.20, 10 fuentes = 2.0 sin tope
-            // pero con tope debe dar 1.0
-            for (int i = 0; i < 10; i++)
+            // 12 adornos distintos con footprint ≤ 1.0 y charm ≥ 0.08 repartidos
+            // en una rejilla de 3 m para que no solapen. Suma sin tope ≈ 1.40,
+            // con tope debe dar exactamente 1.0.
+            //   test_banco       charm 0.10  footprint 1.0
+            //   test_farola      charm 0.08  footprint 0.8
+            //   test_cartel      charm 0.06  footprint 0.6
+            //   test_arbusto     charm 0.05  footprint 0.5
+            //   test_valla       charm 0.04  footprint 0.4
+            //   test_a..test_h   charm 0.10  footprint 0.5  (8 items)
+            //   total = 0.10+0.08+0.06+0.05+0.04+0.80 = 1.13 → recortado a 1.0
+            (string id, float x, float z)[] placements =
             {
-                _service.Place("test_fuente", "plaza", Pos(i * 4f, 0), 0f);
+                ("test_banco",   0f,  0f),
+                ("test_farola",  3f,  0f),
+                ("test_cartel",  6f,  0f),
+                ("test_arbusto", 9f,  0f),
+                ("test_valla",   0f,  3f),
+                ("test_a",       3f,  3f),
+                ("test_b",       6f,  3f),
+                ("test_c",       9f,  3f),
+                ("test_d",       0f,  6f),
+                ("test_e",       3f,  6f),
+                ("test_f",       6f,  6f),
+                ("test_g",       9f,  6f),
+            };
+
+            for (int i = 0; i < placements.Length; i++)
+            {
+                var (id, x, z) = placements[i];
+                string placed = _service.Place(id, "plaza", Pos(x, z), 0f);
+                Assert.IsNotEmpty(placed,
+                    $"no se pudo colocar {id} en ({x},{z})");
             }
 
             float charm = _service.CharmOf("plaza");

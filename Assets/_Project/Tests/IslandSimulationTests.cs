@@ -114,6 +114,23 @@ namespace Nimbo.Tests
         private void SimulateDays(int days) => _clock.Advance(days * GameClock.MinutesPerDay);
 
         [Test]
+        public void NadieCompartePorLoQueSeLeLlama()
+        {
+            // La lista de habitantes enseña ShortName, que es el apodo cuando lo hay.
+            // Una isla con dos «Cometa» tiene dos botones idénticos para dos vecinos
+            // distintos, y el jugador no sabe a cuál está entrando. Que el nombre de
+            // pila fuera único no bastaba: no es el que se ve.
+            var seen = new HashSet<string>();
+
+            foreach (var islander in _registry.All)
+            {
+                string shown = islander.Identity.ShortName;
+                Assert.IsNotEmpty(shown, "un habitante sin nada que enseñar");
+                Assert.IsTrue(seen.Add(shown), $"dos habitantes se enseñan como «{shown}»");
+            }
+        }
+
+        [Test]
         public void LaIslaArrancaConSeisHabitantesConCasa()
         {
             Assert.AreEqual(6, _registry.Count);

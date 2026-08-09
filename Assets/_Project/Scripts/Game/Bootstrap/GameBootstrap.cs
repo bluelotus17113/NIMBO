@@ -12,6 +12,7 @@ using Nimbo.Economy.Items;
 using Nimbo.Housing;
 using Nimbo.Housing.Catalog;
 using Nimbo.Island;
+using Nimbo.Island.Decor;
 using Nimbo.Personality.Runtime;
 using Nimbo.Simulation;
 using Nimbo.Simulation.Behaviour;
@@ -181,6 +182,10 @@ namespace Nimbo.Game.Bootstrap
 
             var housing = new HousingService(furniture, _save, registry);
 
+            // Los adornos van después de la isla porque preguntan si la zona está
+            // abierta: decorar un sitio que todavía no existe no tiene sentido.
+            var decor = new DecorService(new DecorCatalog(), _save, _island);
+
             var generator = new RequestGenerator(registry, personalities, _requestConfig);
             _requests = new RequestService(registry, _simulation, generator, _requestConfig, _clock);
             _requests.LoadFrom(_save.Requests);
@@ -202,6 +207,7 @@ namespace Nimbo.Game.Bootstrap
             ServiceRegistry.Register<IHousingService>(housing);
             ServiceRegistry.Register<IEconomyService>(_economy);
             ServiceRegistry.Register<IIslandService>(_island);
+            ServiceRegistry.Register<IDecorService>(decor);
             ServiceRegistry.Register<IIslanderFactory>(factory);
             ServiceRegistry.Register<IJobService>(_jobs);
             ServiceRegistry.Register<NimboTree>(_tree);

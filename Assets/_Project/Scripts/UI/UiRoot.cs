@@ -33,6 +33,7 @@ namespace Nimbo.UI
         private HudView _hud;
         private IslanderPanel _panel;
         private ShopPanel _shop;
+        private Decor.DecorPanel _decor;
         private HousingEditorPanel _housing;
         private CreatorPanel _creator;
         private VisualElement _islanderStrip;
@@ -105,6 +106,9 @@ namespace Nimbo.UI
             _shop = new ShopPanel();
             body.Add(_shop.Root);
 
+            _decor = new Decor.DecorPanel();
+            body.Add(_decor.Root);
+
             root.Add(body);
             root.Add(BuildActionBar());
 
@@ -143,6 +147,10 @@ namespace Nimbo.UI
             Add("Comida", () => Toggle(() => _shop.Show("tienda_comida"), _shop.IsShowing));
             Add("Muebles", () => Toggle(() => _shop.Show("tienda_muebles"), _shop.IsShowing));
             Add("Ropa", () => Toggle(() => _shop.Show("tienda_ropa"), _shop.IsShowing));
+            Add("Decorar", () =>
+            {
+                if (_decor.IsShowing) _decor.Hide(); else _decor.Show();
+            });
             Add("Nuevo habitante", () => _creator.Show());
             return _actions;
 

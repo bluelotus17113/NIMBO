@@ -26,12 +26,15 @@ namespace Nimbo.Art.World
 
         private readonly Dictionary<string, IslanderView> _views = new();
         private readonly Dictionary<string, Vector3> _zoneCentres = new();
+        private readonly Dictionary<string, GameObject> _decorViews = new();
         private readonly HashSet<string> _built = new();
 
         private Transform _islanders;
+        private Transform _decorRoot;
         private IIslanderRegistry _registry;
         private IIslandService _island;
         private IPersonalityService _personalities;
+        private IDecorService _decor;
 
         private Rng _rng = Rng.FromTime();
         private float _sinceCheck;
@@ -45,6 +48,9 @@ namespace Nimbo.Art.World
             EventBus.Unsubscribe<IslanderLeft>(OnIslanderLeft);
             EventBus.Unsubscribe<EmotionShown>(OnEmotionShown);
             EventBus.Unsubscribe<BuildingUnlocked>(OnBuildingUnlocked);
+            EventBus.Unsubscribe<DecorPlaced>(OnDecorPlaced);
+            EventBus.Unsubscribe<DecorRemoved>(OnDecorRemoved);
+            EventBus.Unsubscribe<DecorMoved>(OnDecorMoved);
         }
 
         /// <summary>Se acaba de abrir una zona: se levanta ahí mismo, sin recargar.</summary>
@@ -62,8 +68,11 @@ namespace Nimbo.Art.World
             if (!ServiceRegistry.TryGet(out _island)) return;
             ServiceRegistry.TryGet(out _personalities);
 
+            ServiceRegistry.TryGet(out _decor);
+
             BuildIsland();
             BuildZones();
+            BuildDecor();
 
             _islanders = new GameObject("Habitantes").transform;
             _islanders.SetParent(transform, worldPositionStays: false);
@@ -74,6 +83,9 @@ namespace Nimbo.Art.World
             EventBus.Subscribe<IslanderLeft>(OnIslanderLeft);
             EventBus.Subscribe<EmotionShown>(OnEmotionShown);
             EventBus.Subscribe<BuildingUnlocked>(OnBuildingUnlocked);
+            EventBus.Subscribe<DecorPlaced>(OnDecorPlaced);
+            EventBus.Subscribe<DecorRemoved>(OnDecorRemoved);
+            EventBus.Subscribe<DecorMoved>(OnDecorMoved);
         }
 
         private void BuildIsland()
@@ -166,6 +178,78 @@ namespace Nimbo.Art.World
                         ToonPalette.Solid(purpose == ZonePurpose.Nature
                             ? ToonPalette.Water : ToonPalette.TrunkBrown));
         }
+
+        // ── Los adornos que ha puesto el jugador ─────────────────────────────
+        //
+        // Se levantan después de las zonas porque van colocados en coordenadas de
+        // zona: sin el centro de la zona ya calculado, todos aterrizarían apilados
+        // en mitad de la plaza.
+
+        private void BuildDecor()
+        {
+            _decorRoot = new GameObject("Adornos").transform;
+            _decorRoot.SetParent(transform, worldPositionStays: false);
+
+            if (_decor == null) return;
+
+            var placed = _decor.Placed;
+            for (int i = 0; i < placed.Count; i++) SpawnDecor(placed[i]);
+        }
+
+        private void SpawnDecor(Data.World.DecorPlacement placement)
+        {
+            if (placement == null) return;
+            if (_decorViews.ContainsKey(placement.PlacementId)) return;
+            if (!_decor.TryGetDefinition(placement.CatalogId, out var definition)) return;
+            if (!_zoneCentres.TryGetValue(placement.ZoneId, out var centre)) return;
+
+            var go = new GameObject(placement.PlacementId);
+            go.transform.SetParent(_decorRoot, worldPositionStays: false);
+            go.transform.localPosition = centre + new Vector3(placement.X, placement.Y, placement.Z);
+            go.transform.localRotation = Quaternion.Euler(0f, placement.Yaw, 0f);
+
+            AddMesh(go.transform, "cuerpo",
+                    DecorMeshBuilder.For(definition.Kind),
+                    ToonPalette.Solid(DecorMeshBuilder.ColorOf(placement.CatalogId, definition.Kind)));
+
+            _decorViews[placement.PlacementId] = go;
+        }
+
+        private void OnDecorPlaced(DecorPlaced evt)
+        {
+            if (_decor == null) return;
+
+            // Se busca en la lista del servicio en vez de reconstruirlo del evento:
+            // el evento lleva lo justo para saber qué ha pasado, y la posición y el
+            // giro los tiene quien manda, que es el servicio.
+            foreach (var placement in _decor.Placed)
+                if (placement.PlacementId == evt.PlacementId) { SpawnDecor(placement); return; }
+        }
+
+        private void OnDecorRemoved(DecorRemoved evt)
+        {
+            if (!_decorViews.TryGetValue(evt.PlacementId, out var go)) return;
+            Destroy(go);
+            _decorViews.Remove(evt.PlacementId);
+        }
+
+        private void OnDecorMoved(DecorMoved evt)
+        {
+            if (_decor == null) return;
+            if (!_decorViews.TryGetValue(evt.PlacementId, out var go)) return;
+
+            foreach (var placement in _decor.Placed)
+            {
+                if (placement.PlacementId != evt.PlacementId) continue;
+                if (!_zoneCentres.TryGetValue(placement.ZoneId, out var centre)) return;
+
+                go.transform.localPosition = centre + new Vector3(placement.X, placement.Y, placement.Z);
+                go.transform.localRotation = Quaternion.Euler(0f, placement.Yaw, 0f);
+                return;
+            }
+        }
+
+        private void OnDestroy() => DecorMeshBuilder.Clear();
 
         // ── Lo que la cámara necesita saber del mundo ────────────────────────
         //

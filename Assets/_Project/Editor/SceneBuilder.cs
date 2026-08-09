@@ -1,5 +1,6 @@
 using System.IO;
 using Nimbo.Art.Audio;
+using Nimbo.Art.CameraWork;
 using Nimbo.Art.World;
 using Nimbo.Game.Bootstrap;
 using Nimbo.UI;
@@ -94,6 +95,11 @@ namespace Nimbo.EditorTools
             go.tag = "MainCamera";
 
             go.AddComponent<AudioListener>();
+
+            // La posición de arriba es solo la del primer fotograma, antes de que
+            // cargue nada. En cuanto hay partida manda esto: orbita, acerca y se va
+            // a mirar de cerca al habitante cuya ficha abras.
+            go.AddComponent<IslandCamera>();
         }
 
         private static void BuildLighting()

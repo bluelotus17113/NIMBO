@@ -33,6 +33,36 @@ namespace Nimbo.CharacterCreator.Presets
 
         public static string RandomNickname(ref Rng rng) => Nicknames[rng.Range(0, Nicknames.Length)];
 
+        /// <summary>
+        /// Un apodo libre, o vacío si a este habitante no le toca ninguno.
+        /// </summary>
+        /// <remarks>
+        /// Hace falta porque el apodo tapa al nombre: la lista de habitantes enseña
+        /// <c>ShortName</c>, que prefiere el apodo si lo hay. Sorteando el apodo sin
+        /// mirar quién más lo tiene, una isla de tres podía enseñar «Cometa, Cometa,
+        /// Nico» — dos vecinos distintos con el mismo botón. Que el nombre de pila
+        /// fuera único no servía de nada porque no era el que se veía.
+        ///
+        /// Solo la mitad del banco lleva apodo, y eso se respeta: si sale hueco, se
+        /// queda hueco. Un apodo que tiene todo el mundo deja de ser un apodo.
+        /// </remarks>
+        public static string UnusedNickname(ref Rng rng, System.Func<string, bool> isTaken)
+        {
+            int start = rng.Range(0, Nicknames.Length);
+            if (string.IsNullOrEmpty(Nicknames[start])) return "";
+
+            for (int i = 0; i < Nicknames.Length; i++)
+            {
+                string candidate = Nicknames[(start + i) % Nicknames.Length];
+                if (string.IsNullOrEmpty(candidate)) continue;
+                if (!isTaken(candidate)) return candidate;
+            }
+
+            // Todos cogidos: mejor sin apodo que repetido. Con doce habitantes como
+            // mucho y ocho apodos, es una isla muy poblada y muy apodada.
+            return "";
+        }
+
         /// <summary>Un nombre que no esté cogido. Si se agotan, añade un número al final.</summary>
         public static string UnusedName(ref Rng rng, System.Func<string, bool> isTaken)
         {
