@@ -34,6 +34,8 @@ namespace Nimbo.UI
         private IslanderPanel _panel;
         private ShopPanel _shop;
         private Decor.DecorPanel _decor;
+        private Achievements.AchievementsPanel _achievements;
+        private Achievements.AchievementToast _toast;
         private HousingEditorPanel _housing;
         private CreatorPanel _creator;
         private VisualElement _islanderStrip;
@@ -52,6 +54,7 @@ namespace Nimbo.UI
             EventBus.Unsubscribe<GameLoaded>(OnGameLoaded);
             EventBus.Unsubscribe<IslanderCreated>(OnRosterChanged);
             EventBus.Unsubscribe<IslanderLeft>(OnRosterChanged);
+            _toast?.Unsubscribe();
             _hud?.Dispose();
             _shop?.Dispose();
             _housing?.Dispose();
@@ -109,6 +112,9 @@ namespace Nimbo.UI
             _decor = new Decor.DecorPanel();
             body.Add(_decor.Root);
 
+            _achievements = new Achievements.AchievementsPanel();
+            body.Add(_achievements.Root);
+
             root.Add(body);
             root.Add(BuildActionBar());
 
@@ -121,6 +127,13 @@ namespace Nimbo.UI
             strip.backgroundColor = UiTheme.Panel;
             UiTheme.SetRadius(_islanderStrip, UiTheme.Radius);
             root.Add(_islanderStrip);
+
+            // El cartel de logro va suelto sobre todo lo demás, así que se cuelga de
+            // la raíz y no del cuerpo: dentro del cuerpo lo colocaría el flexbox y
+            // acabaría empujando a los paneles en vez de flotar sobre ellos.
+            _toast = new Achievements.AchievementToast();
+            _toast.Subscribe();
+            root.Add(_toast.Root);
 
             EventBus.Subscribe<IslanderCreated>(OnRosterChanged);
             EventBus.Subscribe<IslanderLeft>(OnRosterChanged);
@@ -150,6 +163,10 @@ namespace Nimbo.UI
             Add("Decorar", () =>
             {
                 if (_decor.IsShowing) _decor.Hide(); else _decor.Show();
+            });
+            Add("Logros", () =>
+            {
+                if (_achievements.IsShowing) _achievements.Hide(); else _achievements.Show();
             });
             Add("Nuevo habitante", () => _creator.Show());
             return _actions;
@@ -231,6 +248,10 @@ namespace Nimbo.UI
             if (!_mounted) return;
 
             _hud.Tick();
+
+            // Sin escalar: el cartel de logro tiene que terminar de irse aunque el
+            // juego esté en pausa, en vez de quedarse clavado en pantalla.
+            _toast.Tick(Time.unscaledDeltaTime);
 
             // Las listas y las barras a ritmo lento: nadie nota que una barra de
             // hambre se mueva dos veces por segundo en vez de sesenta, y reconstruir
