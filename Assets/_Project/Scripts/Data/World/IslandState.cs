@@ -27,6 +27,14 @@ namespace Nimbo.Data.World
 
         public List<BuildingState> Buildings = new List<BuildingState>();
 
+        /// <summary>
+        /// Lo que el jugador ha puesto por la isla: bancos, farolas, estatuas. Va
+        /// aparte de <see cref="Buildings"/> porque un adorno no abre nada ni da
+        /// servicio, solo decora, y mezclarlos obligaría a preguntar «¿y esto de
+        /// qué tipo es?» en cada sitio donde se recorren los edificios.
+        /// </summary>
+        public List<DecorPlacement> Decor = new List<DecorPlacement>();
+
         public Weather Weather = Weather.Clear;
         public int PopulationCap = 12;
 

@@ -1,0 +1,325 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "catalogId": "deco_banco_nube",
+      "displayName": "Banco de nube",
+      "description": "Banco de nube prensada. Incómodo, pero es el sitio donde todo el mundo acaba sentándose a hablar.",
+      "kind": "Seat",
+      "price": 80,
+      "unlockLevel": 1,
+      "footprint": 1.4,
+      "charm": 0.06
+    },
+    {
+      "catalogId": "deco_silla_mimbre",
+      "displayName": "Silla de mimbre",
+      "description": "Silla de mimbre celeste. Cruje con el viento y nadie sabe por qué no se rompe.",
+      "kind": "Seat",
+      "price": 60,
+      "unlockLevel": 1,
+      "footprint": 0.8,
+      "charm": 0.04
+    },
+    {
+      "catalogId": "deco_hamaca_estelar",
+      "displayName": "Hamaca estelar",
+      "description": "Hamaca tejida con hilo de estrella. Quien se tumba jura que flota un palmo por encima del suelo.",
+      "kind": "Seat",
+      "price": 150,
+      "unlockLevel": 3,
+      "footprint": 2.0,
+      "charm": 0.10
+    },
+    {
+      "catalogId": "deco_banco_piedra",
+      "displayName": "Banco de piedra lunar",
+      "description": "Banco de piedra lunar. Fresco en verano, templado en invierno, y siempre con un liquen plateado que brilla de noche.",
+      "kind": "Seat",
+      "price": 200,
+      "unlockLevel": 4,
+      "footprint": 1.6,
+      "charm": 0.12
+    },
+    {
+      "catalogId": "deco_sillon_plaza",
+      "displayName": "Sillón de plaza",
+      "description": "Sillón de plaza, mullido y ancho. Caben dos nimbos o un nimbo y medio, según la tarde.",
+      "kind": "Seat",
+      "price": 350,
+      "unlockLevel": 6,
+      "footprint": 2.2,
+      "charm": 0.16
+    },
+    {
+      "catalogId": "deco_trono_vagabundo",
+      "displayName": "Trono del vagabundo",
+      "description": "Una butaca desvencijada que, por alguna razón, siempre atrae la mejor conversación de la isla.",
+      "kind": "Seat",
+      "price": 500,
+      "unlockLevel": 8,
+      "footprint": 1.8,
+      "charm": 0.20
+    },
+    {
+      "catalogId": "deco_farola_gas",
+      "displayName": "Farola de gas nimbo",
+      "description": "Farola de gas nimbo. Su luz anaranjada titila con el ritmo de la isla y nunca se apaga, ni con lluvia ni con viento.",
+      "kind": "Light",
+      "price": 100,
+      "unlockLevel": 2,
+      "footprint": 0.8,
+      "charm": 0.06
+    },
+    {
+      "catalogId": "deco_farolillo_papel",
+      "displayName": "Farolillo de papel",
+      "description": "Farolillo de papel de arroz. Se enciende al atardecer y tiñe el suelo de un rosa suave que huele a jazmín.",
+      "kind": "Light",
+      "price": 70,
+      "unlockLevel": 1,
+      "footprint": 0.5,
+      "charm": 0.04
+    },
+    {
+      "catalogId": "deco_candelabro_alas",
+      "displayName": "Candelabro de alas",
+      "description": "Candelabro de alas. Siete brazos que arden sin llama visible; solo un calorcillo amable y una sombra movediza en la pared.",
+      "kind": "Light",
+      "price": 300,
+      "unlockLevel": 5,
+      "footprint": 1.2,
+      "charm": 0.14
+    },
+    {
+      "catalogId": "deco_antorcha_flotante",
+      "displayName": "Antorcha flotante",
+      "description": "Antorcha flotante. No está sujeta a nada: se mantiene en el aire a metro y medio del suelo y gira despacio, como mirando alrededor.",
+      "kind": "Light",
+      "price": 450,
+      "unlockLevel": 7,
+      "footprint": 0.6,
+      "charm": 0.18
+    },
+    {
+      "catalogId": "deco_globo_luz",
+      "displayName": "Globo de luz atrapada",
+      "description": "Globo de luz atrapada. Una esfera de cristal opalino con una chispa dentro que persigue a quien se acerca.",
+      "kind": "Light",
+      "price": 600,
+      "unlockLevel": 9,
+      "footprint": 1.0,
+      "charm": 0.22
+    },
+    {
+      "catalogId": "deco_estatua_fundador",
+      "displayName": "Estatua del Fundador",
+      "description": "Estatua del Fundador. Un nimbo anciano señalando al horizonte con cara de «por allí se va a algún sitio». Nadie ha averiguado a cuál.",
+      "kind": "Statue",
+      "price": 800,
+      "unlockLevel": 8,
+      "footprint": 2.0,
+      "charm": 0.20
+    },
+    {
+      "catalogId": "deco_monolito_viento",
+      "displayName": "Monolito del viento",
+      "description": "Monolito del viento. Una columna de basalto negro con agujeros que silban cuando sopla el este. Dicen que es el primer habitante de la isla, petrificado de aburrimiento.",
+      "kind": "Statue",
+      "price": 1000,
+      "unlockLevel": 10,
+      "footprint": 2.5,
+      "charm": 0.25
+    },
+    {
+      "catalogId": "deco_busto_anonimo",
+      "displayName": "Busto anónimo",
+      "description": "Busto anónimo. Una cabeza de piedra que no se parece a nadie y a la vez a todo el mundo. Los niños le ponen gorros en invierno.",
+      "kind": "Statue",
+      "price": 400,
+      "unlockLevel": 6,
+      "footprint": 1.0,
+      "charm": 0.14
+    },
+    {
+      "catalogId": "deco_piedra_equilibrio",
+      "displayName": "Piedras en equilibrio",
+      "description": "Piedras en equilibrio. Tres cantos rodados apilados en un imposible que desafía al viento hace siglos. Si las tiras, al día siguiente vuelven a estar así.",
+      "kind": "Statue",
+      "price": 200,
+      "unlockLevel": 4,
+      "footprint": 1.2,
+      "charm": 0.10
+    },
+    {
+      "catalogId": "deco_arbusto_nimbo",
+      "displayName": "Arbusto nimbo",
+      "description": "Arbusto nimbo. Una mata redonda y esponjosa que suelta pelusilla blanca en primavera. Huele a limpio.",
+      "kind": "Plant",
+      "price": 40,
+      "unlockLevel": 1,
+      "footprint": 0.6,
+      "charm": 0.02
+    },
+    {
+      "catalogId": "deco_maceta_colgante",
+      "displayName": "Maceta colgante",
+      "description": "Maceta colgante. Helecho plateado que crece hacia abajo y se mece sin viento. De vez en cuando gotea un agua que sabe a menta.",
+      "kind": "Plant",
+      "price": 60,
+      "unlockLevel": 1,
+      "footprint": 0.5,
+      "charm": 0.03
+    },
+    {
+      "catalogId": "deco_arbol_bonsai",
+      "displayName": "Bonsái estelar",
+      "description": "Bonsái estelar. Un arbolito que tardó cien años en hacerse así de pequeño y otros cien en aprender a brillar de noche.",
+      "kind": "Plant",
+      "price": 250,
+      "unlockLevel": 5,
+      "footprint": 0.8,
+      "charm": 0.12
+    },
+    {
+      "catalogId": "deco_jardin_rocalla",
+      "displayName": "Jardín de rocalla",
+      "description": "Jardín de rocalla. Musgo, piedrecitas de colores y una flor que solo abre cuando pasa alguien contento.",
+      "kind": "Plant",
+      "price": 150,
+      "unlockLevel": 3,
+      "footprint": 1.4,
+      "charm": 0.08
+    },
+    {
+      "catalogId": "deco_seto_recortado",
+      "displayName": "Seto recortado",
+      "description": "Seto recortado. Un arbusto con forma de nimbo gordito. Recortarlo cada semana es tradición; dejarlo crecer salvaje, también.",
+      "kind": "Plant",
+      "price": 120,
+      "unlockLevel": 2,
+      "footprint": 1.0,
+      "charm": 0.06
+    },
+    {
+      "catalogId": "deco_trepadora_pergola",
+      "displayName": "Trepadora de pérgola",
+      "description": "Trepadora de pérgola. Enredadera de flores azules que sube por donde puede y florece los martes. Los martes en la isla huelen a vainilla.",
+      "kind": "Plant",
+      "price": 180,
+      "unlockLevel": 4,
+      "footprint": 1.6,
+      "charm": 0.10
+    },
+    {
+      "catalogId": "deco_cactus_nube",
+      "displayName": "Cactus nube",
+      "description": "Cactus nube. Un cactus esférico y blanquecino que en lugar de pinchos tiene una pelusilla suave. Si lo riegas de más, flota un rato y vuelve a posarse.",
+      "kind": "Plant",
+      "price": 100,
+      "unlockLevel": 2,
+      "footprint": 0.6,
+      "charm": 0.05
+    },
+    {
+      "catalogId": "deco_bambu_susurrante",
+      "displayName": "Bambú susurrante",
+      "description": "Bambú susurrante. Tres cañas finas que entrechocan con la brisa y producen una melodía distinta cada día. Los músicos de la isla vienen a tomar nota.",
+      "kind": "Plant",
+      "price": 220,
+      "unlockLevel": 5,
+      "footprint": 0.8,
+      "charm": 0.11
+    },
+    {
+      "catalogId": "deco_cartel_bienvenida",
+      "displayName": "Cartel de bienvenida",
+      "description": "Cartel de bienvenida. «Pasa y siéntate, que aquí el tiempo no corre». La caligrafía cambia según quien lo mire.",
+      "kind": "Sign",
+      "price": 80,
+      "unlockLevel": 2,
+      "footprint": 0.6,
+      "charm": 0.04
+    },
+    {
+      "catalogId": "deco_buzon_amistad",
+      "displayName": "Buzón de la amistad",
+      "description": "Buzón de la amistad. Un buzón rojo donde los nimbos dejan notas anónimas con cumplidos. Se vacía los viernes y siempre hay cola.",
+      "kind": "Sign",
+      "price": 120,
+      "unlockLevel": 3,
+      "footprint": 0.8,
+      "charm": 0.08
+    },
+    {
+      "catalogId": "deco_indicador_estelar",
+      "displayName": "Indicador estelar",
+      "description": "Indicador estelar. Un poste con flechas que señalan a todas partes y a ninguna. Las direcciones son versos sueltos: «Por aquí, la luna / Por allá, el recuerdo».",
+      "kind": "Sign",
+      "price": 200,
+      "unlockLevel": 5,
+      "footprint": 0.8,
+      "charm": 0.10
+    },
+    {
+      "catalogId": "deco_valla_madera",
+      "displayName": "Valla de madera flotante",
+      "description": "Valla de madera flotante. Listones de cedro que levitan dos dedos sobre el suelo. Si la saltas, no te haces daño; si la rodeas, tampoco.",
+      "kind": "Fence",
+      "price": 60,
+      "unlockLevel": 1,
+      "footprint": 0.4,
+      "charm": 0.03
+    },
+    {
+      "catalogId": "deco_seto_vivo",
+      "displayName": "Seto vivo",
+      "description": "Seto vivo. Un arbusto alargado que crece formando una pared natural de hojas diminutas. En otoño da bayas que saben a caramelo.",
+      "kind": "Fence",
+      "price": 100,
+      "unlockLevel": 2,
+      "footprint": 0.5,
+      "charm": 0.05
+    },
+    {
+      "catalogId": "deco_verja_forjada",
+      "displayName": "Verja forjada",
+      "description": "Verja forjada. Barrotes negros con remates dorados y un dibujo de hojas que, si te fijas bien, se mueven. Forjada por el herrero de la isla en una sola noche de inspiración.",
+      "kind": "Fence",
+      "price": 350,
+      "unlockLevel": 6,
+      "footprint": 0.5,
+      "charm": 0.12
+    },
+    {
+      "catalogId": "deco_fuente_susurro",
+      "displayName": "Fuente del susurro",
+      "description": "Fuente del susurro. Un pilón de piedra con un caño que nunca deja de manar. Si le cuentas un secreto al agua, al día siguiente te responde con otro.",
+      "kind": "Water",
+      "price": 400,
+      "unlockLevel": 6,
+      "footprint": 3.0,
+      "charm": 0.16
+    },
+    {
+      "catalogId": "deco_estanque_lirios",
+      "displayName": "Estanque de lirios",
+      "description": "Estanque de lirios. Agua quieta con nenúfares que se abren al alba y se cierran al ocaso. Dentro viven tres peces dorados que solo se dejan ver los jueves.",
+      "kind": "Water",
+      "price": 600,
+      "unlockLevel": 8,
+      "footprint": 3.5,
+      "charm": 0.20
+    },
+    {
+      "catalogId": "deco_cascada_miniatura",
+      "displayName": "Cascada en miniatura",
+      "description": "Cascada en miniatura. Tres niveles de piedra apilada por donde el agua baja cantando. El ruido es tan pequeño que lo oyes solo si cierras los ojos.",
+      "kind": "Water",
+      "price": 1200,
+      "unlockLevel": 10,
+      "footprint": 3.2,
+      "charm": 0.25
+    }
+  ]
+}

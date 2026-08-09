@@ -594,8 +594,10 @@ funcional. Lo de `[SI DA TIEMPO]` puede llegar en un parche post-lanzamiento.
 - [x] El Árbol Nimbo funcional.
 - [x] Semana de juego estructurada (lunes a domingo con bonos).
 - [x] Guardado y carga de partida (JSON versionado, copia atómica).
-- [~] UI: HUD, ficha, tienda, creador y construcción están. Falta el menú principal.
-- [ ] Sonido: voces sintetizadas, música adaptativa (calma/evento), efectos.
+- [x] UI: HUD, ficha, tienda, creador, construcción y menú principal (con pausa y ajustes).
+- [~] Sonido: voces sintetizadas, efectos y ambiente generativo están. La música
+      todavía no cambia con lo que pasa: suena el mismo ambiente en calma y en
+      fiesta, y eso es lo que falta para poder marcarlo.
 
 ### 12.2 `[IMPORTANTE]` — El juego cojea sin esto
 

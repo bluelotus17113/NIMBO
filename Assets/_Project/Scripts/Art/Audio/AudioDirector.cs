@@ -1,6 +1,7 @@
 using Nimbo.Core.Events;
 using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
+using Nimbo.Core.Settings;
 using Nimbo.Core.Util;
 using Nimbo.Data.Islanders;
 using UnityEngine;
@@ -33,6 +34,12 @@ namespace Nimbo.Art.Audio
 
         private void Awake()
         {
+            // Lo elegido en los ajustes manda sobre lo puesto en el inspector: el
+            // inspector es el valor de fábrica, y el jugador ya dijo lo suyo.
+            _musicVolume = AudioPrefs.Get(AudioChannel.Music);
+            _sfxVolume = AudioPrefs.Get(AudioChannel.Sfx);
+            _voiceVolume = AudioPrefs.Get(AudioChannel.Voice);
+
             _music = GetComponent<AudioSource>();
             _music.loop = true;
             _music.playOnAwake = false;
@@ -49,6 +56,7 @@ namespace Nimbo.Art.Audio
 
         private void OnEnable()
         {
+            EventBus.Subscribe<VolumeChanged>(OnVolumeChanged);
             EventBus.Subscribe<GameLoaded>(OnGameLoaded);
             EventBus.Subscribe<CoinsChanged>(OnCoins);
             EventBus.Subscribe<IslanderLeveledUp>(OnLevelUp);
@@ -60,6 +68,7 @@ namespace Nimbo.Art.Audio
 
         private void OnDisable()
         {
+            EventBus.Unsubscribe<VolumeChanged>(OnVolumeChanged);
             EventBus.Unsubscribe<GameLoaded>(OnGameLoaded);
             EventBus.Unsubscribe<CoinsChanged>(OnCoins);
             EventBus.Unsubscribe<IslanderLeveledUp>(OnLevelUp);
@@ -74,6 +83,21 @@ namespace Nimbo.Art.Audio
             if (_ambience != null) Destroy(_ambience);
             if (_currentVoice != null) Destroy(_currentVoice);
             SoundBank.Clear();
+        }
+
+        /// <summary>
+        /// El jugador ha movido un deslizador. Se aplica en el acto y sonando: bajar
+        /// la música y no oír el cambio hasta la siguiente pista es lo que hace que
+        /// uno la baje de más.
+        /// </summary>
+        private void OnVolumeChanged(VolumeChanged evt)
+        {
+            switch (evt.Channel)
+            {
+                case AudioChannel.Music: SetMusicVolume(evt.Value); break;
+                case AudioChannel.Sfx:   SetSfxVolume(evt.Value); break;
+                case AudioChannel.Voice: SetVoiceVolume(evt.Value); break;
+            }
         }
 
         private void OnGameLoaded(GameLoaded _)

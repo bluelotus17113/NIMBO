@@ -50,6 +50,12 @@ namespace Nimbo.Game.Bootstrap
         [Tooltip("Minutos de juego entre guardados. 0 lo desactiva.")]
         [SerializeField] private int _autosaveMinutes = 60;
 
+        [Header("Arranque")]
+        [Tooltip("Si está marcado, espera a que el menú diga por dónde empezar.")]
+        [SerializeField] private bool _startFromMenu = true;
+
+        private bool _forceNewGame;
+
         private GameClock _clock;
         private SaveGame _save;
         private SimulationService _simulation;
@@ -75,20 +81,42 @@ namespace Nimbo.Game.Bootstrap
             // Persistente entre escenas: la simulación no puede pararse porque el
             // jugador entre al editor de interiores.
             DontDestroyOnLoad(gameObject);
-            Build();
+
+            // Con menú, montar aquí sería tirar el trabajo: hasta que el jugador no
+            // elija, no se sabe siquiera si la partida que hay que cargar es la
+            // guardada o una nueva.
+            if (!_startFromMenu) Build();
+        }
+
+        private void Start()
+        {
+            if (_built) Launch();
         }
 
         /// <summary>
-        /// El aviso de que la partida está lista va en Start y no en Awake, y esto no
-        /// es un detalle: Unity ejecuta Awake y OnEnable objeto por objeto, así que si
+        /// Enciende la partida. La llama el menú, y solo una vez.
+        /// </summary>
+        /// <param name="newGame">
+        /// Cierto para empezar de cero dejando atrás lo guardado.
+        /// </param>
+        public void StartGame(bool newGame)
+        {
+            if (_built) return;
+
+            _forceNewGame = newGame;
+            Build();
+            Launch();
+        }
+
+        /// <summary>
+        /// El aviso de que la partida está lista va aquí y no en Awake, y esto no es
+        /// un detalle: Unity ejecuta Awake y OnEnable objeto por objeto, así que si
         /// se publicara en Awake, los que se suscriben en su OnEnable —el mundo y la
         /// interfaz— aún no existirían y se perderían el aviso. La isla arrancaba con
         /// todos los servicios montados y sin un solo muñeco dibujado.
         /// </summary>
-        private void Start()
+        private void Launch()
         {
-            if (!_built) return;
-
             EventBus.Publish(new GameLoaded());
             CatchUpOfflineTime();
 
@@ -122,7 +150,12 @@ namespace Nimbo.Game.Bootstrap
         {
             EnsureConfigs();
 
-            _save = SaveSystem.Read();
+            // Empezar de nuevo aparta lo que había antes de tocar nada. El respaldo
+            // normal no sirve para esto: en cuanto la isla nueva autoguarde, la copia
+            // de seguridad pasaría a ser de la isla nueva y la vieja desaparecería.
+            if (_forceNewGame) SaveSystem.Archive();
+
+            _save = _forceNewGame ? null : SaveSystem.Read();
             bool isNewGame = _save == null;
             if (isNewGame) _save = NewSave();
 

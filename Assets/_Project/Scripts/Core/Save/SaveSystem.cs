@@ -21,6 +21,7 @@ namespace Nimbo.Core.Save
     {
         public const string SaveFileName = "partida.json";
         public const string BackupFileName = "partida.bak.json";
+        public const string ArchiveFileName = "partida.anterior.json";
 
         private static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
         {
@@ -29,11 +30,69 @@ namespace Nimbo.Core.Save
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
         };
 
-        public static string SaveDirectory => Application.persistentDataPath;
+        private static string _directoryOverride;
+
+        /// <summary>
+        /// Dónde vive la partida. Normalmente la carpeta de datos del jugador.
+        /// </summary>
+        public static string SaveDirectory => _directoryOverride ?? Application.persistentDataPath;
+
+        /// <summary>
+        /// Manda el guardado a otra carpeta. Es SOLO para las pruebas y existe por un
+        /// motivo caro de aprender: en el editor, <c>persistentDataPath</c> es la misma
+        /// carpeta que usa el juego compilado, así que una prueba que borraba «su»
+        /// fichero de guardado estaba borrando la partida de verdad de quien estuviera
+        /// jugando. Pasó, y se perdió una isla con tres habitantes dentro.
+        /// </summary>
+        /// <remarks>
+        /// No basta con acordarse de llamarla: la que la llama de verdad es
+        /// <c>AislarGuardadoEnPruebas</c>, un <c>SetUpFixture</c> que corre antes que
+        /// cualquier prueba del ensamblado, para que también proteja a las que escriba
+        /// alguien que no haya leído esto.
+        /// </remarks>
+        public static void RedirectTo(string directory) => _directoryOverride = directory;
+
+        /// <summary>Vuelve a la carpeta del jugador.</summary>
+        public static void UseDefaultDirectory() => _directoryOverride = null;
+
         public static string SavePath => Path.Combine(SaveDirectory, SaveFileName);
         public static string BackupPath => Path.Combine(SaveDirectory, BackupFileName);
 
+        public static string ArchivePath => Path.Combine(SaveDirectory, ArchiveFileName);
+
         public static bool SaveExists => File.Exists(SavePath);
+
+        /// <summary>
+        /// Aparta la partida actual antes de empezar otra. Devuelve false si no había
+        /// nada que apartar o si no se pudo.
+        /// </summary>
+        /// <remarks>
+        /// El respaldo de <see cref="Write"/> no vale para esto: es el de la escritura
+        /// anterior, así que en cuanto la isla nueva autoguarde una sola vez, el
+        /// respaldo pasa a ser de la isla nueva y la vieja ya no está en ningún sitio.
+        /// Esta copia es aparte y nadie la sobrescribe salvo otro «empezar de nuevo».
+        ///
+        /// El juego no la lee nunca. Está para que quien haya borrado una isla de
+        /// treinta días por pulsar mal pueda recuperarla renombrando un fichero.
+        /// </remarks>
+        public static bool Archive()
+        {
+            if (!File.Exists(SavePath)) return false;
+
+            try
+            {
+                File.Copy(SavePath, ArchivePath, overwrite: true);
+                Debug.Log($"Partida anterior guardada en {ArchivePath}");
+                return true;
+            }
+            catch (Exception e)
+            {
+                // No se aborta la partida nueva por esto: es una red de seguridad,
+                // no un requisito. Pero se dice, para que no parezca que hay copia.
+                Debug.LogWarning($"SaveSystem: no se pudo apartar la partida anterior — {e.Message}");
+                return false;
+            }
+        }
 
         /// <summary>Escribe la partida. Devuelve false y deja el fichero anterior intacto si falla.</summary>
         public static bool Write(SaveGame save)

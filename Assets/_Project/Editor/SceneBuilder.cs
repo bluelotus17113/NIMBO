@@ -3,6 +3,7 @@ using Nimbo.Art.Audio;
 using Nimbo.Art.World;
 using Nimbo.Game.Bootstrap;
 using Nimbo.UI;
+using Nimbo.UI.Menu;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -131,6 +132,22 @@ namespace Nimbo.EditorTools
             var document = uiGo.AddComponent<UIDocument>();
             document.panelSettings = panelSettings;
             uiGo.AddComponent<UiRoot>();
+
+            // El menú y el control de flujo cuelgan de la raíz de la escena, NO del
+            // objeto persistente: volver al menú recarga la escena, y lo que tiene
+            // que morir en esa recarga es justo esto, para renacer limpio.
+            var menuGo = new GameObject("Menú");
+            var menuDocument = menuGo.AddComponent<UIDocument>();
+            menuDocument.panelSettings = panelSettings;
+
+            // Por encima de la interfaz de la partida. Con el mismo orden, cuál se
+            // dibuja delante depende del orden de creación, que es justo la clase de
+            // detalle que se rompe solo el día que alguien reordene el método.
+            menuDocument.sortingOrder = 10;
+            menuGo.AddComponent<MainMenuView>();
+
+            var flowGo = new GameObject("Flujo");
+            flowGo.AddComponent<FlowController>();
         }
 
         private static void RegisterInBuildSettings()

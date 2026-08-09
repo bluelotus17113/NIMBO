@@ -225,6 +225,42 @@ namespace Nimbo.Core.Events
         public BuildingUnlocked(string buildingId) => BuildingId = buildingId;
     }
 
+    // --- adornos de la isla -------------------------------------------------
+
+    public readonly struct DecorPlaced
+    {
+        public readonly string PlacementId;
+        public readonly string CatalogId;
+        public readonly string ZoneId;
+        public DecorPlaced(string placementId, string catalogId, string zoneId)
+        {
+            PlacementId = placementId; CatalogId = catalogId; ZoneId = zoneId;
+        }
+    }
+
+    public readonly struct DecorRemoved
+    {
+        public readonly string PlacementId;
+        public DecorRemoved(string placementId) => PlacementId = placementId;
+    }
+
+    public readonly struct DecorMoved
+    {
+        public readonly string PlacementId;
+        public DecorMoved(string placementId) => PlacementId = placementId;
+    }
+
+    /// <summary>
+    /// El jugador ha puesto la atención en alguien. La cámara se acerca a mirarlo.
+    /// Con el identificador vacío significa que ha dejado de mirar y se vuelve al
+    /// plano general de la isla.
+    /// </summary>
+    public readonly struct IslanderFocused
+    {
+        public readonly string IslanderId;
+        public IslanderFocused(string islanderId) => IslanderId = islanderId;
+    }
+
     // --- vivienda -----------------------------------------------------------
 
     public readonly struct RoomEdited
@@ -245,5 +281,39 @@ namespace Nimbo.Core.Events
     {
         public readonly string Path;
         public GameSaved(string path) => Path = path;
+    }
+
+    // --- menú y flujo -------------------------------------------------------
+    //
+    // Son los únicos eventos que rompen la convención del pasado, y a propósito:
+    // el menú no sabe cómo se enciende una partida ni tiene por qué. Publica lo
+    // que el jugador ha pedido y quien sepa hacerlo lo hace. Es lo que permite
+    // que Nimbo.UI no dependa de Nimbo.Game.
+
+    public readonly struct NewGameRequested { }
+
+    public readonly struct ContinueRequested { }
+
+    /// <summary>Volver al menú principal desde la partida, guardando antes.</summary>
+    public readonly struct ReturnToMenuRequested { }
+
+    public readonly struct QuitRequested { }
+
+    public readonly struct GamePaused
+    {
+        public readonly bool Paused;
+        public GamePaused(bool paused) => Paused = paused;
+    }
+
+    public enum AudioChannel { Music = 0, Sfx = 1, Voice = 2 }
+
+    public readonly struct VolumeChanged
+    {
+        public readonly AudioChannel Channel;
+        public readonly float Value;   // 0-1
+        public VolumeChanged(AudioChannel channel, float value)
+        {
+            Channel = channel; Value = value;
+        }
     }
 }

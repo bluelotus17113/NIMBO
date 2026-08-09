@@ -167,6 +167,29 @@ namespace Nimbo.Art.World
                             ? ToonPalette.Water : ToonPalette.TrunkBrown));
         }
 
+        // ── Lo que la cámara necesita saber del mundo ────────────────────────
+        //
+        // Es la única puerta de entrada: quien quiera enfocar algo pregunta aquí y
+        // no rebusca por la jerarquía con Find. Si mañana los habitantes cuelgan de
+        // otro sitio, esto sigue valiendo y no se entera nadie.
+
+        public float IslandRadius => _islandRadius;
+
+        /// <summary>El cuerpo de un habitante, para poder mirarlo. Nulo si no está.</summary>
+        public bool TryGetIslander(string islanderId, out Transform body)
+        {
+            body = null;
+            if (string.IsNullOrEmpty(islanderId)) return false;
+            if (!_views.TryGetValue(islanderId, out var view) || view == null) return false;
+
+            body = view.transform;
+            return true;
+        }
+
+        /// <summary>El centro de una zona, esté abierta o cerrada.</summary>
+        public bool TryGetZoneCentre(string zoneId, out Vector3 centre) =>
+            _zoneCentres.TryGetValue(zoneId ?? "", out centre);
+
         private static void AddMesh(Transform parent, string name, Mesh mesh, Material material)
         {
             var go = new GameObject(name);

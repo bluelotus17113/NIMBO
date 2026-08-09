@@ -199,14 +199,23 @@ namespace Nimbo.UI
                 _islanderStrip.Add(UiTheme.Body("La isla está vacía. Crea a alguien.", soft: true));
         }
 
+        /// <summary>
+        /// Abrir la ficha de alguien es «ir a verlo», no solo leer sus barras: se
+        /// avisa de a quién se mira y la cámara se acerca a él. Cerrarla avisa con el
+        /// identificador vacío y la cámara vuelve al plano general.
+        /// </summary>
         private void Toggle(string islanderId)
         {
-            if (_panel.IsShowing && _panel.Root.name == islanderId) _panel.Hide();
-            else
+            if (_panel.IsShowing && _panel.Root.name == islanderId)
             {
-                _panel.Root.name = islanderId;
-                _panel.Show(islanderId);
+                _panel.Hide();
+                EventBus.Publish(new IslanderFocused(""));
+                return;
             }
+
+            _panel.Root.name = islanderId;
+            _panel.Show(islanderId);
+            EventBus.Publish(new IslanderFocused(islanderId));
         }
 
         private void Update()
