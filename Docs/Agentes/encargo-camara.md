@@ -18,7 +18,7 @@ Ese último punto es el que importa. El resto es el andamio para que funcione.
 
 1. `Assets/_Project/Scripts/Art/Camera/CameraRig.cs`
 2. `Assets/_Project/Scripts/Art/Camera/IslandCamera.cs`
-3. `Assets/_Project/Scripts/Tests/CameraRigTests.cs`
+3. `Assets/_Project/Tests/CameraRigTests.cs`
 
 No toques nada más. Ni `WorldView.cs`, ni `UiRoot.cs`, ni ningún `.asmdef`, ni
 `Assets/_Project/Editor/`, ni los `Docs/`. Hay otro agente y yo trabajando en

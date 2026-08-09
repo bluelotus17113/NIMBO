@@ -225,6 +225,18 @@ namespace Nimbo.Core.Events
         public BuildingUnlocked(string buildingId) => BuildingId = buildingId;
     }
 
+    // --- logros -------------------------------------------------------------
+
+    public readonly struct AchievementUnlocked
+    {
+        public readonly string AchievementId;
+        public readonly long Reward;
+        public AchievementUnlocked(string achievementId, long reward)
+        {
+            AchievementId = achievementId; Reward = reward;
+        }
+    }
+
     // --- adornos de la isla -------------------------------------------------
 
     public readonly struct DecorPlaced

@@ -25,7 +25,7 @@ Es el punto «Personalización de la isla» del `[IMPORTANTE]` del GDD.
 2. `Assets/_Project/Resources/Config/catalogo_decoracion.json`
 3. `Assets/_Project/Scripts/Island/Decor/DecorCatalog.cs`
 4. `Assets/_Project/Scripts/Island/Decor/DecorService.cs`
-5. `Assets/_Project/Scripts/Tests/DecorTests.cs`
+5. `Assets/_Project/Tests/DecorTests.cs`
 
 No toques nada más. Ni `IDecorService.cs`, ni `IslandState.cs`, ni
 `GameEvents.cs`, ni `GameBootstrap.cs`, ni ningún `.asmdef`, ni `Docs/`. Hay otro

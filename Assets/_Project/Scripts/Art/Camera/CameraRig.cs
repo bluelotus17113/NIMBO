@@ -25,6 +25,16 @@ namespace Nimbo.Art.CameraWork
         private const float MinDistance = 8f;
         private const float MaxDistance = 220f;
 
+        /// <summary>
+        /// Altura mínima de la cámara sobre el nivel del prado, en metros.
+        /// </summary>
+        /// <remarks>
+        /// Tres metros porque es lo que mide de alto una casa de la isla: por debajo
+        /// de eso, acercarse a alguien que esté junto a un edificio mete la cámara
+        /// dentro del tejado y se ve el interior de la malla.
+        /// </remarks>
+        public const float MinHeight = 3f;
+
         private readonly float _pivotRadiusMax;
 
         private CameraPose _current;
@@ -130,7 +140,17 @@ namespace Nimbo.Art.CameraWork
                 // Coordenadas esféricas alrededor del pivote:
                 // la cámara está a Distance del pivote, rotada por Yaw y Pitch.
                 Quaternion rot = Quaternion.Euler(_current.Pitch, _current.Yaw, 0f);
-                return _current.Pivot + rot * Vector3.back * _current.Distance;
+                var position = _current.Pivot + rot * Vector3.back * _current.Distance;
+
+                // Suelo duro. Los topes de arriba se cumplen y aun así la cámara se
+                // metía dentro del césped y por debajo de los tejados: con el pitch
+                // en su mínimo de 12° y la distancia en su mínimo de 8, la cámara
+                // queda a metro y medio sobre el pivote, que es más bajo que una
+                // casa. Se sube lo justo, sin tocar el pivote: la cámara sigue
+                // mirando lo mismo, solo que desde un poco más arriba.
+                if (position.y < MinHeight) position.y = MinHeight;
+
+                return position;
             }
         }
 

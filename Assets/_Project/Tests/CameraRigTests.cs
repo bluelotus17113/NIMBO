@@ -386,5 +386,60 @@ namespace Nimbo.Tests
             rig.Target = new CameraPose { Yaw = 361f, Distance = 100f, Pitch = 45f };
             Assert.AreEqual(1f, rig.Target.Yaw, 0.001f, "361° debería normalizarse a 1°.");
         }
+
+        [Test]
+        public void LaCamaraNoSeMeteDentroDelSuelo()
+        {
+            // Los topes de pitch y distancia se cumplían y aun así la cámara acababa
+            // dentro del césped: con pitch 12° y distancia 8, la altura sobre el
+            // pivote es 8·sen(12°) = 1,66 m, más bajo que un tejado. Esto se vio
+            // jugando, no en una prueba, que es lo que suele pasar con la cámara.
+            var rig = NewRig();
+
+            rig.Target = new CameraPose { Pivot = Vector3.zero, Distance = 8f, Pitch = 12f, Yaw = 0f };
+            rig.SnapToTarget();
+
+            Assert.GreaterOrEqual(rig.Position.y, CameraRig.MinHeight - 0.001f,
+                $"la cámara se metió en el suelo (y={rig.Position.y:0.00})");
+        }
+
+        [Test]
+        public void ElSueloSeMideDesdeElMundoYNoDesdeElPivote()
+        {
+            // Enfocar a alguien que está en una zona hundida no puede colar la cámara
+            // por debajo del prado: el suelo es el del mundo, no una altura relativa
+            // al punto que se esté mirando.
+            var rig = NewRig();
+
+            rig.Target = new CameraPose
+            {
+                Pivot = new Vector3(10f, -6f, 10f),
+                Distance = 8f,
+                Pitch = 12f,
+                Yaw = 45f,
+            };
+            rig.SnapToTarget();
+
+            Assert.GreaterOrEqual(rig.Position.y, CameraRig.MinHeight - 0.001f,
+                $"con el pivote hundido la cámara se fue debajo del prado (y={rig.Position.y:0.00})");
+        }
+
+        [Test]
+        public void SubirLaCamaraNoLeCambiaLoQueMira()
+        {
+            // El suelo levanta la cámara pero no mueve el pivote, así que tiene que
+            // seguir mirando exactamente al mismo punto. Si esto falla, al acercarse
+            // a un habitante la cámara sube y lo pierde de vista.
+            var rig = NewRig();
+
+            var pivot = new Vector3(4f, 0f, -3f);
+            rig.Target = new CameraPose { Pivot = pivot, Distance = 8f, Pitch = 12f, Yaw = 30f };
+            rig.SnapToTarget();
+
+            var toPivot = (pivot - rig.Position).normalized;
+            float aim = Vector3.Dot(rig.Rotation * Vector3.forward, toPivot);
+
+            Assert.Greater(aim, 0.999f, "la cámara dejó de mirar al pivote al subirla");
+        }
     }
 }

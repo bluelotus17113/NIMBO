@@ -52,6 +52,9 @@ namespace Nimbo.Data.Save
         public List<HomeRecord> Homes = new List<HomeRecord>();
         public List<IslanderRequest> Requests = new List<IslanderRequest>();
 
+        /// <summary>Solo los logros que se han tocado alguna vez; el resto son cero.</summary>
+        public List<AchievementRecord> Achievements = new List<AchievementRecord>();
+
         /// <summary>Contadores sueltos del juego (eventos vistos, tutoriales, rachas).</summary>
         public List<string> Flags = new List<string>();
 
