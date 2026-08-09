@@ -142,6 +142,27 @@ namespace Nimbo.PlayTests
         }
 
         [UnityTest]
+        public IEnumerator LosLogrosDelPrimerMinutoTambienPagan()
+        {
+            // Poblar una isla nueva ya desbloquea logros —el primer edificio, el
+            // primer amigo— y esos avisos salen mientras se monta la partida. Si la
+            // paga se engancha después, esos primeros logros se consiguen y no
+            // pagan. Se veía en el guardado y en ningún test: dos logros hechos y
+            // las monedas exactamente en las 200 de salida.
+            yield return CargarYEmpezar();
+
+            var achievements = ServiceRegistry.Get<IAchievementService>();
+            var economy = ServiceRegistry.Get<IEconomyService>();
+
+            if (achievements.UnlockedCount == 0)
+                Assert.Ignore("esta partida no desbloqueó nada al arrancar");
+
+            Assert.Greater(economy.Wallet.Coins, 200L,
+                $"{achievements.UnlockedCount} logros conseguidos y las monedas " +
+                $"siguen en {economy.Wallet.Coins}");
+        }
+
+        [UnityTest]
         public IEnumerator LaCamaraEmpiezaEnPlanoGeneral()
         {
             // Lo primero que se ve de una partida es el encuadre. Una cámara que

@@ -124,7 +124,6 @@ namespace Nimbo.Game.Bootstrap
 
             _running = true;
             EventBus.Subscribe<DayPassed>(OnDayPassed);
-            EventBus.Subscribe<AchievementUnlocked>(OnAchievementUnlocked);
             ApplyDayRhythm(_clock.Day);
 
             Debug.Log($"Isla Nimbo lista — {_registry.Count} habitantes, {_clock}");
@@ -204,6 +203,14 @@ namespace Nimbo.Game.Bootstrap
             // Se construyen los últimos para no perderse nada de lo que publiquen
             // los demás al montarse.
             _achievements = new AchievementService(new AchievementCatalog(), _save, _clock);
+
+            // La paga se engancha aquí y no al encender la partida, y no es un
+            // detalle: poblar una isla nueva ya desbloquea logros —el primer
+            // edificio, el primer amigo— y esos avisos salen dentro de este mismo
+            // Build. Suscribiéndose después, los primeros logros de cada partida se
+            // conseguían y no pagaban ni un nimbo. Se veía en el guardado: dos
+            // logros hechos y las monedas intactas.
+            EventBus.Subscribe<AchievementUnlocked>(OnAchievementUnlocked);
 
             var generator = new RequestGenerator(registry, personalities, _requestConfig);
             _requests = new RequestService(registry, _simulation, generator, _requestConfig, _clock);
