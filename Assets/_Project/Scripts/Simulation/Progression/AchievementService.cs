@@ -194,7 +194,6 @@ namespace Nimbo.Simulation.Progression
             EventBus.Subscribe<HappinessChanged>(OnHappinessChanged);
             EventBus.Subscribe<BuildingUnlocked>(OnBuildingUnlocked);
             EventBus.Subscribe<DecorPlaced>(OnDecorPlaced);
-            EventBus.Subscribe<NeedBandChanged>(OnNeedBandChanged);
         }
 
         // ── manejadores ──────────────────────────────────────────────────────
@@ -324,12 +323,6 @@ namespace Nimbo.Simulation.Progression
 
         void OnIslanderLeft(IslanderLeft e) => Advance("logro_abandono");
 
-        void OnNeedBandChanged(NeedBandChanged e)
-        {
-            // solo cuenta cuando una necesidad llega a crítica
-            if (e.To == NeedBand.Critical) Advance("logro_necesidad_extrema");
-        }
-
         // ── IDisposable ──────────────────────────────────────────────────────
         //
         // Quitarse de todos los eventos al morir no es una cortesía: el
@@ -360,7 +353,6 @@ namespace Nimbo.Simulation.Progression
             EventBus.Unsubscribe<HappinessChanged>(OnHappinessChanged);
             EventBus.Unsubscribe<BuildingUnlocked>(OnBuildingUnlocked);
             EventBus.Unsubscribe<DecorPlaced>(OnDecorPlaced);
-            EventBus.Unsubscribe<NeedBandChanged>(OnNeedBandChanged);
         }
     }
 }

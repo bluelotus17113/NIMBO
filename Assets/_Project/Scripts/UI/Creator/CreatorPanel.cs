@@ -218,7 +218,8 @@ namespace Nimbo.UI.Creator
             FloatSlider(face, "MouthHeight", "Altura");
 
             var hair = Section("Pelo");
-            IntSlider(hair, "HairStyle", "Peinado", 20);
+            IntSlider(hair, "HairStyle", "Peinado",
+                      Nimbo.Data.Islanders.HairStyles.BaseCount);
 
             var body = Section("Cuerpo");
             FloatSlider(body, "BodyHeight", "Estatura");

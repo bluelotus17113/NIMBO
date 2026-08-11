@@ -602,11 +602,11 @@ funcional. Lo de `[SI DA TIEMPO]` puede llegar en un parche post-lanzamiento.
 ### 12.2 `[IMPORTANTE]` — El juego cojea sin esto
 
 - [x] 8 prendas base + pool de 150 en tienda de ropa rotatoria.
-- [ ] 32 peinados base + 8 desbloqueables.
+- [x] 40 peinados: 32 de salida y 8 que se ganan subiendo el nivel de isla.
 - [ ] Conjuntos de muebles temáticos (rústico, moderno, japonés).
 - [ ] Eventos de "visita misteriosa" y "expedición".
 - [x] Sistema de logros: 44 logros con recompensa en nimbos, pantalla y aviso.
-- [ ] Ampliación de apartamento (2 niveles de mejora).
+- [x] Ampliación de apartamento: 2 niveles (8×8 → 11×11 → 14×14).
 - [ ] El Espejo de introspección (reajuste de personalidad).
 - [ ] Sueños con escenas visuales (no solo texto).
 - [ ] Sala de la fama (isleños nivel 50).

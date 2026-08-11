@@ -122,62 +122,182 @@ namespace Nimbo.Art.Chibi
         }
 
         /// <summary>
-        /// El pelo: un casquete sobre el cráneo más los mechones que pida el estilo.
-        /// Veinte peinados salen de combinar casquete, flequillo, coleta y moño.
+        /// El pelo: un casquete sobre el cráneo más las piezas que pida el peinado.
         /// </summary>
+        /// <remarks>
+        /// Las piezas salen de <see cref="HairStyles"/>, que es una tabla escrita a
+        /// mano. Antes se deducían del número de estilo con condiciones sueltas
+        /// —«si es par, flequillo; si pasa de ocho, moño»— y varios números daban
+        /// exactamente el mismo pelo: había veinte peinados sobre el papel y bastantes
+        /// menos en pantalla. Con la tabla cada entrada es una decisión y se puede
+        /// comprobar que las cuarenta son distintas.
+        /// </remarks>
         private static Mesh BuildHair(in AppearanceData appearance, float headCentre,
                                       float headWidth, float headHeight)
         {
             var parts = new List<(Mesh, Matrix4x4)>();
-            int style = appearance.HairStyle;
+            var style = HairStyles.Get(appearance.HairStyle);
 
-            // Un casquete de verdad, no una esfera entera: la esfera completa envolvía
-            // también la cara y tapaba los ojos y la boca — parecía que todos llevaran
-            // pasamontañas. Este llega hasta media cabeza y se desplaza hacia atrás,
-            // así que deja la frente y la cara libres.
-            var cap = MeshShapes.SphericalCap(20, 10, coverage: 0.52f);
-            parts.Add((cap, Matrix4x4.TRS(
-                new Vector3(0f, headCentre + headHeight * 0.02f, -headWidth * 0.06f),
-                Quaternion.identity,
-                new Vector3(headWidth * 1.04f, headHeight * 1.03f, headWidth * 1.06f))));
-
-            if (style % 4 >= 1) // flequillo
-            {
-                var fringe = MeshShapes.Sphere(14, 10, new Vector3(1f, 0.30f, 0.42f));
-                parts.Add((fringe, Matrix4x4.TRS(
-                    new Vector3(0f, headCentre + headHeight * 0.30f, headWidth * 0.34f),
-                    Quaternion.Euler(16f, 0f, 0f), Vector3.one * headWidth * 0.90f)));
-            }
-
-            if (style % 4 >= 2) // melena por detrás
-            {
-                var back = MeshShapes.Sphere(14, 12, new Vector3(0.86f, 1.15f, 0.5f));
-                parts.Add((back, Matrix4x4.TRS(
-                    new Vector3(0f, headCentre - headHeight * 0.18f, -headWidth * 0.40f),
-                    Quaternion.identity, Vector3.one * headWidth * 0.82f)));
-            }
-
-            if (style >= 8 && style % 4 == 3) // coletas
-            {
-                for (int side = -1; side <= 1; side += 2)
-                {
-                    var tail = MeshShapes.Sphere(12, 10, new Vector3(0.7f, 1.5f, 0.7f));
-                    parts.Add((tail, Matrix4x4.TRS(
-                        new Vector3(side * headWidth * 0.52f, headCentre - headHeight * 0.05f,
-                                    -headWidth * 0.12f),
-                        Quaternion.Euler(0f, 0f, side * 16f), Vector3.one * headWidth * 0.42f)));
-                }
-            }
-
-            if (style >= 14) // moño
-            {
-                var bun = MeshShapes.Sphere(12, 10);
-                parts.Add((bun, Matrix4x4.TRS(
-                    new Vector3(0f, headCentre + headHeight * 0.52f, -headWidth * 0.16f),
-                    Quaternion.identity, Vector3.one * headWidth * 0.42f)));
-            }
+            AddCap(parts, style.Cap, headCentre, headWidth, headHeight);
+            AddFringe(parts, style.Fringe, headCentre, headWidth, headHeight);
+            AddBack(parts, style.Back, headCentre, headWidth, headHeight);
+            AddSides(parts, style.Sides, headCentre, headWidth, headHeight);
+            AddCrown(parts, style.Crown, headCentre, headWidth, headHeight);
 
             return MeshShapes.Combine(parts, "chibi_pelo");
+        }
+
+        /// <summary>
+        /// El casquete. Es un casquete de verdad y no una esfera entera: la esfera
+        /// completa envolvía también la cara y tapaba los ojos y la boca — parecía
+        /// que todos llevaran pasamontañas.
+        /// </summary>
+        private static void AddCap(List<(Mesh, Matrix4x4)> parts, HairCap cap,
+                                   float headCentre, float headWidth, float headHeight)
+        {
+            float coverage = cap switch
+            {
+                HairCap.Shaved => 0.34f,
+                HairCap.Short => 0.44f,
+                _ => 0.52f,
+            };
+
+            // El rapado además se pega al cráneo, o se queda flotando como un gorro.
+            float hug = cap == HairCap.Shaved ? 1.005f : 1.04f;
+
+            parts.Add((MeshShapes.SphericalCap(20, 10, coverage), Matrix4x4.TRS(
+                new Vector3(0f, headCentre + headHeight * 0.02f, -headWidth * 0.06f),
+                Quaternion.identity,
+                new Vector3(headWidth * hug, headHeight * (hug - 0.01f), headWidth * (hug + 0.02f)))));
+        }
+
+        private static void AddFringe(List<(Mesh, Matrix4x4)> parts, HairFringe fringe,
+                                      float headCentre, float headWidth, float headHeight)
+        {
+            if (fringe == HairFringe.None) return;
+
+            // El flequillo de lado va girado y desplazado, no centrado: es lo único
+            // que lo distingue del recto a la distancia a la que se mira la isla.
+            float tilt = fringe == HairFringe.Side ? 14f : 0f;
+            float offsetX = fringe == HairFringe.Side ? headWidth * 0.13f : 0f;
+            float drop = fringe == HairFringe.Long ? 0.20f : 0.30f;
+            float thickness = fringe == HairFringe.Long ? 0.42f : 0.30f;
+
+            var mesh = MeshShapes.Sphere(14, 10, new Vector3(1f, thickness, 0.42f));
+            parts.Add((mesh, Matrix4x4.TRS(
+                new Vector3(offsetX, headCentre + headHeight * drop, headWidth * 0.34f),
+                Quaternion.Euler(16f, 0f, tilt), Vector3.one * headWidth * 0.90f)));
+        }
+
+        private static void AddBack(List<(Mesh, Matrix4x4)> parts, HairBack back,
+                                    float headCentre, float headWidth, float headHeight)
+        {
+            if (back == HairBack.None) return;
+
+            float length = back == HairBack.Long ? 1.55f : 1.15f;
+            float drop = back == HairBack.Long ? 0.42f : 0.18f;
+
+            var mesh = MeshShapes.Sphere(14, 12, new Vector3(0.86f, length, 0.5f));
+            parts.Add((mesh, Matrix4x4.TRS(
+                new Vector3(0f, headCentre - headHeight * drop, -headWidth * 0.40f),
+                Quaternion.identity, Vector3.one * headWidth * 0.82f)));
+        }
+
+        private static void AddSides(List<(Mesh, Matrix4x4)> parts, HairSides sides,
+                                     float headCentre, float headWidth, float headHeight)
+        {
+            if (sides == HairSides.None) return;
+
+            for (int side = -1; side <= 1; side += 2)
+            {
+                switch (sides)
+                {
+                    case HairSides.Tails:
+                        parts.Add((MeshShapes.Sphere(12, 10, new Vector3(0.7f, 1.5f, 0.7f)),
+                            Matrix4x4.TRS(
+                                new Vector3(side * headWidth * 0.52f,
+                                            headCentre - headHeight * 0.05f, -headWidth * 0.12f),
+                                Quaternion.Euler(0f, 0f, side * 16f),
+                                Vector3.one * headWidth * 0.42f)));
+                        break;
+
+                    case HairSides.Braids:
+                        // Tres bolas en fila hacen una trenza a esta distancia, y se
+                        // distinguen de una coleta lisa porque se ve el escalonado.
+                        for (int link = 0; link < 3; link++)
+                        {
+                            float t = link / 2f;
+                            parts.Add((MeshShapes.Sphere(10, 8),
+                                Matrix4x4.TRS(
+                                    new Vector3(side * headWidth * (0.48f + t * 0.06f),
+                                                headCentre - headHeight * (0.05f + t * 0.42f),
+                                                -headWidth * 0.10f),
+                                    Quaternion.identity,
+                                    Vector3.one * headWidth * (0.30f - t * 0.05f))));
+                        }
+                        break;
+
+                    case HairSides.Curls:
+                        for (int curl = 0; curl < 3; curl++)
+                        {
+                            float t = curl / 2f;
+                            parts.Add((MeshShapes.Sphere(10, 8),
+                                Matrix4x4.TRS(
+                                    new Vector3(side * headWidth * 0.50f,
+                                                headCentre + headHeight * (0.18f - t * 0.34f),
+                                                -headWidth * (0.06f + t * 0.10f)),
+                                    Quaternion.identity,
+                                    Vector3.one * headWidth * 0.34f)));
+                        }
+                        break;
+                }
+            }
+        }
+
+        private static void AddCrown(List<(Mesh, Matrix4x4)> parts, HairCrown crown,
+                                     float headCentre, float headWidth, float headHeight)
+        {
+            switch (crown)
+            {
+                case HairCrown.Bun:
+                    parts.Add((MeshShapes.Sphere(12, 10), Matrix4x4.TRS(
+                        new Vector3(0f, headCentre + headHeight * 0.52f, -headWidth * 0.16f),
+                        Quaternion.identity, Vector3.one * headWidth * 0.42f)));
+                    break;
+
+                case HairCrown.DoubleBun:
+                    for (int side = -1; side <= 1; side += 2)
+                        parts.Add((MeshShapes.Sphere(12, 10), Matrix4x4.TRS(
+                            new Vector3(side * headWidth * 0.36f,
+                                        headCentre + headHeight * 0.46f, -headWidth * 0.10f),
+                            Quaternion.identity, Vector3.one * headWidth * 0.34f)));
+                    break;
+
+                case HairCrown.Spike:
+                    // Cinco púas de alturas distintas. Iguales parecían un peine.
+                    for (int i = 0; i < 5; i++)
+                    {
+                        float t = i / 4f;
+                        float height = 0.34f + Mathf.Sin(t * Mathf.PI) * 0.30f;
+                        parts.Add((MeshShapes.Sphere(8, 6, new Vector3(0.45f, 1.8f, 0.45f)),
+                            Matrix4x4.TRS(
+                                new Vector3(0f, headCentre + headHeight * 0.48f,
+                                            headWidth * (0.26f - t * 0.62f)),
+                                Quaternion.Euler(-12f + t * 24f, 0f, 0f),
+                                Vector3.one * headWidth * height)));
+                    }
+                    break;
+
+                case HairCrown.Antenna:
+                    // El mechón que no se deja peinar. Es lo que da cara de despistado.
+                    parts.Add((MeshShapes.Sphere(8, 6, new Vector3(0.4f, 2.2f, 0.4f)),
+                        Matrix4x4.TRS(
+                            new Vector3(headWidth * 0.10f, headCentre + headHeight * 0.60f,
+                                        -headWidth * 0.04f),
+                            Quaternion.Euler(-28f, 0f, 18f),
+                            Vector3.one * headWidth * 0.30f)));
+                    break;
+            }
         }
 
         /// <summary>

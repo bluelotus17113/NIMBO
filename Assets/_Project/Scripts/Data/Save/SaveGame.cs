@@ -20,6 +20,17 @@ namespace Nimbo.Data.Save
         public int UnitIndex;
         public RoomLayout Layout = new RoomLayout();
 
+        /// <summary>
+        /// Ampliaciones compradas. 0 es la casa de serie.
+        /// </summary>
+        /// <remarks>
+        /// Se guarda aparte del tamaño de la rejilla aunque se pueda deducir de él:
+        /// el tamaño de cada nivel es un número de diseño y se retoca, y si mañana
+        /// el nivel 1 pasara de 11 a 12 casillas, todas las casas compradas se
+        /// leerían como del nivel de serie y se podrían volver a comprar.
+        /// </remarks>
+        public int UpgradeLevel;
+
         public string Key => $"{BuildingId}#{UnitIndex}";
     }
 

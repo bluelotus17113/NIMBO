@@ -17,7 +17,9 @@ namespace Nimbo.CharacterCreator.Appearance
         public const int BrowStyles = 8;
         public const int NoseStyles = 8;
         public const int MouthStyles = 10;
-        public const int HairStyles = 20;
+        // Los que se sortean son solo los de salida: un vecino que aparece solo
+        // no puede lucir un peinado que el jugador todavía no ha desbloqueado.
+        public const int HairStyles = Data.Islanders.HairStyles.BaseCount;
         public const int GlassesStyles = 7;   // el 0 es «ninguna»
         public const int FacialHairStyles = 6; // el 0 es «ninguno»
 

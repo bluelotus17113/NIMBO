@@ -225,6 +225,17 @@ namespace Nimbo.Core.Events
         public BuildingUnlocked(string buildingId) => BuildingId = buildingId;
     }
 
+    public readonly struct HomeUpgraded
+    {
+        public readonly string IslanderId;
+        public readonly int Level;
+        public readonly int Size;     // casillas de lado tras la ampliación
+        public HomeUpgraded(string islanderId, int level, int size)
+        {
+            IslanderId = islanderId; Level = level; Size = size;
+        }
+    }
+
     // --- logros -------------------------------------------------------------
 
     public readonly struct AchievementUnlocked
