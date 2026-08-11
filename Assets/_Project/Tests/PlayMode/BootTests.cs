@@ -303,6 +303,35 @@ namespace Nimbo.PlayTests
         }
 
         [UnityTest]
+        public IEnumerator ElProtagonistaNoSePuedeCaerDeLaIsla()
+        {
+            // Pasó de verdad en la primera partida jugada: el guardado quedó con el
+            // protagonista a cincuenta metros por debajo de la isla, cayendo, y sin
+            // forma de volver. La isla es un disco que flota: si andas hasta el borde
+            // hay que pararte, no dejarte caer.
+            yield return CargarYEmpezar();
+
+            var body = GameObject.Find("Protagonista");
+            Assert.IsNotNull(body);
+
+            // Se le deja en el aire fuera de la isla y se comprueba que la red lo
+            // devuelve, que es el caso que el guardado enseñó.
+            var controller = body.GetComponent<CharacterController>();
+            controller.enabled = false;
+            body.transform.position = new Vector3(140f, -30f, 0f);
+            controller.enabled = true;
+
+            yield return new WaitForSeconds(0.6f);
+
+            Assert.Greater(body.transform.position.y, -6f,
+                $"el protagonista se quedó cayendo (y={body.transform.position.y:0})");
+
+            float radius = new Vector2(body.transform.position.x,
+                                       body.transform.position.z).magnitude;
+            Assert.Less(radius, 110f, $"acabó a {radius:0} m del centro, fuera de la isla");
+        }
+
+        [UnityTest]
         public IEnumerator LaIslaTieneSuelo()
         {
             yield return CargarYEmpezar();

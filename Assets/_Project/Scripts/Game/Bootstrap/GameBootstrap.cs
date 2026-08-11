@@ -320,9 +320,13 @@ namespace Nimbo.Game.Bootstrap
             if (_save.Player.Created) return;
 
             var look = _protagonistLook ?? factory.CreateRandom().Appearance;
-            string name = string.IsNullOrWhiteSpace(_protagonistName)
+            // El creador devuelve «Sin nombre» si dejas el campo vacío, y eso se lee
+            // raro en la ficha y en los diálogos. Se trata igual que no haber puesto
+            // nada: un nombre del banco es mejor que un hueco.
+            string typed = _protagonistName?.Trim();
+            string name = string.IsNullOrEmpty(typed) || typed == "Sin nombre"
                 ? factory.CreateRandom().Identity.DisplayName
-                : _protagonistName.Trim();
+                : typed;
 
             _player.Create(name, look, new Vector3(14f, 3f, 14f));
         }

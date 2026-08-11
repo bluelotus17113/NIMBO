@@ -139,11 +139,23 @@ namespace Nimbo.Art.PlayerView
             // vigor a cero no puede dejarte tirado en mitad del campo.
             if (VigorFraction <= 0f) speed *= _tiredFactor;
 
-            // La gravedad va aparte y siempre: sin ella, andar por el borde de la isla
-            // deja al muñeco flotando sobre el aire al salirse del prado.
-            var velocity = move * speed;
-            velocity.y = -9.8f;
-            _controller.Move(velocity * Time.deltaTime);
+            // No se puede salir de la isla. El borde del prado es irregular —va de 86
+            // a 100 metros según la dirección—, así que un radio fijo o cortaría suelo
+            // bueno o dejaría huecos por los que caerse. Se mira si hay suelo justo
+            // donde vas a pisar, que funciona sea cual sea la forma.
+            var step = move * speed * Time.deltaTime;
+            if (step.sqrMagnitude > 0f && !HasGroundAt(transform.position + step))
+            {
+                step = Vector3.zero;
+                IsMoving = false;
+            }
+
+            // La gravedad va aparte y siempre: sin ella, el muñeco no baja las cuestas
+            // y va dando saltitos por las arrugas del prado.
+            step.y = -9.8f * Time.deltaTime;
+            _controller.Move(step);
+
+            KeepOnTheIsland();
 
             if (IsMoving)
             {
@@ -157,6 +169,48 @@ namespace Nimbo.Art.PlayerView
             // Se le va contando al servicio dónde ha acabado, para que la partida
             // guarde la posición sin que la lógica tenga que buscar el cuerpo.
             _service?.SyncTransform(transform.position, transform.eulerAngles.y);
+        }
+
+        /// <summary>¿Hay algo sólido debajo de ese punto?</summary>
+        private static bool HasGroundAt(Vector3 position)
+        {
+            // Se tira desde tres metros por encima y se buscan diez hacia abajo: desde
+            // los pies exactos, una cuesta abajo daría «no hay suelo» y el jugador se
+            // quedaría clavado al principio de cualquier bajada.
+            return Physics.Raycast(position + Vector3.up * 3f, Vector3.down,
+                                   10f, ~0, QueryTriggerInteraction.Ignore);
+        }
+
+        private Vector3 _lastSafe;
+
+        /// <summary>
+        /// Red de seguridad por si aun así acaba en el aire.
+        /// </summary>
+        /// <remarks>
+        /// La comprobación de arriba debería bastar, pero una malla generada tiene
+        /// costuras y basta un hueco de un centímetro para colarse. Sin esto se cae
+        /// para siempre: la partida se guardó una vez con el protagonista a cincuenta
+        /// metros por debajo de la isla, cayendo, y no había forma de volver.
+        /// </remarks>
+        private void KeepOnTheIsland()
+        {
+            var position = transform.position;
+
+            if (position.y > -6f)
+            {
+                // Solo se apunta como sitio seguro si de verdad se está de pie: si no,
+                // el sitio seguro acabaría siendo un punto del aire durante la caída.
+                if (_controller.isGrounded) _lastSafe = position;
+                return;
+            }
+
+            var rescue = _lastSafe.sqrMagnitude > 0.01f ? _lastSafe : new Vector3(14f, 3f, 14f);
+
+            // Hay que apagar el controlador para teletransportarlo: si no, se come el
+            // cambio de posición y lo deja donde estaba.
+            _controller.enabled = false;
+            transform.position = rescue + Vector3.up * 0.5f;
+            _controller.enabled = true;
         }
 
         /// <summary>
