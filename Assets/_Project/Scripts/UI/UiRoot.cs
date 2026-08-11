@@ -39,6 +39,7 @@ namespace Nimbo.UI
         private Player.HotbarView _hotbar;
         private Player.BagPanel _bag;
         private Player.CraftPanel _craft;
+        private Player.ShippingPanel _shipping;
         private HousingEditorPanel _housing;
         private CreatorPanel _creator;
         private VisualElement _islanderStrip;
@@ -57,6 +58,7 @@ namespace Nimbo.UI
             EventBus.Unsubscribe<GameLoaded>(OnGameLoaded);
             EventBus.Unsubscribe<IslanderCreated>(OnRosterChanged);
             EventBus.Unsubscribe<IslanderLeft>(OnRosterChanged);
+            EventBus.Unsubscribe<StationUsed>(OnStationUsed);
             _toast?.Unsubscribe();
             _hotbar?.Unsubscribe();
             _hud?.Dispose();
@@ -125,6 +127,9 @@ namespace Nimbo.UI
             _craft = new Player.CraftPanel();
             body.Add(_craft.Root);
 
+            _shipping = new Player.ShippingPanel();
+            body.Add(_shipping.Root);
+
             root.Add(body);
             root.Add(BuildActionBar());
 
@@ -154,6 +159,7 @@ namespace Nimbo.UI
 
             EventBus.Subscribe<IslanderCreated>(OnRosterChanged);
             EventBus.Subscribe<IslanderLeft>(OnRosterChanged);
+            EventBus.Subscribe<StationUsed>(OnStationUsed);
 
             RebuildStrip();
             _mounted = true;
@@ -221,6 +227,25 @@ namespace Nimbo.UI
             registry.Add(islander);
             EventBus.Publish(new IslanderCreated(islander.Id));
             _panel.Show(islander.Id);
+        }
+
+        /// <summary>
+        /// El jugador se ha puesto delante de un mueble de su casa: se abre lo que
+        /// toque. Es lo que hace que la mesa de trabajo sea un sitio al que ir y no
+        /// otro botón en la fila de arriba.
+        /// </summary>
+        private void OnStationUsed(StationUsed evt)
+        {
+            switch (evt.Station)
+            {
+                case CraftStationKind.Shipping:
+                    if (_shipping.IsShowing) _shipping.Hide(); else _shipping.Show();
+                    break;
+
+                default:
+                    if (_craft.IsShowing) _craft.Hide(); else _craft.Show();
+                    break;
+            }
         }
 
         private void OnRosterChanged<T>(T _) => RebuildStrip();

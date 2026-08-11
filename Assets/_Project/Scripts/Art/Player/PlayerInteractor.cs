@@ -6,7 +6,8 @@ using UnityEngine;
 namespace Nimbo.Art.PlayerView
 {
     /// <summary>Con qué está a punto de interactuar el jugador.</summary>
-    public enum TargetKind { None = 0, Islander = 1, Node = 2, FarmTile = 3 }
+    public enum TargetKind { None = 0, Islander = 1, Node = 2, FarmTile = 3,
+                             Hammock = 4, Bench = 5, ShippingBox = 6 }
 
     /// <summary>
     /// Lo que el jugador tiene delante y qué pasa si pulsa.
@@ -100,6 +101,11 @@ namespace Nimbo.Art.PlayerView
 
             if (Kind == TargetKind.Islander) return;
 
+            // Los muebles de casa antes que el huerto y los nodos: la parcela llega
+            // hasta cerca del porche, y estando delante de tu propia mesa lo que
+            // quieres es usarla, no labrar la casilla que tengas bajo los pies.
+            if (TryTargetHome()) return;
+
             if (TryTargetFarmTile()) return;
 
             if (_gathering == null) return;
@@ -118,6 +124,66 @@ namespace Nimbo.Art.PlayerView
                 TargetId = node.InstanceId;
                 Prompt = PromptFor(definition);
             }
+        }
+
+        /// <summary>¿Está delante de alguno de los muebles de su casa?</summary>
+        private bool TryTargetHome()
+        {
+            var position = transform.position;
+            float range = Data.Player.PlayerHome.UseRange;
+
+            if (Near(position, Data.Player.PlayerHome.Hammock, range))
+            {
+                Kind = TargetKind.Hammock;
+                Prompt = "Dormir hasta mañana";
+                return true;
+            }
+
+            if (Near(position, Data.Player.PlayerHome.Bench, range))
+            {
+                Kind = TargetKind.Bench;
+                Prompt = "Ponerse a hacer cosas";
+                return true;
+            }
+
+            if (Near(position, Data.Player.PlayerHome.ShippingBox, range))
+            {
+                Kind = TargetKind.ShippingBox;
+                Prompt = "Vender lo que traigas";
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool Near(Vector3 from, Vector3 to, float range)
+        {
+            float dx = from.x - to.x;
+            float dz = from.z - to.z;
+            return dx * dx + dz * dz <= range * range;
+        }
+
+        /// <summary>
+        /// Dormir: adelanta el reloj a las ocho de la mañana siguiente.
+        /// </summary>
+        /// <remarks>
+        /// Va por el reloj y no por un salto directo del día para que todo lo que
+        /// escucha las horas —el huerto, los nodos, las agendas de los vecinos— se
+        /// entere de cada hora que pasa. Si se saltara al día siguiente de golpe, te
+        /// levantarías con el huerto sin crecer y la isla congelada donde la dejaste.
+        /// </remarks>
+        private void Sleep()
+        {
+            if (!ServiceRegistry.TryGet<Core.Time.GameClock>(out var clock)) return;
+
+            int minutesToMorning = (24 - clock.Hour + 8) % 24 * 60 - clock.Minute;
+            if (minutesToMorning <= 0) minutesToMorning += 24 * 60;
+
+            clock.Advance(minutesToMorning);
+            _player?.RestoreVigor(Data.Player.PlayerState.MaxVigor);
+            _body.SetEmotion(Data.Islanders.Emotion.Happy);
+
+            EventBus.Publish(new Slept(clock.Day));
         }
 
         /// <summary>
@@ -307,6 +373,18 @@ namespace Nimbo.Art.PlayerView
 
                 case TargetKind.FarmTile:
                     WorkFarmTile();
+                    break;
+
+                case TargetKind.Hammock:
+                    Sleep();
+                    break;
+
+                case TargetKind.Bench:
+                    EventBus.Publish(new StationUsed(CraftStationKind.Bench));
+                    break;
+
+                case TargetKind.ShippingBox:
+                    EventBus.Publish(new StationUsed(CraftStationKind.Shipping));
                     break;
             }
         }

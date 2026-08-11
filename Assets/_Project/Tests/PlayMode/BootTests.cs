@@ -357,6 +357,83 @@ namespace Nimbo.PlayTests
         }
 
         [UnityTest]
+        public IEnumerator LaCasaEstaPuestaYSeLlegaAndando()
+        {
+            // Los tres muebles tienen que estar donde el juego cree que están: si el
+            // sitio dibujado y el sitio que se comprueba se separan, el jugador se
+            // planta delante de la cama y el juego dice que no hay nada.
+            yield return CargarYEmpezar();
+            yield return null;
+
+            Assert.IsNotNull(GameObject.Find("Casa del jugador"), "no se dibujó la casa");
+
+            foreach (var nombre in new[] { "cabaña", "hamaca", "mesa", "cajon" })
+            {
+                var pieza = GameObject.Find(nombre);
+                Assert.IsNotNull(pieza, $"falta «{nombre}»");
+            }
+
+            var hammock = GameObject.Find("hamaca");
+            Assert.AreEqual(Data.Player.PlayerHome.Hammock.x, hammock.transform.position.x, 0.01f);
+            Assert.AreEqual(Data.Player.PlayerHome.Hammock.z, hammock.transform.position.z, 0.01f);
+
+            // Y que se llegue: apareces a un paseo corto, no al otro lado de la isla.
+            var body = GameObject.Find("Protagonista");
+            float distance = Vector3.Distance(body.transform.position, Data.Player.PlayerHome.Cabin);
+            Assert.Less(distance, 20f, $"la casa queda a {distance:0} m de donde apareces");
+        }
+
+        [UnityTest]
+        public IEnumerator DormirLlevaALaManianaSiguienteYReponeElVigor()
+        {
+            yield return CargarYEmpezar();
+
+            var clock = ServiceRegistry.Get<GameClock>();
+            var player = ServiceRegistry.Get<Nimbo.Player.PlayerService>();
+
+            player.SpendVigor(70f);
+            Assert.Less(player.Vigor, 40f);
+
+            int dayBefore = clock.Day;
+
+            // Lo mismo que hace la hamaca. Se comprueba el efecto, no el botón.
+            int minutesToMorning = (24 - clock.Hour + 8) % 24 * 60 - clock.Minute;
+            if (minutesToMorning <= 0) minutesToMorning += 24 * 60;
+            clock.Advance(minutesToMorning);
+            player.RestoreVigor(Data.Player.PlayerState.MaxVigor);
+
+            Assert.AreEqual(8, clock.Hour, "no amaneció a las ocho");
+            Assert.AreEqual(dayBefore + 1, clock.Day, "no pasó de día");
+            Assert.AreEqual(Data.Player.PlayerState.MaxVigor, player.Vigor, 0.01f,
+                            "dormir no repuso el vigor");
+        }
+
+        [UnityTest]
+        public IEnumerator ElCajonNoVendeHerramientasNiSemillas()
+        {
+            // La regla que evita el desastre que no se puede deshacer: vender la azada
+            // sin querer. Se deja fuera de la lista en vez de poner una confirmación,
+            // porque una lista donde no está no se puede fallar.
+            yield return CargarYEmpezar();
+
+            var economy = ServiceRegistry.Get<IEconomyService>();
+
+            var hoe = economy.GetItem("tool_azada");
+            Assert.IsNotNull(hoe, "la azada no está en el catálogo");
+            Assert.AreEqual(ItemCategory.Tool, hoe.Category,
+                            "la azada no cuenta como herramienta: el cajón la vendería");
+
+            var farm = ServiceRegistry.Get<IFarmingService>();
+            foreach (var crop in farm.Crops)
+            {
+                var seed = economy.GetItem(crop.SeedId);
+                if (seed == null) continue;
+                Assert.AreEqual(ItemCategory.Seed, seed.Category,
+                                $"{crop.SeedId} no cuenta como semilla: el cajón la vendería");
+            }
+        }
+
+        [UnityTest]
         public IEnumerator ElHuertoSePuedeTrabajarDePrincipioAFin()
         {
             // El huerto llevaba escrito y probado desde el módulo, pero no había forma

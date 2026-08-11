@@ -38,4 +38,28 @@ namespace Nimbo.Data.Player
 
         public int SelectedSlot;
     }
+
+    /// <summary>
+    /// Dónde está la casa del protagonista y sus cuatro muebles.
+    /// </summary>
+    /// <remarks>
+    /// Igual que con el huerto: los números viven en Data porque los usan quien
+    /// dibuja la casa y quien decide si estás delante de la cama, y son ensamblados
+    /// que no se ven entre sí. Copiarlos a mano acabaría con el jugador plantado
+    /// delante de una cama que el juego cree que está dos metros más allá.
+    ///
+    /// Está al norte del huerto, y todo lo de trabajar queda fuera: no hay interior
+    /// que recorrer. La cama es una hamaca en el porche, que en una isla que flota
+    /// no chirría y evita fingir una casa por dentro que no existe.
+    /// </remarks>
+    public static class PlayerHome
+    {
+        public static readonly UnityEngine.Vector3 Cabin = new(20f, 0f, -6f);
+        public static readonly UnityEngine.Vector3 Hammock = new(16.4f, 0f, -6f);
+        public static readonly UnityEngine.Vector3 Bench = new(23.6f, 0f, -6f);
+        public static readonly UnityEngine.Vector3 ShippingBox = new(20f, 0f, -10f);
+
+        /// <summary>A cuánto hay que estar para poder usar un mueble.</summary>
+        public const float UseRange = 2.4f;
+    }
 }

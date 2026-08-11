@@ -295,6 +295,29 @@ namespace Nimbo.Core.Events
         }
     }
 
+    /// <summary>Ha dormido. El reloj ya está en la mañana siguiente.</summary>
+    public readonly struct Slept
+    {
+        public readonly int Day;
+        public Slept(int day) => Day = day;
+    }
+
+    /// <summary>
+    /// Se ha puesto delante de un sitio de trabajo. La interfaz abre lo que toque.
+    /// </summary>
+    /// <remarks>
+    /// Va por evento y no llamando a la interfaz porque quien lo detecta vive en
+    /// <c>Nimbo.Art</c> y los paneles en <c>Nimbo.UI</c>, que no se ven entre sí.
+    /// </remarks>
+    public readonly struct StationUsed
+    {
+        public readonly CraftStationKind Station;
+        public StationUsed(CraftStationKind station) => Station = station;
+    }
+
+    /// <summary>Qué sitio de trabajo se ha usado.</summary>
+    public enum CraftStationKind { Bench = 0, Kitchen = 1, Shipping = 2 }
+
     /// <summary>El protagonista ya existe y está puesto en el mundo.</summary>
     public readonly struct PlayerSpawned { }
 
