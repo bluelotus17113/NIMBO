@@ -129,6 +129,7 @@ namespace Nimbo.EditorTools
             worldGo.AddComponent<FarmView>();
             worldGo.AddComponent<PlayerHomeView>();
             worldGo.AddComponent<BuildModeView>();
+            worldGo.AddComponent<InteriorView>();
 
             var audioGo = new GameObject("Sonido");
             audioGo.transform.SetParent(go.transform);

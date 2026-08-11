@@ -37,6 +37,17 @@ namespace Nimbo.Data.Player
         public Economy.Inventory Bag = new Economy.Inventory();
 
         public int SelectedSlot;
+
+        /// <summary>
+        /// El interior de tu cabaña.
+        /// </summary>
+        /// <remarks>
+        /// Es el mismo tipo que usan las casas de los vecinos, así que el editor de
+        /// muebles, el catálogo y la puntuación de comodidad valen igual para la tuya
+        /// sin escribir nada aparte. Lo único que la diferencia es que esta cuelga del
+        /// jugador y las otras del censo.
+        /// </remarks>
+        public Housing.RoomLayout Home = new Housing.RoomLayout();
     }
 
     /// <summary>

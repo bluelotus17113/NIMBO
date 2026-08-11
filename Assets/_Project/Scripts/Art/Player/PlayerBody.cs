@@ -144,7 +144,7 @@ namespace Nimbo.Art.PlayerView
             // bueno o dejaría huecos por los que caerse. Se mira si hay suelo justo
             // donde vas a pisar, que funciona sea cual sea la forma.
             var step = move * speed * Time.deltaTime;
-            if (step.sqrMagnitude > 0f && !HasGroundAt(transform.position + step))
+            if (!_indoors && step.sqrMagnitude > 0f && !HasGroundAt(transform.position + step))
             {
                 step = Vector3.zero;
                 IsMoving = false;
@@ -182,6 +182,19 @@ namespace Nimbo.Art.PlayerView
         }
 
         private Vector3 _lastSafe;
+        private bool _indoors;
+
+        /// <summary>
+        /// Le dice que está dentro de una casa, donde no hay que rescatarlo.
+        /// </summary>
+        /// <remarks>
+        /// La red anticaída rescata todo lo que baje de menos seis metros, y los
+        /// interiores se montan quinientos por debajo del mundo. Sin esto, entrar en
+        /// casa montaba la habitación y la red devolvía al jugador a la calle en el
+        /// mismo fotograma: la casa quedaba construida y vacía, y desde fuera parecía
+        /// que la puerta no hacía nada.
+        /// </remarks>
+        public void SetIndoors(bool indoors) => _indoors = indoors;
 
         /// <summary>
         /// Red de seguridad por si aun así acaba en el aire.
@@ -194,6 +207,8 @@ namespace Nimbo.Art.PlayerView
         /// </remarks>
         private void KeepOnTheIsland()
         {
+            if (_indoors) return;
+
             var position = transform.position;
 
             if (position.y > -6f)

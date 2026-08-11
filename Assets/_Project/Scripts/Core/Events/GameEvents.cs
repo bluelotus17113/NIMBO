@@ -295,6 +295,24 @@ namespace Nimbo.Core.Events
         }
     }
 
+    // --- interiores ---------------------------------------------------------
+
+    /// <summary>
+    /// Ha entrado en una casa. La clave dice de quién: vacía es la del jugador.
+    /// </summary>
+    public readonly struct InteriorEntered
+    {
+        public readonly string HomeKey;
+        public readonly string DisplayName;
+        public InteriorEntered(string homeKey, string displayName)
+        {
+            HomeKey = homeKey; DisplayName = displayName;
+        }
+    }
+
+    /// <summary>Ha salido a la calle.</summary>
+    public readonly struct InteriorExited { }
+
     /// <summary>Un edificio de la aldea se ha puesto o se ha movido de sitio.</summary>
     public readonly struct BuildingMoved
     {

@@ -42,6 +42,7 @@ namespace Nimbo.UI
         private Player.ShippingPanel _shipping;
         private Player.MapPanel _map;
         private Player.BuildPanel _build;
+        private Player.DoorFade _fade;
         private HousingEditorPanel _housing;
         private CreatorPanel _creator;
         private VisualElement _islanderStrip;
@@ -64,6 +65,7 @@ namespace Nimbo.UI
             EventBus.Unsubscribe<BuildModeChanged>(OnBuildModeChanged);
             _toast?.Unsubscribe();
             _hotbar?.Unsubscribe();
+            _fade?.Unsubscribe();
             _hud?.Dispose();
             _shop?.Dispose();
             _housing?.Dispose();
@@ -165,6 +167,12 @@ namespace Nimbo.UI
             _hotbar.Subscribe();
             _hotbar.Rebuild();
             root.Add(_hotbar.Root);
+
+            // El fundido va el último de todos: tiene que taparlo todo, incluido el
+            // cartel de logro y la barra.
+            _fade = new Player.DoorFade();
+            _fade.Subscribe();
+            root.Add(_fade.Root);
 
             EventBus.Subscribe<IslanderCreated>(OnRosterChanged);
             EventBus.Subscribe<IslanderLeft>(OnRosterChanged);
@@ -405,6 +413,7 @@ namespace Nimbo.UI
             // Sin escalar: el cartel de logro tiene que terminar de irse aunque el
             // juego esté en pausa, en vez de quedarse clavado en pantalla.
             _toast.Tick(Time.unscaledDeltaTime);
+            _fade.Tick(Time.unscaledDeltaTime);
             _hotbar.Tick();
             RefreshPrompt();
 

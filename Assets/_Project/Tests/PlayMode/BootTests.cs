@@ -375,6 +375,41 @@ namespace Nimbo.PlayTests
         }
 
         [UnityTest]
+        public IEnumerator SePuedeEntrarYSalirDeTuCasa()
+        {
+            // Lo que de verdad importa de un interior tipo Animal Crossing: que se
+            // entre, que dentro haya suelo bajo los pies, y que se pueda volver a
+            // salir al mismo sitio. Entrar y quedarse encerrado sería peor que no
+            // poder entrar.
+            yield return CargarYEmpezar();
+            yield return null;
+
+            var body = GameObject.Find("Protagonista");
+            var outside = body.transform.position;
+
+            EventBus.Publish(new InteriorEntered("", "Tu casa"));
+            yield return null;
+            yield return new WaitForFixedUpdate();
+
+            Assert.IsNotNull(GameObject.Find("Interior"), "no se construyó la habitación");
+            Assert.Less(body.transform.position.y, -100f,
+                        "se montó la casa pero el jugador se quedó en la calle");
+
+            // Suelo bajo los pies: sin él se cae para siempre por debajo del mundo y
+            // la red de seguridad lo devuelve a la isla dejando la casa montada.
+            bool ground = Physics.Raycast(body.transform.position + Vector3.up * 1.5f,
+                                          Vector3.down, 6f, ~0, QueryTriggerInteraction.Ignore);
+            Assert.IsTrue(ground, "la casa no tiene suelo");
+
+            EventBus.Publish(new InteriorExited());
+            yield return null;
+
+            Assert.IsNull(GameObject.Find("Interior"), "la habitación se quedó montada al salir");
+            Assert.Less(Vector3.Distance(body.transform.position, outside), 1.5f,
+                        "salió por la puerta y apareció en otro sitio");
+        }
+
+        [UnityTest]
         public IEnumerator HayDosIslasYTuCasaEstaEnLaTuya()
         {
             yield return CargarYEmpezar();

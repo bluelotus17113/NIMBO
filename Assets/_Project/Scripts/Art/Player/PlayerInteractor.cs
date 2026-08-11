@@ -7,7 +7,8 @@ namespace Nimbo.Art.PlayerView
 {
     /// <summary>Con qué está a punto de interactuar el jugador.</summary>
     public enum TargetKind { None = 0, Islander = 1, Node = 2, FarmTile = 3,
-                             Hammock = 4, Bench = 5, ShippingBox = 6 }
+                             Hammock = 4, Bench = 5, ShippingBox = 6,
+                             Door = 7, Exit = 8 }
 
     /// <summary>
     /// Lo que el jugador tiene delante y qué pasa si pulsa.
@@ -39,6 +40,8 @@ namespace Nimbo.Art.PlayerView
         private IIslanderRegistry _registry;
         private IFarmingService _farming;
         private IEconomyService _economy;
+        private IIslandService _island;
+        private World.InteriorView _interior;
 
         private int _tileX, _tileY;
 
@@ -62,6 +65,8 @@ namespace Nimbo.Art.PlayerView
             ServiceRegistry.TryGet(out _registry);
             ServiceRegistry.TryGet(out _farming);
             ServiceRegistry.TryGet(out _economy);
+            ServiceRegistry.TryGet(out _island);
+            _interior = FindFirstObjectByType<World.InteriorView>();
         }
 
         private void Update()
@@ -83,6 +88,21 @@ namespace Nimbo.Art.PlayerView
             TargetId = "";
             Prompt = "";
 
+            // Dentro de una casa no hay nada más que la puerta: ni vecinos, ni
+            // huerto, ni árboles. Comprobarlo primero ahorra recorrer ciento veinte
+            // nodos que están quinientos metros más arriba.
+            if (_interior != null && _interior.Inside)
+            {
+                if (Near(transform.position,
+                         World.InteriorView.Anchor + new Vector3(transform.position.x, 1f, 0.4f), 3f)
+                    || transform.position.z <= World.InteriorView.Anchor.z + 2.2f)
+                {
+                    Kind = TargetKind.Exit;
+                    Prompt = "Salir";
+                }
+                return;
+            }
+
             var origin = transform.position;
             float best = _reach * _reach;
 
@@ -102,6 +122,8 @@ namespace Nimbo.Art.PlayerView
             }
 
             if (Kind == TargetKind.Islander) return;
+
+            if (TryTargetDoor()) return;
 
             // Los muebles de casa antes que el huerto y los nodos: la parcela llega
             // hasta cerca del porche, y estando delante de tu propia mesa lo que
@@ -126,6 +148,49 @@ namespace Nimbo.Art.PlayerView
                 TargetId = node.InstanceId;
                 Prompt = PromptFor(definition);
             }
+        }
+
+        /// <summary>
+        /// ¿Está delante de una puerta? La suya o la de un edificio de la aldea.
+        /// </summary>
+        /// <remarks>
+        /// La puerta de la cabaña cae al sur de la fachada, que es por donde se llega
+        /// desde el huerto. Las de la aldea, en el centro del edificio: los edificios
+        /// se pueden mover ahora, así que clavar la puerta a un lado obligaría a
+        /// girarla con el edificio y a que el jugador diera la vuelta para encontrarla.
+        /// </remarks>
+        private bool TryTargetDoor()
+        {
+            var position = transform.position;
+
+            var cabinDoor = Data.Player.PlayerHome.Cabin + new Vector3(0f, 0f, -2.6f);
+            if (Near(position, cabinDoor, 2.2f))
+            {
+                Kind = TargetKind.Door;
+                TargetId = "";
+                Prompt = "Entrar en tu casa";
+                return true;
+            }
+
+            if (_island == null) return false;
+
+            foreach (var zoneId in _island.ZoneIds)
+            {
+                if (!_island.IsUnlocked(zoneId)) continue;
+                if (!_island.TryGetSpawnPoint(zoneId, out var centre)) continue;
+                if (!Near(position, centre, 3.4f)) continue;
+
+                // Solo se entra en lo que tiene dentro: una plaza o un parque no.
+                var purpose = _island.PurposeOf(zoneId);
+                if (purpose is ZonePurpose.Social or ZonePurpose.Nature) continue;
+
+                Kind = TargetKind.Door;
+                TargetId = zoneId;
+                Prompt = "Entrar";
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>¿Está delante de alguno de los muebles de su casa?</summary>
@@ -435,6 +500,14 @@ namespace Nimbo.Art.PlayerView
 
                 case TargetKind.ShippingBox:
                     EventBus.Publish(new StationUsed(CraftStationKind.Shipping));
+                    break;
+
+                case TargetKind.Door:
+                    EventBus.Publish(new InteriorEntered(TargetId, Prompt));
+                    break;
+
+                case TargetKind.Exit:
+                    EventBus.Publish(new InteriorExited());
                     break;
             }
         }
