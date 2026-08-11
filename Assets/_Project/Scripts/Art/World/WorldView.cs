@@ -79,6 +79,8 @@ namespace Nimbo.Art.World
 
             foreach (var islander in _registry.All) Spawn(islander);
 
+            SpawnPlayer();
+
             EventBus.Subscribe<IslanderCreated>(OnIslanderCreated);
             EventBus.Subscribe<IslanderLeft>(OnIslanderLeft);
             EventBus.Subscribe<EmotionShown>(OnEmotionShown);
@@ -94,7 +96,7 @@ namespace Nimbo.Art.World
             island.SetParent(transform, worldPositionStays: false);
 
             AddMesh(island, "prado", IslandMeshBuilder.BuildSurface(_islandRadius),
-                    ToonPalette.Solid(ToonPalette.Grass));
+                    ToonPalette.Solid(ToonPalette.Grass), solid: true);
             AddMesh(island, "roca", IslandMeshBuilder.BuildUnderside(_islandRadius, _islandDepth),
                     ToonPalette.Solid(ToonPalette.Rock));
 
@@ -103,7 +105,7 @@ namespace Nimbo.Art.World
             var (trunk, crown) = IslandMeshBuilder.BuildTree(26f, 9f);
             var tree = new GameObject("Árbol Nimbo").transform;
             tree.SetParent(island, worldPositionStays: false);
-            AddMesh(tree, "tronco", trunk, ToonPalette.Solid(ToonPalette.TrunkBrown));
+            AddMesh(tree, "tronco", trunk, ToonPalette.Solid(ToonPalette.TrunkBrown), solid: true);
             AddMesh(tree, "copa", crown, ToonPalette.Solid(ToonPalette.LeafGreen));
 
             BuildClouds(island);
@@ -169,7 +171,8 @@ namespace Nimbo.Art.World
                 zone.localRotation = Quaternion.LookRotation(toCentre.normalized);
 
             if (meshes.Walls != null)
-                AddMesh(zone, "muros", meshes.Walls, ToonPalette.Solid(ToonPalette.WallCream));
+                AddMesh(zone, "muros", meshes.Walls, ToonPalette.Solid(ToonPalette.WallCream),
+                        solid: true);
             if (meshes.Roof != null)
                 AddMesh(zone, "tejado", meshes.Roof,
                         ToonPalette.Solid(BuildingMeshBuilder.RoofColor(purpose)));
@@ -249,6 +252,34 @@ namespace Nimbo.Art.World
             }
         }
 
+        /// <summary>
+        /// Pone al protagonista en el mundo y le da la cámara.
+        /// </summary>
+        /// <remarks>
+        /// Va aquí y no en el arranque porque el cuerpo tiene que nacer después de la
+        /// isla: sin el prado puesto —y con él su colisionador— el protagonista
+        /// aparece en el aire y se cae antes del primer fotograma.
+        ///
+        /// Si todavía no está creado no pasa nada: el creador de personajes avisará y
+        /// se le pondrá entonces.
+        /// </remarks>
+        private void SpawnPlayer()
+        {
+            if (!ServiceRegistry.TryGet<Nimbo.Player.PlayerService>(out var player)) return;
+            if (!player.Exists) return;
+
+            var body = PlayerView.PlayerBody.Create(
+                player.State.Appearance, player.Position, player.State.Yaw, transform);
+            body.Bind(player);
+            body.gameObject.AddComponent<PlayerView.PlayerInteractor>();
+            EventBus.Publish(new PlayerSpawned());
+
+            var camera = Camera.main != null
+                ? Camera.main.GetComponent<CameraWork.IslandCamera>()
+                : null;
+            camera?.Follow(body.transform);
+        }
+
         private void OnDestroy() => DecorMeshBuilder.Clear();
 
         // ── Lo que la cámara necesita saber del mundo ────────────────────────
@@ -274,12 +305,23 @@ namespace Nimbo.Art.World
         public bool TryGetZoneCentre(string zoneId, out Vector3 centre) =>
             _zoneCentres.TryGetValue(zoneId ?? "", out centre);
 
-        private static void AddMesh(Transform parent, string name, Mesh mesh, Material material)
+        /// <param name="solid">
+        /// Si es cierto, se le pone colisionador. Desde que el protagonista anda por
+        /// la isla, lo que no lo lleve es aire: sin esto se cae por el prado en el
+        /// primer fotograma. Se pone solo a lo que hay que pisar o rodear —el suelo,
+        /// los muros— y nunca a las nubes ni a los adornos pequeños, que multiplicaría
+        /// por cien los colisionadores para que el jugador se quede atascado en un
+        /// arbusto.
+        /// </param>
+        private static void AddMesh(Transform parent, string name, Mesh mesh, Material material,
+                                    bool solid = false)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, worldPositionStays: false);
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
             go.AddComponent<MeshRenderer>().sharedMaterial = material;
+
+            if (solid) go.AddComponent<MeshCollider>().sharedMesh = mesh;
         }
 
         private void OnIslanderCreated(IslanderCreated evt)

@@ -19,6 +19,40 @@ namespace Nimbo.Art.CameraWork
         private Transform _focusedBody;
         private bool _followingFocus;
 
+        // A quién sigue cuando no está enfocando a nadie. Desde que el jugador tiene
+        // cuerpo, el estado normal de la cámara es ir detrás de él; el plano general
+        // pasó a ser lo que se ve mientras no hay protagonista.
+        private Transform _player;
+
+        [Header("Seguimiento del protagonista")]
+        [SerializeField] private float _followDistance = 26f;
+        [SerializeField] private float _followPitch = 42f;
+        [SerializeField] private float _followHeight = 1.2f;
+
+        /// <summary>
+        /// Le dice a quién seguir. Lo llama el arranque en cuanto el cuerpo existe;
+        /// con null vuelve al plano general de la isla.
+        /// </summary>
+        public void Follow(Transform player)
+        {
+            _player = player;
+            if (_rig == null) return;
+
+            if (player != null)
+            {
+                _rig.Target = FollowPose(_rig.Target.Yaw);
+                _rig.SnapToTarget();
+            }
+        }
+
+        private CameraPose FollowPose(float yaw) => new CameraPose
+        {
+            Pivot = _player.position + Vector3.up * _followHeight,
+            Distance = _followDistance,
+            Pitch = _followPitch,
+            Yaw = yaw,
+        };
+
         private bool _paused;
         private Vector3 _lastMousePosition;
 
@@ -74,6 +108,7 @@ namespace Nimbo.Art.CameraWork
             _rig.SnapToTarget();
             _focusedBody = null;
             _followingFocus = false;
+            _followingFocus = false;
             ApplyPose();
         }
 
@@ -83,17 +118,20 @@ namespace Nimbo.Art.CameraWork
 
             if (string.IsNullOrEmpty(evt.IslanderId))
             {
-                // Dejó de enfocar: vuelta al plano general con transición suave.
+                // Dejó de enfocar: se vuelve al protagonista si lo hay, y al plano
+                // general solo si todavía no existe. El yaw no se toca en ninguno de
+                // los dos casos, para que la transición no dé un latigazo.
                 _focusedBody = null;
                 _followingFocus = false;
-                _rig.Target = new CameraPose
-                {
-                    Pivot = Vector3.zero,
-                    Distance = 150f,
-                    Pitch = 45f,
-                    // El yaw no se toca para que la transición no dé un latigazo.
-                    Yaw = _rig.Target.Yaw,
-                };
+                _rig.Target = _player != null
+                    ? FollowPose(_rig.Target.Yaw)
+                    : new CameraPose
+                    {
+                        Pivot = Vector3.zero,
+                        Distance = 150f,
+                        Pitch = 45f,
+                        Yaw = _rig.Target.Yaw,
+                    };
             }
             else
             {
@@ -139,6 +177,7 @@ namespace Nimbo.Art.CameraWork
             if (_rig == null) return;
 
             UpdateFocusTracking();
+            UpdatePlayerTracking();
             _rig.Advance(Time.unscaledDeltaTime);
             ApplyPose();
         }
@@ -221,6 +260,20 @@ namespace Nimbo.Art.CameraWork
         /// andan. Si solo se apuntara una vez, el muñeco se saldría del plano a los
         /// tres segundos.
         /// </summary>
+        /// <summary>
+        /// Sigue al protagonista mientras no se esté mirando a un vecino.
+        /// </summary>
+        /// <remarks>
+        /// El giro se respeta: si el jugador ha orbitado, la cámara le sigue desde
+        /// donde él la puso. Recolocarla sola a un ángulo fijo cada fotograma es lo
+        /// que hace que una cámara de seguimiento se sienta como un forcejeo.
+        /// </remarks>
+        private void UpdatePlayerTracking()
+        {
+            if (_followingFocus || _player == null) return;
+            _rig.Target = FollowPose(_rig.Target.Yaw);
+        }
+
         private void UpdateFocusTracking()
         {
             if (!_followingFocus)
@@ -232,13 +285,18 @@ namespace Nimbo.Art.CameraWork
             {
                 _focusedBody = null;
                 _followingFocus = false;
-                _rig.Target = new CameraPose
-                {
-                    Pivot = Vector3.zero,
-                    Distance = 150f,
-                    Pitch = 45f,
-                    Yaw = _rig.Target.Yaw,
-                };
+
+                // Si hay protagonista se vuelve a él; el plano general solo queda
+                // para cuando todavía no lo hay.
+                _rig.Target = _player != null
+                    ? FollowPose(_rig.Target.Yaw)
+                    : new CameraPose
+                    {
+                        Pivot = Vector3.zero,
+                        Distance = 150f,
+                        Pitch = 45f,
+                        Yaw = _rig.Target.Yaw,
+                    };
                 return;
             }
 

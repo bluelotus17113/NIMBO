@@ -14,6 +14,7 @@ using Nimbo.Housing.Catalog;
 using Nimbo.Island;
 using Nimbo.Island.Decor;
 using Nimbo.Personality.Runtime;
+using Nimbo.Player;
 using Nimbo.Simulation;
 using Nimbo.Simulation.Behaviour;
 using Nimbo.Simulation.Jobs;
@@ -69,6 +70,7 @@ namespace Nimbo.Game.Bootstrap
         private NimboTree _tree;
         private WardrobeService _wardrobe;
         private AchievementService _achievements;
+        private PlayerService _player;
 
         private IslanderRegistry _registry;
         private long _lastAutosaveMinute;
@@ -204,6 +206,11 @@ namespace Nimbo.Game.Bootstrap
             // los demás al montarse.
             _achievements = new AchievementService(new AchievementCatalog(), _save, _clock);
 
+            // El protagonista. Se construye siempre, exista o no todavía: si la
+            // partida es nueva, el creador de personajes lo rellenará y a partir de
+            // ahí ya hay a quien seguir.
+            _player = new PlayerService(_save.Player, _clock);
+
             // La paga se engancha aquí y no al encender la partida, y no es un
             // detalle: poblar una isla nueva ya desbloquea logros —el primer
             // edificio, el primer amigo— y esos avisos salen dentro de este mismo
@@ -235,6 +242,7 @@ namespace Nimbo.Game.Bootstrap
             ServiceRegistry.Register<IIslandService>(_island);
             ServiceRegistry.Register<IDecorService>(decor);
             ServiceRegistry.Register<IAchievementService>(_achievements);
+            ServiceRegistry.Register<PlayerService>(_player);
             ServiceRegistry.Register<IIslanderFactory>(factory);
             ServiceRegistry.Register<IJobService>(_jobs);
             ServiceRegistry.Register<NimboTree>(_tree);
@@ -338,6 +346,7 @@ namespace Nimbo.Game.Bootstrap
 
             _clock.Tick(UnityEngine.Time.deltaTime);
             _simulation.TickFrame(UnityEngine.Time.deltaTime);
+            _player.Tick();
 
             if (_autosaveMinutes > 0 &&
                 _clock.ElapsedMinutes - _lastAutosaveMinute >= _autosaveMinutes)

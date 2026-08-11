@@ -3,7 +3,8 @@
     "rootNamespace": "Nimbo.Art",
     "references": [
         "Nimbo.Data",
-        "Nimbo.Core"
+        "Nimbo.Core",
+        "Nimbo.Player"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

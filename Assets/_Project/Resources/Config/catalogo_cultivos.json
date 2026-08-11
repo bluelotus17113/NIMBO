@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "seedId": "seed_nimbocereza",
+      "cropId": "crop_nimbocereza",
+      "displayName": "Nimbocereza",
+      "daysToGrow": 3,
+      "yield": 3,
+      "regrows": false,
+      "description": "Un cerezo enano que da frutos del color del cielo al atardecer. Solo crece en tierra que ha sentido el viento de las alturas. Dulce y refrescante, ideal para mermeladas que quitan el vértigo."
+    },
+    {
+      "seedId": "seed_alasauce",
+      "cropId": "crop_alasauce",
+      "displayName": "Alasauce",
+      "daysToGrow": 4,
+      "yield": 2,
+      "regrows": false,
+      "description": "Una planta con hojas en forma de ala que produce unas vainas picantes. Dicen que comer una antes de volar te da mejor maniobrabilidad. Los isleños la usan para salsas que despiertan hasta a las nubes."
+    },
+    {
+      "seedId": "seed_cristalovento",
+      "cropId": "crop_cristalovento",
+      "displayName": "Cristal de viento",
+      "daysToGrow": 6,
+      "yield": 2,
+      "regrows": true,
+      "description": "Una formación cristalina que crece en los bordes de las islas, donde el viento pega más fuerte. Al recoger sus fragmentos, vuelve a brotar. Los cristales tintinean con la brisa y se usan para fabricar campanas de meditación."
+    },
+    {
+      "seedId": "seed_cetrella",
+      "cropId": "crop_cetrella",
+      "displayName": "Cetrella",
+      "daysToGrow": 5,
+      "yield": 2,
+      "regrows": false,
+      "description": "Una seta bioluminiscente que crece en la cara inferior de las islas, colgando hacia el vacío. Su luz azulada guía a los viajeros nocturnos. Hay que recogerla con cuidado: si se rompe, tiñe las manos durante días."
+    },
+    {
+      "seedId": "seed_nimbocalabaza",
+      "cropId": "crop_nimbocalabaza",
+      "displayName": "Nimbocalabaza",
+      "daysToGrow": 6,
+      "yield": 2,
+      "regrows": false,
+      "description": "Una calabaza enorme que crece flotando unos centímetros sobre la tierra. Cuanto más pesa, más alto flota: hay que atarla para que no se escape. Con una sola alcanza para alimentar a media aldea."
+    },
+    {
+      "seedId": "seed_musgolante",
+      "cropId": "crop_musgolante",
+      "displayName": "Musgolante",
+      "daysToGrow": 5,
+      "yield": 3,
+      "regrows": true,
+      "description": "Un musgo dorado que tapiza las rocas flotantes y se regenera solo tras cada cosecha. Machacado suelta un polvo que aligera el peso de quien lo respira: los albañiles de las islas lo usan para cargar piedras como si fueran de corcho."
+    },
+    {
+      "seedId": "seed_raisnube",
+      "cropId": "crop_raisnube",
+      "displayName": "Raiznube",
+      "daysToGrow": 4,
+      "yield": 2,
+      "regrows": false,
+      "description": "Una raíz que absorbe la humedad de las nubes directamente del aire. No necesita riego de lluvia: le basta la neblina del amanecer. Con ella se prepara un caldo que cura el mareo de altura."
+    },
+    {
+      "seedId": "seed_azurflor",
+      "cropId": "crop_azurflor",
+      "displayName": "Azurflor",
+      "daysToGrow": 7,
+      "yield": 2,
+      "regrows": false,
+      "description": "Una flor de seis pétalos color zafiro que solo se abre cuando la isla atraviesa una nube. Su aroma atrae a las libélulas mensajeras. Se necesitan siete días de cuidados para que despliegue todo su esplendor."
+    },
+    {
+      "seedId": "seed_trigoeter",
+      "cropId": "crop_trigoeter",
+      "displayName": "Trigo éter",
+      "daysToGrow": 3,
+      "yield": 4,
+      "regrows": false,
+      "description": "Un trigo translúcido que crece rápido y da mucho grano. Su harina produce un pan tan ligero que flota sobre el plato. El alimento básico de cualquiera que viva por encima de las nubes."
+    },
+    {
+      "seedId": "seed_sombraliquida",
+      "cropId": "crop_sombraliquida",
+      "displayName": "Sombra líquida",
+      "daysToGrow": 8,
+      "yield": 2,
+      "regrows": false,
+      "description": "La planta más rara y valiosa: crece en la umbría perpetua bajo las islas mayores, donde no llega el sol. Su fruto suelta un líquido negro como tinta que los escribas usan para redactar contratos irrompibles. Tarda una eternidad en madurar."
+    },
+    {
+      "seedId": "seed_esporaalba",
+      "cropId": "crop_esporaalba",
+      "displayName": "Espora alba",
+      "daysToGrow": 4,
+      "yield": 3,
+      "regrows": true,
+      "description": "Un hongo que brota al amanecer y se recoge al anochecer, pero no muere: vuelve a asomar al día siguiente. Sus esporas brillan con luz propia y sirven para fabricar antorchas que nunca se apagan."
+    },
+    {
+      "seedId": "seed_vidrioestelar",
+      "cropId": "crop_vidrioestelar",
+      "displayName": "Vidrio estelar",
+      "daysToGrow": 2,
+      "yield": 5,
+      "regrows": false,
+      "description": "Brotan de noche, como si las estrellas dejasen caer semillas al pasar. En solo dos días produce unas esferas transparentes con motitas brillantes dentro. Frágiles y preciosas, se venden bien en cualquier mercadillo."
+    }
+  ]
+}
