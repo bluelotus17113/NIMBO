@@ -295,6 +295,20 @@ namespace Nimbo.Core.Events
         }
     }
 
+    /// <summary>Un edificio de la aldea se ha puesto o se ha movido de sitio.</summary>
+    public readonly struct BuildingMoved
+    {
+        public readonly string ZoneId;
+        public BuildingMoved(string zoneId) => ZoneId = zoneId;
+    }
+
+    /// <summary>Se ha entrado o salido del modo construcción.</summary>
+    public readonly struct BuildModeChanged
+    {
+        public readonly bool Building;
+        public BuildModeChanged(bool building) => Building = building;
+    }
+
     /// <summary>Ha dormido. El reloj ya está en la mañana siguiente.</summary>
     public readonly struct Slept
     {

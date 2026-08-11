@@ -35,6 +35,13 @@ namespace Nimbo.Data.World
         /// </summary>
         public List<DecorPlacement> Decor = new List<DecorPlacement>();
 
+        /// <summary>
+        /// Dónde ha puesto el jugador cada edificio. Lo que no esté aquí sigue en el
+        /// sitio que le daba la tabla de diseño, para que una partida vieja no amanezca
+        /// con la aldea desmontada.
+        /// </summary>
+        public List<BuildingPlacement> Placements = new List<BuildingPlacement>();
+
         public Weather Weather = Weather.Clear;
         public int PopulationCap = 12;
 

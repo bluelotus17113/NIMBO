@@ -52,6 +52,7 @@ namespace Nimbo.Art.World
             EventBus.Unsubscribe<DecorPlaced>(OnDecorPlaced);
             EventBus.Unsubscribe<DecorRemoved>(OnDecorRemoved);
             EventBus.Unsubscribe<DecorMoved>(OnDecorMoved);
+            EventBus.Unsubscribe<BuildingMoved>(OnBuildingMoved);
         }
 
         /// <summary>Se acaba de abrir una zona: se levanta ahí mismo, sin recargar.</summary>
@@ -89,6 +90,7 @@ namespace Nimbo.Art.World
             EventBus.Subscribe<DecorPlaced>(OnDecorPlaced);
             EventBus.Subscribe<DecorRemoved>(OnDecorRemoved);
             EventBus.Subscribe<DecorMoved>(OnDecorMoved);
+            EventBus.Subscribe<BuildingMoved>(OnBuildingMoved);
         }
 
         private void BuildIsland()
@@ -395,6 +397,51 @@ namespace Nimbo.Art.World
         /// por cien los colisionadores para que el jugador se quede atascado en un
         /// arbusto.
         /// </param>
+        /// <summary>
+        /// El jugador ha movido un edificio: se lleva su malla al sitio nuevo.
+        /// </summary>
+        /// <remarks>
+        /// No se reconstruye: se mueve el objeto que ya está. Rehacerlo tiraría la
+        /// malla y la volvería a generar por nada, y con el modo construcción se mueve
+        /// un edificio cada dos segundos.
+        ///
+        /// Y hay que rehacer el bulto que rodean los vecinos, o seguirían dando la
+        /// vuelta a un edificio que ya no está ahí.
+        /// </remarks>
+        private void OnBuildingMoved(BuildingMoved evt)
+        {
+            var zones = transform.Find("Zonas");
+            if (zones == null) return;
+
+            var zone = zones.Find(evt.ZoneId);
+            if (zone == null) return;
+            if (!ServiceRegistry.TryGet<IBuildService>(out var build)) return;
+            if (!build.TryGetWorldCentre(evt.ZoneId, out var centre)) return;
+
+            var previous = zone.localPosition;
+            zone.localPosition = centre;
+
+            var toCentre = new Vector3(-centre.x, 0f, -centre.z);
+            if (toCentre.sqrMagnitude > 0.01f)
+                zone.localRotation = Quaternion.LookRotation(toCentre.normalized);
+
+            _zoneCentres[evt.ZoneId] = centre;
+            MoveObstacle(previous, centre);
+        }
+
+        /// <summary>Lleva el bulto que se rodea al sitio nuevo del edificio.</summary>
+        private void MoveObstacle(Vector3 from, Vector3 to)
+        {
+            for (int i = 0; i < _obstacles.Count; i++)
+            {
+                var flat = new Vector2(from.x, from.z);
+                if ((_obstacles[i].Centre - flat).sqrMagnitude > 0.25f) continue;
+
+                _obstacles[i] = new Obstacle(to, _obstacles[i].Radius);
+                return;
+            }
+        }
+
         private static void AddMesh(Transform parent, string name, Mesh mesh, Material material,
                                     bool solid = false)
             => AddMesh(parent, name, mesh, material, Vector3.zero, solid: solid);

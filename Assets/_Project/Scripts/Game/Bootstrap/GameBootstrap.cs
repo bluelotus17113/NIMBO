@@ -70,6 +70,7 @@ namespace Nimbo.Game.Bootstrap
         private RequestService _requests;
         private SocialService _social;
         private IslandService _island;
+        private BuildService _build;
         private IslanderBrain _brain;
         private EconomyService _economy;
         private JobService _jobs;
@@ -217,6 +218,12 @@ namespace Nimbo.Game.Bootstrap
             _economy = new EconomyService(itemCatalog, _save);
             _island = new IslandService(registry, _save);
 
+            // La colocación se engancha después de construir la isla: el servicio de
+            // isla pregunta dónde está cada edificio, y el de construcción necesita el
+            // guardado, así que se montan por separado y se presentan aquí.
+            _build = new BuildService(_save);
+            _island.UseBuildService(_build);
+
             var factory = new IslanderFactory(registry, personalities, _clock,
                                               FoodIds(itemCatalog));
 
@@ -277,6 +284,7 @@ namespace Nimbo.Game.Bootstrap
             ServiceRegistry.Register<IEconomyService>(_economy);
             ServiceRegistry.Register<IIslandService>(_island);
             ServiceRegistry.Register<IDecorService>(decor);
+            ServiceRegistry.Register<IBuildService>(_build);
             ServiceRegistry.Register<IAchievementService>(_achievements);
             ServiceRegistry.Register<PlayerService>(_player);
             ServiceRegistry.Register<IInventoryService>(_inventory);

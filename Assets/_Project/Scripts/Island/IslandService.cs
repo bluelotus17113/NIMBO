@@ -26,6 +26,12 @@ namespace Nimbo.Island
         private readonly IIslanderRegistry _registry;
         private readonly SaveGame _save;
         private readonly ZoneDefinition[] _zones;
+
+        /// <summary>Quien sabe dónde ha puesto el jugador cada edificio. Puede faltar.</summary>
+        private IBuildService _build;
+
+        /// <summary>Se engancha después de construir: los dos se necesitan al arrancar.</summary>
+        public void UseBuildService(IBuildService build) => _build = build;
         private readonly Dictionary<string, int> _zoneIndex;
         private readonly List<string> _zoneIds;
 
@@ -161,12 +167,20 @@ namespace Nimbo.Island
 
             var zone = _zones[i];
 
+            // El centro sale de quien manda en la colocación, no de la tabla: desde
+            // que el jugador mueve los edificios, la tabla solo dice dónde estaban de
+            // fábrica. Si esto leyera de ella, los vecinos seguirían yendo al solar
+            // vacío donde estaba la tienda antes de que la movieras.
+            var centre = _build != null && _build.TryGetWorldCentre(zoneId, out var placed)
+                ? placed
+                : zone.Center;
+
             // Punto al azar dentro del círculo, con raíz cuadrada para que no se
             // amontonen todos en el centro: sin ella el reparto no es uniforme por área.
             float angle = _rng.Range(0f, Mathf.PI * 2f);
             float radius = zone.Radius * Mathf.Sqrt(_rng.NextFloat());
-            position = zone.Center + new Vector3(Mathf.Cos(angle) * radius, 0f,
-                                                 Mathf.Sin(angle) * radius);
+            position = centre + new Vector3(Mathf.Cos(angle) * radius, 0f,
+                                            Mathf.Sin(angle) * radius);
             return true;
         }
 

@@ -41,6 +41,7 @@ namespace Nimbo.UI
         private Player.CraftPanel _craft;
         private Player.ShippingPanel _shipping;
         private Player.MapPanel _map;
+        private Player.BuildPanel _build;
         private HousingEditorPanel _housing;
         private CreatorPanel _creator;
         private VisualElement _islanderStrip;
@@ -60,6 +61,7 @@ namespace Nimbo.UI
             EventBus.Unsubscribe<IslanderCreated>(OnRosterChanged);
             EventBus.Unsubscribe<IslanderLeft>(OnRosterChanged);
             EventBus.Unsubscribe<StationUsed>(OnStationUsed);
+            EventBus.Unsubscribe<BuildModeChanged>(OnBuildModeChanged);
             _toast?.Unsubscribe();
             _hotbar?.Unsubscribe();
             _hud?.Dispose();
@@ -134,6 +136,9 @@ namespace Nimbo.UI
             _map = new Player.MapPanel();
             body.Add(_map.Root);
 
+            _build = new Player.BuildPanel();
+            body.Add(_build.Root);
+
             root.Add(body);
             root.Add(BuildActionBar());
 
@@ -164,6 +169,7 @@ namespace Nimbo.UI
             EventBus.Subscribe<IslanderCreated>(OnRosterChanged);
             EventBus.Subscribe<IslanderLeft>(OnRosterChanged);
             EventBus.Subscribe<StationUsed>(OnStationUsed);
+            EventBus.Subscribe<BuildModeChanged>(OnBuildModeChanged);
 
             RebuildStrip();
             _mounted = true;
@@ -191,6 +197,7 @@ namespace Nimbo.UI
             {
                 if (_decor.IsShowing) _decor.Hide(); else _decor.Show();
             });
+            Add("Construir", () => EventBus.Publish(new BuildModeChanged(!_buildMode)));
             Add("Mapa", () =>
             {
                 if (_map.IsShowing) _map.Hide(); else _map.Show();
@@ -256,6 +263,36 @@ namespace Nimbo.UI
             }
         }
 
+        private bool _buildMode;
+
+        /// <summary>
+        /// Al construir, la interfaz de andar por la isla sobra: se apaga entera y
+        /// queda solo el menú de edificios.
+        /// </summary>
+        /// <remarks>
+        /// La barra de abajo y la fila de habitantes no valen para nada mirando la
+        /// aldea desde el aire, y encima taparían justo las casillas del borde.
+        /// </remarks>
+        private void OnBuildModeChanged(BuildModeChanged evt)
+        {
+            _buildMode = evt.Building;
+
+            var play = evt.Building ? DisplayStyle.None : DisplayStyle.Flex;
+            _hotbar.Root.style.display = play;
+            _islanderStrip.style.display = play;
+            _actions.style.display = play;
+
+            if (evt.Building)
+            {
+                _bag.Hide();
+                _craft.Hide();
+                _shipping.Hide();
+                _map.Hide();
+                _build.Show();
+            }
+            else _build.Hide();
+        }
+
         private void OnRosterChanged<T>(T _) => RebuildStrip();
 
         /// <summary>La fila de abajo: un botón por habitante para abrir su ficha.</summary>
@@ -297,6 +334,31 @@ namespace Nimbo.UI
         /// </remarks>
         private Component _interactor;
         private System.Reflection.PropertyInfo _promptProperty;
+
+        private Component _buildView;
+        private System.Reflection.PropertyInfo _buildSelected;
+
+        private void PushBuildSelection()
+        {
+            if (_buildView == null)
+            {
+                var world = GameObject.Find("Mundo");
+                if (world == null) return;
+
+                foreach (var component in world.GetComponents<Component>())
+                {
+                    var property = component.GetType().GetProperty("Selected");
+                    if (property == null || property.PropertyType != typeof(string)) continue;
+
+                    _buildView = component;
+                    _buildSelected = property;
+                    break;
+                }
+                if (_buildView == null) return;
+            }
+
+            _buildSelected.SetValue(_buildView, _build.Selected);
+        }
 
         private void RefreshPrompt()
         {
@@ -377,6 +439,11 @@ namespace Nimbo.UI
             // El mapa abierto se refresca: los vecinos andan, y uno que enseñe dónde
             // estaban al abrirlo miente a los diez segundos.
             if (_map.IsShowing) _map.Refresh();
+
+            // Lo elegido en el menú viaja hasta quien dibuja el fantasma. Se busca por
+            // reflexión igual que el interactor: el que pinta vive en Nimbo.Art, que
+            // esta capa no puede ver sin cerrar un ciclo entre ensamblados.
+            if (_buildMode) PushBuildSelection();
         }
     }
 }
