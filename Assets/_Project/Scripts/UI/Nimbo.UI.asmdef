@@ -4,6 +4,7 @@
     "references": [
         "Nimbo.Data",
         "Nimbo.Core",
+        "Nimbo.Player",
         "Unity.TextMeshPro",
         "Unity.InputSystem"
     ],

@@ -77,6 +77,8 @@ namespace Nimbo.Art.CameraWork
             }
 
             _rig = new CameraRig(_world.IslandRadius);
+            _rig.AllowSecondIsland(Data.World.Archipelago.HomeCentre,
+                                   Data.World.Archipelago.HomeRadius);
             ApplyPose();
         }
 

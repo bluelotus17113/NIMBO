@@ -44,14 +44,17 @@ namespace Nimbo.Data.Farming
     /// servicio. Con el número copiado en tres ficheros, el día que se mueva la
     /// parcela el jugador labraría una casilla y se pondría verde otra.
     ///
-    /// El sitio está elegido a mano: al sur de la plaza, en el hueco que queda entre
-    /// ella y la zona del embarcadero, y lejos de cualquier edificio.
+    /// El sitio está elegido a mano: en tu isla, al oeste de la cabaña y con sitio de
+    /// sobra alrededor.
     /// </remarks>
     public static class FarmPlot
     {
         public const float TileSize = 1.6f;
-        public const float CentreX = 18f;
-        public const float CentreZ = -20f;
+
+        // En tu isla, al oeste de la cabaña. Antes estaba en la de la aldea, pegado a
+        // la plaza; con las dos islas separadas, el huerto es de tu casa y punto.
+        public const float CentreX = -10f;
+        public const float CentreZ = -168f;
 
         /// <summary>La esquina (0,0) de la parcela, en coordenadas del mundo.</summary>
         public static void Origin(int width, int height, out float x, out float z)

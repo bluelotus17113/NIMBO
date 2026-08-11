@@ -101,6 +101,9 @@ namespace Nimbo.Art.World
             AddMesh(island, "roca", IslandMeshBuilder.BuildUnderside(_islandRadius, _islandDepth),
                     ToonPalette.Solid(ToonPalette.Rock));
 
+            BuildHomeIsland();
+            BuildBridge();
+
             // El Árbol Nimbo: el corazón de la isla y su referencia visual. Va en el
             // centro porque es donde cae la plaza y donde mira la cámara al empezar.
             // El tronco del Árbol es lo primero que hay que rodear: está en mitad de
@@ -114,6 +117,72 @@ namespace Nimbo.Art.World
             AddMesh(tree, "copa", crown, ToonPalette.Solid(ToonPalette.LeafGreen));
 
             BuildClouds(island);
+        }
+
+        /// <summary>
+        /// Tu isla: más pequeña y al sur, con tu casa y tu huerto y nadie más.
+        /// </summary>
+        /// <remarks>
+        /// Se genera con el mismo constructor que la de la aldea pero con otra semilla,
+        /// para que el borde irregular no salga calcado. Con la misma, las dos islas se
+        /// verían como la misma pieza repetida desde el aire.
+        /// </remarks>
+        private void BuildHomeIsland()
+        {
+            var home = new GameObject("Isla del jugador").transform;
+            home.SetParent(transform, worldPositionStays: false);
+            home.localPosition = Data.World.Archipelago.HomeCentre;
+
+            float radius = Data.World.Archipelago.HomeRadius;
+
+            AddMesh(home, "prado", IslandMeshBuilder.BuildSurface(radius, seed: 31u),
+                    ToonPalette.Solid(ToonPalette.Grass), solid: true);
+            AddMesh(home, "roca", IslandMeshBuilder.BuildUnderside(radius, _islandDepth * 0.6f),
+                    ToonPalette.Solid(ToonPalette.Rock));
+        }
+
+        /// <summary>
+        /// El puente de madera que une las dos islas.
+        /// </summary>
+        /// <remarks>
+        /// Con barandilla, y no es adorno: es lo único que impide caerse a media
+        /// travesía. Sin ella, el paso más ancho de la cuenta te tira al vacío y la red
+        /// de seguridad te devuelve al principio, que es peor que no poder cruzar.
+        /// </remarks>
+        private void BuildBridge()
+        {
+            var bridge = new GameObject("Puente").transform;
+            bridge.SetParent(transform, worldPositionStays: false);
+
+            var from = Data.World.Archipelago.BridgeFromVillage;
+            var to = Data.World.Archipelago.BridgeToHome;
+            float length = Mathf.Abs(from.z - to.z);
+            float middle = (from.z + to.z) * 0.5f;
+            float width = Data.World.Archipelago.BridgeWidth;
+
+            var plank = ToonPalette.Solid(new Color32(0xA9, 0x86, 0x63, 255));
+            var rail = ToonPalette.Solid(ToonPalette.TrunkBrown);
+
+            AddMesh(bridge, "tablero", MeshShapes.Box(new Vector3(width, 0.3f, length)),
+                    plank, new Vector3(from.x, -0.15f, middle), solid: true);
+
+            // Barandillas a los dos lados, sólidas: son las que te mantienen encima.
+            for (int side = -1; side <= 1; side += 2)
+            {
+                AddMesh(bridge, "baranda", MeshShapes.Box(new Vector3(0.22f, 1.1f, length)),
+                        rail, new Vector3(from.x + side * width * 0.5f, 0.55f, middle),
+                        solid: true);
+            }
+
+            // Postes cada pocos metros: sin ellos el puente parece una tabla flotando.
+            int posts = Mathf.Max(2, Mathf.RoundToInt(length / 6f));
+            for (int i = 0; i <= posts; i++)
+            {
+                float z = Mathf.Lerp(from.z, to.z, i / (float)posts);
+                for (int side = -1; side <= 1; side += 2)
+                    AddMesh(bridge, "poste", MeshShapes.Box(new Vector3(0.3f, 1.5f, 0.3f)),
+                            rail, new Vector3(from.x + side * width * 0.5f, 0.4f, z));
+            }
         }
 
         /// <summary>Nubes alrededor y por debajo: son las que venden que la isla flota.</summary>
@@ -328,13 +397,28 @@ namespace Nimbo.Art.World
         /// </param>
         private static void AddMesh(Transform parent, string name, Mesh mesh, Material material,
                                     bool solid = false)
+            => AddMesh(parent, name, mesh, material, Vector3.zero, solid: solid);
+
+        private static void AddMesh(Transform parent, string name, Mesh mesh, Material material,
+                                    Vector3 offset, Quaternion rotation = default,
+                                    bool solid = false)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, worldPositionStays: false);
+            go.transform.localPosition = offset;
+            go.transform.localRotation = rotation == default ? Quaternion.identity : rotation;
+
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
             go.AddComponent<MeshRenderer>().sharedMaterial = material;
 
-            if (solid) go.AddComponent<MeshCollider>().sharedMesh = mesh;
+            // Caja para lo que es una caja, malla para lo que no: un MeshCollider por
+            // cada tabla del puente son cuarenta mallas de colisión para algo que son
+            // cuatro cajas.
+            if (!solid) return;
+            if (name is "tablero" or "baranda" or "muros")
+                go.AddComponent<BoxCollider>();
+            else
+                go.AddComponent<MeshCollider>().sharedMesh = mesh;
         }
 
         private void OnIslanderCreated(IslanderCreated evt)

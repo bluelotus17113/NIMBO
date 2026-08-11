@@ -326,9 +326,16 @@ namespace Nimbo.PlayTests
             Assert.Greater(body.transform.position.y, -6f,
                 $"el protagonista se quedó cayendo (y={body.transform.position.y:0})");
 
-            float radius = new Vector2(body.transform.position.x,
-                                       body.transform.position.z).magnitude;
-            Assert.Less(radius, 110f, $"acabó a {radius:0} m del centro, fuera de la isla");
+            // Con dos islas ya no vale medir contra el origen: estar a 176 metros de
+            // él es estar en tu isla, no perdido. Lo que se comprueba es que haya
+            // acabado sobre alguna de las dos.
+            var landed = body.transform.position;
+            var side = Data.World.Archipelago.SideOf(landed);
+            var centre = Data.World.Archipelago.CentreOf(side);
+            float radius = new Vector2(landed.x - centre.x, landed.z - centre.z).magnitude;
+
+            Assert.Less(radius, Data.World.Archipelago.RadiusOf(side) + 12f,
+                        $"acabó a {radius:0} m del centro de la isla {side}: fuera de ella");
         }
 
         [UnityTest]
@@ -365,6 +372,79 @@ namespace Nimbo.PlayTests
             var toFarm = new Vector3(fx, camera.transform.position.y, fz) - camera.transform.position;
             Assert.Greater(Vector3.Dot(camera.transform.forward.normalized, toFarm.normalized), 0.2f,
                            "el huerto queda detrás de la cámara al empezar");
+        }
+
+        [UnityTest]
+        public IEnumerator HayDosIslasYTuCasaEstaEnLaTuya()
+        {
+            yield return CargarYEmpezar();
+            yield return null;
+
+            Assert.IsNotNull(GameObject.Find("Isla del jugador"), "no se levantó tu isla");
+            Assert.IsNotNull(GameObject.Find("Puente"), "no hay puente entre las islas");
+
+            // Tu casa, tu huerto y tú, los tres en tu isla; los vecinos en la otra.
+            Assert.AreEqual(Data.World.IslandSide.Home,
+                            Data.World.Archipelago.SideOf(Data.Player.PlayerHome.Cabin),
+                            "la cabaña se quedó en la isla de la aldea");
+
+            var farm = ServiceRegistry.Get<IFarmingService>();
+            Data.Farming.FarmPlot.CentreOf(0, 0, farm.Width, farm.Height,
+                                           out float fx, out float fz);
+            Assert.AreEqual(Data.World.IslandSide.Home,
+                            Data.World.Archipelago.SideOf(new Vector3(fx, 0f, fz)),
+                            "el huerto se quedó en la isla de la aldea");
+
+            var body = GameObject.Find("Protagonista");
+            Assert.AreEqual(Data.World.IslandSide.Home,
+                            Data.World.Archipelago.SideOf(body.transform.position),
+                            "apareces en la isla equivocada");
+        }
+
+        [UnityTest]
+        public IEnumerator ElPuenteTieneSueloDePuntaAPunta()
+        {
+            // La comprobación que importa del puente: que se pueda cruzar. Un puente
+            // dibujado sin suelo continuo tira al jugador al vacío a mitad de camino,
+            // y la red de seguridad lo devuelve al principio — peor que no cruzar.
+            yield return CargarYEmpezar();
+            yield return null;
+            yield return new WaitForFixedUpdate();
+
+            var from = Data.World.Archipelago.BridgeFromVillage;
+            var to = Data.World.Archipelago.BridgeToHome;
+
+            for (int i = 0; i <= 20; i++)
+            {
+                var point = Vector3.Lerp(from, to, i / 20f);
+                bool ground = Physics.Raycast(point + Vector3.up * 3f, Vector3.down,
+                                              10f, ~0, QueryTriggerInteraction.Ignore);
+                Assert.IsTrue(ground, $"no hay suelo en z={point.z:0}: ahí se cae");
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator LaCamaraPuedeSeguirteHastaLaOtraIsla()
+        {
+            // El tope del pivote iba alrededor del origen. Con dos islas frenaba a
+            // medio puente: el protagonista seguía andando y la cámara se quedaba
+            // atrás, así que llegabas a tu isla viéndote de lejos y de espaldas.
+            yield return CargarYEmpezar();
+
+            var body = GameObject.Find("Protagonista");
+            var controller = body.GetComponent<CharacterController>();
+
+            // Se le planta en el centro de la aldea y se deja que la cámara le alcance.
+            controller.enabled = false;
+            body.transform.position = new Vector3(0f, 3f, 40f);
+            controller.enabled = true;
+
+            yield return new WaitForSeconds(1.5f);
+
+            float distance = Vector3.Distance(Camera.main.transform.position,
+                                              body.transform.position);
+            Assert.Less(distance, 30f,
+                        $"la cámara se quedó a {distance:0} m al cruzar a la otra isla");
         }
 
         [UnityTest]

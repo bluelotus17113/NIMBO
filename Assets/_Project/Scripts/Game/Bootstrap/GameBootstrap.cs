@@ -335,7 +335,7 @@ namespace Nimbo.Game.Bootstrap
             // la parcela, la cámara caía justo encima de ella y el jugador miraba al
             // lado contrario — salías de espaldas a tu propio huerto. Desde aquí lo
             // primero que se ve es la tierra, y detrás la casa.
-            _player.Create(name, look, new Vector3(18f, 3f, -25f));
+            _player.Create(name, look, Data.Player.PlayerHome.Spawn);
         }
 
         /// <summary>

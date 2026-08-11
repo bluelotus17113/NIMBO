@@ -40,6 +40,7 @@ namespace Nimbo.UI
         private Player.BagPanel _bag;
         private Player.CraftPanel _craft;
         private Player.ShippingPanel _shipping;
+        private Player.MapPanel _map;
         private HousingEditorPanel _housing;
         private CreatorPanel _creator;
         private VisualElement _islanderStrip;
@@ -130,6 +131,9 @@ namespace Nimbo.UI
             _shipping = new Player.ShippingPanel();
             body.Add(_shipping.Root);
 
+            _map = new Player.MapPanel();
+            body.Add(_map.Root);
+
             root.Add(body);
             root.Add(BuildActionBar());
 
@@ -186,6 +190,10 @@ namespace Nimbo.UI
             Add("Decorar", () =>
             {
                 if (_decor.IsShowing) _decor.Hide(); else _decor.Show();
+            });
+            Add("Mapa", () =>
+            {
+                if (_map.IsShowing) _map.Hide(); else _map.Show();
             });
             Add("Mochila", () =>
             {
@@ -345,6 +353,13 @@ namespace Nimbo.UI
                 if (_bag.IsShowing) _bag.Hide(); else _bag.Show();
             }
 
+            // M de mapa. Con dos islas y un puente, saber de qué lado estás pasa a ser
+            // una pregunta de verdad y merece su tecla.
+            if (Input.GetKeyDown(KeyCode.M))
+            {
+                if (_map.IsShowing) _map.Hide(); else _map.Show();
+            }
+
             // Las listas y las barras a ritmo lento: nadie nota que una barra de
             // hambre se mueva dos veces por segundo en vez de sesenta, y reconstruir
             // listas cada fotograma es lo que calienta el portátil.
@@ -358,6 +373,10 @@ namespace Nimbo.UI
             // La mochila abierta se refresca sola: si recoges algo con ella delante
             // —pasa, porque no para el juego— tiene que aparecer sin cerrarla.
             if (_bag.IsShowing) _bag.Rebuild();
+
+            // El mapa abierto se refresca: los vecinos andan, y uno que enseñe dónde
+            // estaban al abrirlo miente a los diez segundos.
+            if (_map.IsShowing) _map.Refresh();
         }
     }
 }

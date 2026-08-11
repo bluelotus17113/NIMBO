@@ -37,6 +37,12 @@ namespace Nimbo.Art.CameraWork
 
         private readonly float _pivotRadiusMax;
 
+        // La segunda isla, si la hay. Se añade después de construir el aparato porque
+        // quien lo construye —la cámara— no sabe todavía cuántas islas hay montadas.
+        private bool _hasSecond;
+        private Vector2 _secondCentre;
+        private float _secondRadius;
+
         private CameraPose _current;
         private CameraPose _target;
 
@@ -63,6 +69,25 @@ namespace Nimbo.Art.CameraWork
                 Pitch = 45f,
             };
             _target = _current;
+        }
+
+        /// <summary>
+        /// Añade otra isla a la zona por la que el pivote se puede mover.
+        /// </summary>
+        /// <remarks>
+        /// Sin esto, el tope alrededor del origen frena la cámara a medio puente: el
+        /// protagonista sigue andando y la cámara se queda atrás, así que cruzar de una
+        /// isla a otra se veía desde muy lejos y de espaldas.
+        ///
+        /// La zona permitida son los dos círculos **y el pasillo entre ellos**, que es
+        /// justo por donde va el puente. Permitir el rectángulo entero que las contiene
+        /// dejaría al jugador pasear la cámara por el vacío de los lados.
+        /// </remarks>
+        public void AllowSecondIsland(Vector3 centre, float radius)
+        {
+            _hasSecond = true;
+            _secondCentre = new Vector2(centre.x, centre.z);
+            _secondRadius = radius * 1.1f;
         }
 
         // ── movimiento del objetivo ────────────────────────────────────────
@@ -173,16 +198,65 @@ namespace Nimbo.Art.CameraWork
             pose.Distance = Mathf.Clamp(pose.Distance, MinDistance, MaxDistance);
             pose.Yaw = NormalizeYaw(pose.Yaw);
 
-            // El pivote no sale del círculo de la isla.
+            // El pivote no sale de la zona permitida.
             Vector2 xz = new Vector2(pose.Pivot.x, pose.Pivot.z);
-            if (xz.sqrMagnitude > _pivotRadiusMax * _pivotRadiusMax)
+            if (!Allowed(xz))
             {
-                xz = xz.normalized * _pivotRadiusMax;
+                xz = NearestAllowed(xz);
                 pose.Pivot.x = xz.x;
                 pose.Pivot.z = xz.y;
             }
 
             return pose;
+        }
+
+        /// <summary>¿Está dentro de alguna isla, o del pasillo del puente?</summary>
+        private bool Allowed(Vector2 xz)
+        {
+            if (xz.sqrMagnitude <= _pivotRadiusMax * _pivotRadiusMax) return true;
+            if (!_hasSecond) return false;
+
+            if ((xz - _secondCentre).sqrMagnitude <= _secondRadius * _secondRadius) return true;
+
+            return OnCorridor(xz);
+        }
+
+        /// <summary>
+        /// El pasillo entre las dos islas: la banda recta que las une.
+        /// </summary>
+        /// <remarks>
+        /// Se mide contra el segmento que va de un centro al otro, con un ancho
+        /// generoso — la cámara va por delante y por detrás del protagonista mientras
+        /// cruza, y un pasillo justo la haría dar tirones al llegar al puente.
+        /// </remarks>
+        private bool OnCorridor(Vector2 xz)
+        {
+            const float HalfWidth = 14f;
+
+            var axis = _secondCentre;
+            float lengthSq = axis.sqrMagnitude;
+            if (lengthSq < 0.001f) return false;
+
+            float along = Mathf.Clamp01(Vector2.Dot(xz, axis) / lengthSq);
+            var closest = axis * along;
+            return (xz - closest).sqrMagnitude <= HalfWidth * HalfWidth;
+        }
+
+        private Vector2 NearestAllowed(Vector2 xz)
+        {
+            var toFirst = xz.sqrMagnitude > 0.001f
+                ? xz.normalized * _pivotRadiusMax
+                : new Vector2(_pivotRadiusMax, 0f);
+
+            if (!_hasSecond) return toFirst;
+
+            var offset = xz - _secondCentre;
+            var toSecond = offset.sqrMagnitude > 0.001f
+                ? _secondCentre + offset.normalized * _secondRadius
+                : _secondCentre + new Vector2(_secondRadius, 0f);
+
+            return (xz - toFirst).sqrMagnitude <= (xz - toSecond).sqrMagnitude
+                ? toFirst : toSecond;
         }
 
         /// <summary>Deja el yaw en [0, 360).</summary>
