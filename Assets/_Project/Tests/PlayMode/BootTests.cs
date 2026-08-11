@@ -445,6 +445,37 @@ namespace Nimbo.PlayTests
         }
 
         [UnityTest]
+        public IEnumerator ElKitInicialCubreElCicloEntero()
+        {
+            // Lo que se aprendió mirando una partida: labraste las 48 casillas y no
+            // sembraste ninguna. Para que el ciclo se pueda completar sin salir a
+            // comprar nada, lo que llevas el primer día tiene que dar para las cuatro
+            // fases — y estar en la barra, donde se ve, no en el fondo de la mochila.
+            yield return CargarYEmpezar();
+
+            var bag = ServiceRegistry.Get<IInventoryService>();
+            var economy = ServiceRegistry.Get<IEconomyService>();
+            var farm = ServiceRegistry.Get<IFarmingService>();
+
+            bool hoe = false, can = false, seeds = false;
+
+            for (int i = 0; i < bag.HotbarSize; i++)
+            {
+                var stack = bag.At(i);
+                if (stack.Quantity <= 0) continue;
+
+                var item = economy.GetItem(stack.CatalogId);
+                if (item != null && item.Tool == ToolKind.Hoe) hoe = true;
+                if (item != null && item.Tool == ToolKind.WateringCan) can = true;
+                if (farm.TryGetCrop(stack.CatalogId, out _)) seeds = true;
+            }
+
+            Assert.IsTrue(hoe, "la azada no está en la barra: no puedes labrar");
+            Assert.IsTrue(can, "la regadera no está en la barra: no puedes regar");
+            Assert.IsTrue(seeds, "las semillas no están en la barra: no puedes sembrar");
+        }
+
+        [UnityTest]
         public IEnumerator LasHerramientasDeVerdadSeReconocen()
         {
             // La que faltaba, y costó una partida entera. El tipo de herramienta se

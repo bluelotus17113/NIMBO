@@ -38,6 +38,7 @@ namespace Nimbo.Art.PlayerView
         private IInventoryService _inventory;
         private IIslanderRegistry _registry;
         private IFarmingService _farming;
+        private IEconomyService _economy;
 
         private int _tileX, _tileY;
 
@@ -60,6 +61,7 @@ namespace Nimbo.Art.PlayerView
             ServiceRegistry.TryGet(out _inventory);
             ServiceRegistry.TryGet(out _registry);
             ServiceRegistry.TryGet(out _farming);
+            ServiceRegistry.TryGet(out _economy);
         }
 
         private void Update()
@@ -220,23 +222,51 @@ namespace Nimbo.Art.PlayerView
             switch (tile.State)
             {
                 case Data.Farming.TileState.Wild:
-                    return tool == ToolKind.Hoe
-                        ? "Labrar" : "Tierra sin labrar — hace falta una azada";
+                    if (tool == ToolKind.Hoe) return "Labrar";
+                    return ToolSlot(ToolKind.Hoe, out int hoeSlot)
+                        ? $"Sin labrar — pulsa {(hoeSlot + 1) % 10} para la azada"
+                        : "Sin labrar — hace falta una azada";
 
                 case Data.Farming.TileState.Tilled:
-                    if (tool == ToolKind.Hoe) return "Ya está labrada";
-                    return SelectedSeed(out string seedName)
-                        ? $"Sembrar {seedName}"
-                        : "Labrada — elige semillas en la barra";
+                    if (SelectedSeed(out string seedName)) return $"Sembrar {seedName}";
+
+                    // Aquí es donde el jugador se quedaba atascado: labraba las
+                    // cuarenta y ocho casillas con la azada, el cartel decía «ya está
+                    // labrada» y ahí acababa la conversación. Decir qué falta no basta
+                    // si no dices dónde está: se busca el hueco que tiene semillas y
+                    // se nombra la tecla.
+                    return SeedSlot(out int slot)
+                        ? $"Labrada — pulsa {(slot + 1) % 10} para las semillas"
+                        : "Labrada — no llevas semillas encima";
 
                 case Data.Farming.TileState.Planted:
                     if (tile.Watered) return "Regada, creciendo";
-                    return tool == ToolKind.WateringCan
-                        ? "Regar" : "Le falta agua — hace falta una regadera";
+                    if (tool == ToolKind.WateringCan) return "Regar";
+                    return ToolSlot(ToolKind.WateringCan, out int canSlot)
+                        ? $"Le falta agua — pulsa {(canSlot + 1) % 10} para la regadera"
+                        : "Le falta agua — hace falta una regadera";
 
                 default:
                     return "Recoger";
             }
+        }
+
+        /// <summary>El primer hueco de la barra que tenga semillas.</summary>
+        private bool SeedSlot(out int slot)
+        {
+            slot = -1;
+            if (_inventory == null || _farming == null) return false;
+
+            for (int i = 0; i < _inventory.HotbarSize; i++)
+            {
+                var stack = _inventory.At(i);
+                if (stack.Quantity <= 0) continue;
+                if (!_farming.TryGetCrop(stack.CatalogId, out _)) continue;
+
+                slot = i;
+                return true;
+            }
+            return false;
         }
 
         /// <summary>Las semillas que lleva en la mano, si es que lleva.</summary>
@@ -251,6 +281,26 @@ namespace Nimbo.Art.PlayerView
 
             displayName = crop.DisplayName;
             return true;
+        }
+
+        /// <summary>El primer hueco de la barra con esa herramienta.</summary>
+        private bool ToolSlot(ToolKind wanted, out int slot)
+        {
+            slot = -1;
+            if (_inventory == null) return false;
+
+            for (int i = 0; i < _inventory.HotbarSize; i++)
+            {
+                var stack = _inventory.At(i);
+                if (stack.Quantity <= 0) continue;
+
+                var item = _economy?.GetItem(stack.CatalogId);
+                if (item == null || item.Tool != wanted) continue;
+
+                slot = i;
+                return true;
+            }
+            return false;
         }
 
         private void WorkFarmTile()
