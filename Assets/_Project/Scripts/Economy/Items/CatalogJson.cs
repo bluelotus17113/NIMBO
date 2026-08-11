@@ -27,6 +27,9 @@ namespace Nimbo.Economy.Items
         public int unlockLevel;
         public List<string> tags;
 
+        // ── herramientas ──
+        public string toolKind;
+
         // ── comida ──
         public int hungerRestore;
         public string foodKind;

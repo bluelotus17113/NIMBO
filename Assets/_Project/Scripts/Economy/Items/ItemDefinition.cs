@@ -14,6 +14,9 @@ namespace Nimbo.Economy.Items
         public string DisplayName { get; }
         public string Description { get; }
         public ItemCategory Category { get; }
+
+        /// <summary>Qué herramienta es. Lo dice el catálogo, no el nombre del id.</summary>
+        public ToolKind Tool { get; }
         public int Price { get; }
         public int UnlockLevel { get; }
 
@@ -44,6 +47,8 @@ namespace Nimbo.Economy.Items
 
         public ItemDefinition(CatalogItemJson json, ItemCategory category)
         {
+            Tool = System.Enum.TryParse<ToolKind>(json.toolKind, ignoreCase: true, out var tool)
+                ? tool : ToolKind.None;
             CatalogId = json.catalogId;
             DisplayName = json.displayName;
             Description = json.description;

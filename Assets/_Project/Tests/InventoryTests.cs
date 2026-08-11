@@ -19,9 +19,10 @@ namespace Nimbo.Tests
         {
             readonly System.Collections.Generic.Dictionary<string, IItemDefinition> _items = new();
 
-            public FakeEconomyService WithItem(string catalogId, ItemCategory category)
+            public FakeEconomyService WithItem(string catalogId, ItemCategory category,
+                                               ToolKind tool = ToolKind.None)
             {
-                _items[catalogId] = new FakeItemDef(catalogId, category);
+                _items[catalogId] = new FakeItemDef(catalogId, category, tool);
                 return this;
             }
 
@@ -52,11 +53,14 @@ namespace Nimbo.Tests
             public int UnlockLevel => 0;
             public int FootprintX => 1;
             public int FootprintY => 1;
+            public ToolKind Tool { get; }
 
-            public FakeItemDef(string catalogId, ItemCategory category)
+            public FakeItemDef(string catalogId, ItemCategory category,
+                               ToolKind tool = ToolKind.None)
             {
                 CatalogId = catalogId;
                 Category = category;
+                Tool = tool;
             }
         }
 
@@ -77,8 +81,8 @@ namespace Nimbo.Tests
             return new FakeEconomyService()
                 .WithItem("manzana", ItemCategory.Food)
                 .WithItem("madera", ItemCategory.Material)
-                .WithItem("hoe", ItemCategory.Tool)
-                .WithItem("pickaxe", ItemCategory.Tool)
+                .WithItem("hoe", ItemCategory.Tool, ToolKind.Hoe)
+                .WithItem("pickaxe", ItemCategory.Tool, ToolKind.Pickaxe)
                 .WithItem("semilla_trigo", ItemCategory.Seed);
         }
 

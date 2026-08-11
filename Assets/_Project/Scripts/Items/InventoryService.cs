@@ -126,21 +126,12 @@ namespace Nimbo.Items
                 if (stack.Quantity <= 0) return ToolKind.None;
                 var def = _economy.GetItem(stack.CatalogId);
                 if (def == null || def.Category != ItemCategory.Tool) return ToolKind.None;
-                return ToolKindFromId(stack.CatalogId);
-            }
-        }
 
-        /// <summary>
-        /// Saca el <see cref="ToolKind"/> del identificador de catálogo.
-        /// Los identificadores son los nombres del enum en minúscula, con guiones
-        /// bajos opcionales (ej. "hoe", "watering_can", "axe").
-        /// </summary>
-        static ToolKind ToolKindFromId(string catalogId)
-        {
-            var cleaned = catalogId.Replace("_", "");
-            return Enum.TryParse<ToolKind>(cleaned, ignoreCase: true, out var kind)
-                ? kind
-                : ToolKind.None;
+                // Del catálogo, no del nombre del identificador. Deducirlo del nombre
+                // daba «ninguna» para todas: los ids están en castellano y se buscaban
+                // en inglés, así que no se podía ni labrar ni regar y nada fallaba.
+                return def.Tool;
+            }
         }
 
         // ── guardar ───────────────────────────────────────────────────────────

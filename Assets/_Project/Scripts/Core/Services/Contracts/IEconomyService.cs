@@ -48,6 +48,18 @@ namespace Nimbo.Core.Services.Contracts
         /// <summary>Casillas que ocupa si es mueble. (1,1) para todo lo demás.</summary>
         int FootprintX { get; }
         int FootprintY { get; }
+
+        /// <summary>
+        /// Qué herramienta es, o <c>None</c> si no lo es.
+        /// </summary>
+        /// <remarks>
+        /// Sale del catálogo y no se deduce del identificador, y esto costó una
+        /// partida entera: se sacaba del nombre esperándolo en inglés («hoe», «axe»),
+        /// los identificadores están en castellano («tool_azada»), y **todas** las
+        /// herramientas se leían como «ninguna». No se podía labrar, ni regar, ni
+        /// talar, y no fallaba nada: simplemente no pasaba nada al pulsar.
+        /// </remarks>
+        ToolKind Tool { get; }
     }
 
     /// <summary>Monedas, tiendas, catálogo e inventario del jugador.</summary>

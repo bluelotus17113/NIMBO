@@ -434,6 +434,49 @@ namespace Nimbo.PlayTests
         }
 
         [UnityTest]
+        public IEnumerator LasHerramientasDeVerdadSeReconocen()
+        {
+            // La que faltaba, y costó una partida entera. El tipo de herramienta se
+            // deducía del identificador esperándolo en inglés («hoe», «axe») y los
+            // del juego están en castellano («tool_azada»): TODAS se leían como
+            // «ninguna», así que no se podía labrar, regar ni talar y no fallaba nada
+            // — simplemente no pasaba nada al pulsar.
+            //
+            // Las pruebas del módulo no lo veían porque usaban sus propios
+            // identificadores en inglés. Esta usa los del juego de verdad.
+            yield return CargarYEmpezar();
+
+            var bag = ServiceRegistry.Get<IInventoryService>();
+            var economy = ServiceRegistry.Get<IEconomyService>();
+
+            var esperado = new (string id, ToolKind kind)[]
+            {
+                ("tool_azada", ToolKind.Hoe),
+                ("tool_regadera", ToolKind.WateringCan),
+                ("tool_hacha", ToolKind.Axe),
+                ("tool_pico", ToolKind.Pickaxe),
+                ("tool_guadana", ToolKind.Scythe),
+            };
+
+            foreach (var (id, kind) in esperado)
+            {
+                var item = economy.GetItem(id);
+                Assert.IsNotNull(item, $"{id} no está en el catálogo");
+                Assert.AreEqual(kind, item.Tool, $"{id} no se reconoce como {kind}");
+            }
+
+            // Y de punta a punta: con la azada en el hueco elegido, la mano lleva azada.
+            int slot = -1;
+            for (int i = 0; i < bag.HotbarSize; i++)
+                if (bag.At(i).CatalogId == "tool_azada") { slot = i; break; }
+
+            Assert.GreaterOrEqual(slot, 0, "la azada no está en la barra");
+            bag.Select(slot);
+            Assert.AreEqual(ToolKind.Hoe, bag.ToolInHand,
+                            "con la azada seleccionada, la mano no lleva azada");
+        }
+
+        [UnityTest]
         public IEnumerator ElHuertoSePuedeTrabajarDePrincipioAFin()
         {
             // El huerto llevaba escrito y probado desde el módulo, pero no había forma
