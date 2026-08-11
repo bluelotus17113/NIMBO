@@ -36,6 +36,9 @@ namespace Nimbo.Art.PlayerView
         private IGatheringService _gathering;
         private IInventoryService _inventory;
         private IIslanderRegistry _registry;
+        private IFarmingService _farming;
+
+        private int _tileX, _tileY;
 
         private float _sinceRefresh;
 
@@ -55,6 +58,7 @@ namespace Nimbo.Art.PlayerView
             ServiceRegistry.TryGet(out _gathering);
             ServiceRegistry.TryGet(out _inventory);
             ServiceRegistry.TryGet(out _registry);
+            ServiceRegistry.TryGet(out _farming);
         }
 
         private void Update()
@@ -96,6 +100,8 @@ namespace Nimbo.Art.PlayerView
 
             if (Kind == TargetKind.Islander) return;
 
+            if (TryTargetFarmTile()) return;
+
             if (_gathering == null) return;
 
             var nodes = _gathering.Nodes;
@@ -112,6 +118,112 @@ namespace Nimbo.Art.PlayerView
                 TargetId = node.InstanceId;
                 Prompt = PromptFor(definition);
             }
+        }
+
+        /// <summary>
+        /// ¿Estás de pie en el huerto? Entonces el objetivo es la casilla que pisas.
+        /// </summary>
+        /// <remarks>
+        /// Se mira la casilla en la que estás, no la que tienes delante. En una rejilla
+        /// de metro y medio, apuntar a la de al lado es una pelea constante: uno se
+        /// pone encima de lo que quiere trabajar y ya está.
+        /// </remarks>
+        private bool TryTargetFarmTile()
+        {
+            if (_farming == null) return false;
+
+            var position = transform.position;
+            if (!Data.Farming.FarmPlot.TileAt(position.x, position.z,
+                                              _farming.Width, _farming.Height,
+                                              out _tileX, out _tileY))
+                return false;
+
+            var tile = _farming.TileAt(_tileX, _tileY);
+            if (tile == null) return false;
+
+            var tool = _inventory?.ToolInHand ?? ToolKind.None;
+
+            Kind = TargetKind.FarmTile;
+            TargetId = $"{_tileX},{_tileY}";
+            Prompt = FarmPrompt(tile, tool);
+            return true;
+        }
+
+        private string FarmPrompt(Data.Farming.FarmTile tile, ToolKind tool)
+        {
+            switch (tile.State)
+            {
+                case Data.Farming.TileState.Wild:
+                    return tool == ToolKind.Hoe
+                        ? "Labrar" : "Tierra sin labrar — hace falta una azada";
+
+                case Data.Farming.TileState.Tilled:
+                    if (tool == ToolKind.Hoe) return "Ya está labrada";
+                    return SelectedSeed(out string seedName)
+                        ? $"Sembrar {seedName}"
+                        : "Labrada — elige semillas en la barra";
+
+                case Data.Farming.TileState.Planted:
+                    if (tile.Watered) return "Regada, creciendo";
+                    return tool == ToolKind.WateringCan
+                        ? "Regar" : "Le falta agua — hace falta una regadera";
+
+                default:
+                    return "Recoger";
+            }
+        }
+
+        /// <summary>Las semillas que lleva en la mano, si es que lleva.</summary>
+        private bool SelectedSeed(out string displayName)
+        {
+            displayName = "";
+            if (_inventory == null || _farming == null) return false;
+
+            string id = _inventory.InHand.CatalogId;
+            if (string.IsNullOrEmpty(id)) return false;
+            if (!_farming.TryGetCrop(id, out var crop)) return false;
+
+            displayName = crop.DisplayName;
+            return true;
+        }
+
+        private void WorkFarmTile()
+        {
+            if (_farming == null || _player == null) return;
+
+            var tile = _farming.TileAt(_tileX, _tileY);
+            if (tile == null) return;
+
+            var tool = _inventory?.ToolInHand ?? ToolKind.None;
+
+            switch (tile.State)
+            {
+                case Data.Farming.TileState.Wild:
+                    if (tool != ToolKind.Hoe || !_player.CanUseTool) return;
+                    if (_farming.Till(_tileX, _tileY) == FarmError.Ok) _player.SpendVigor(1.5f);
+                    break;
+
+                case Data.Farming.TileState.Tilled:
+                    if (!SelectedSeed(out _)) return;
+                    _farming.Plant(_tileX, _tileY, _inventory.InHand.CatalogId);
+                    break;
+
+                case Data.Farming.TileState.Planted:
+                    if (tool != ToolKind.WateringCan || !_player.CanUseTool) return;
+                    if (_farming.Water(_tileX, _tileY) == FarmError.Ok) _player.SpendVigor(1f);
+                    break;
+
+                default:
+                    int got = _farming.Harvest(_tileX, _tileY, out var error);
+                    if (got > 0) _body.SetEmotion(Data.Islanders.Emotion.Happy);
+                    else if (error == FarmError.InventoryFull) _body.SetEmotion(Data.Islanders.Emotion.Worried);
+                    break;
+            }
+
+            // La casilla acaba de cambiar y el aviso que pinta el mundo ya salió del
+            // servicio, pero el texto de la barra lo calculamos aquí: sin refrescarlo,
+            // sigue diciendo «Labrar» sobre una casilla ya labrada hasta que te muevas.
+            FindTarget();
         }
 
         private string PromptFor(in NodeDefinition definition)
@@ -191,6 +303,10 @@ namespace Nimbo.Art.PlayerView
 
                 case TargetKind.Node:
                     GatherTarget();
+                    break;
+
+                case TargetKind.FarmTile:
+                    WorkFarmTile();
                     break;
             }
         }

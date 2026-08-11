@@ -35,6 +35,55 @@ namespace Nimbo.Data.Farming
         public bool Watered;
     }
 
+    /// <summary>
+    /// Dónde está el huerto en el mundo y cuánto mide cada casilla.
+    /// </summary>
+    /// <remarks>
+    /// Vive en Data y no en el servicio porque lo necesitan tres sitios que no se ven
+    /// entre sí: quien lo dibuja, quien decide sobre qué casilla estás y el propio
+    /// servicio. Con el número copiado en tres ficheros, el día que se mueva la
+    /// parcela el jugador labraría una casilla y se pondría verde otra.
+    ///
+    /// El sitio está elegido a mano: al sur de la plaza, en el hueco que queda entre
+    /// ella y la zona del embarcadero, y lejos de cualquier edificio.
+    /// </remarks>
+    public static class FarmPlot
+    {
+        public const float TileSize = 1.6f;
+        public const float CentreX = 18f;
+        public const float CentreZ = -20f;
+
+        /// <summary>La esquina (0,0) de la parcela, en coordenadas del mundo.</summary>
+        public static void Origin(int width, int height, out float x, out float z)
+        {
+            x = CentreX - width * TileSize * 0.5f;
+            z = CentreZ - height * TileSize * 0.5f;
+        }
+
+        /// <summary>El centro de esa casilla, en coordenadas del mundo.</summary>
+        public static void CentreOf(int tileX, int tileY, int width, int height,
+                                    out float x, out float z)
+        {
+            Origin(width, height, out float ox, out float oz);
+            x = ox + (tileX + 0.5f) * TileSize;
+            z = oz + (tileY + 0.5f) * TileSize;
+        }
+
+        /// <summary>
+        /// Sobre qué casilla cae ese punto del mundo. Falso si está fuera.
+        /// </summary>
+        public static bool TileAt(float worldX, float worldZ, int width, int height,
+                                  out int tileX, out int tileY)
+        {
+            Origin(width, height, out float ox, out float oz);
+
+            tileX = (int)System.Math.Floor((worldX - ox) / TileSize);
+            tileY = (int)System.Math.Floor((worldZ - oz) / TileSize);
+
+            return tileX >= 0 && tileY >= 0 && tileX < width && tileY < height;
+        }
+    }
+
     /// <summary>El huerto entero, tal y como se guarda.</summary>
     [Serializable]
     public class FarmState

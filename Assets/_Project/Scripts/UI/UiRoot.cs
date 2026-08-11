@@ -37,6 +37,8 @@ namespace Nimbo.UI
         private Achievements.AchievementsPanel _achievements;
         private Achievements.AchievementToast _toast;
         private Player.HotbarView _hotbar;
+        private Player.BagPanel _bag;
+        private Player.CraftPanel _craft;
         private HousingEditorPanel _housing;
         private CreatorPanel _creator;
         private VisualElement _islanderStrip;
@@ -117,6 +119,12 @@ namespace Nimbo.UI
             _achievements = new Achievements.AchievementsPanel();
             body.Add(_achievements.Root);
 
+            _bag = new Player.BagPanel();
+            body.Add(_bag.Root);
+
+            _craft = new Player.CraftPanel();
+            body.Add(_craft.Root);
+
             root.Add(body);
             root.Add(BuildActionBar());
 
@@ -172,6 +180,14 @@ namespace Nimbo.UI
             Add("Decorar", () =>
             {
                 if (_decor.IsShowing) _decor.Hide(); else _decor.Show();
+            });
+            Add("Mochila", () =>
+            {
+                if (_bag.IsShowing) _bag.Hide(); else _bag.Show();
+            });
+            Add("Hacer", () =>
+            {
+                if (_craft.IsShowing) _craft.Hide(); else _craft.Show();
             });
             Add("Logros", () =>
             {
@@ -297,6 +313,13 @@ namespace Nimbo.UI
             _hotbar.Tick();
             RefreshPrompt();
 
+            // Tab abre y cierra la mochila. Es la tecla que todo el mundo prueba
+            // primero en un juego con inventario.
+            if (Input.GetKeyDown(KeyCode.Tab))
+            {
+                if (_bag.IsShowing) _bag.Hide(); else _bag.Show();
+            }
+
             // Las listas y las barras a ritmo lento: nadie nota que una barra de
             // hambre se mueva dos veces por segundo en vez de sesenta, y reconstruir
             // listas cada fotograma es lo que calienta el portátil.
@@ -306,6 +329,10 @@ namespace Nimbo.UI
             _sinceRefresh = 0f;
             _panel.Refresh();
             if (_shop.IsShowing) _shop.Refresh();
+
+            // La mochila abierta se refresca sola: si recoges algo con ella delante
+            // —pasa, porque no para el juego— tiene que aparecer sin cerrarla.
+            if (_bag.IsShowing) _bag.Rebuild();
         }
     }
 }

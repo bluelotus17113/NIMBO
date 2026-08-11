@@ -88,6 +88,11 @@ namespace Nimbo.Art.Chibi
 
         public void WalkTo(Vector3 position) => _target = position;
 
+        /// <summary>
+        /// Los bultos que hay que rodear. Los pone el mundo, que es quien los levanta.
+        /// </summary>
+        public System.Collections.Generic.IReadOnlyList<World.Obstacle> Obstacles { get; set; }
+
         public bool IsWalking => (transform.position - _target).sqrMagnitude > 0.04f;
 
         private void Update()
@@ -96,12 +101,15 @@ namespace Nimbo.Art.Chibi
 
             if (IsWalking)
             {
-                var to = _target - transform.position;
-                to.y = 0f;
+                // La dirección la decide el rodeo, no la línea recta: antes cruzaban
+                // por dentro de las tiendas, que es lo único de la isla que se veía
+                // claramente mal.
+                var step = World.WalkAround.Steer(transform.position, _target, Obstacles);
+                if (step.sqrMagnitude < 0.0001f) step = (_target - transform.position).normalized;
 
-                transform.position += to.normalized * (_walkSpeed * dt);
+                transform.position += step * (_walkSpeed * dt);
                 transform.rotation = Quaternion.Slerp(transform.rotation,
-                    Quaternion.LookRotation(to), 8f * dt);
+                    Quaternion.LookRotation(step), 8f * dt);
 
                 // Balanceo al andar: sube y baja y se inclina un poco. Es lo que
                 // separa a un muñeco que camina de una caja que se desliza.

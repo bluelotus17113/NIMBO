@@ -28,6 +28,7 @@ namespace Nimbo.Art.World
         private readonly Dictionary<string, Vector3> _zoneCentres = new();
         private readonly Dictionary<string, GameObject> _decorViews = new();
         private readonly HashSet<string> _built = new();
+        private readonly List<Obstacle> _obstacles = new();
 
         private Transform _islanders;
         private Transform _decorRoot;
@@ -102,6 +103,10 @@ namespace Nimbo.Art.World
 
             // El Árbol Nimbo: el corazón de la isla y su referencia visual. Va en el
             // centro porque es donde cae la plaza y donde mira la cámara al empezar.
+            // El tronco del Árbol es lo primero que hay que rodear: está en mitad de
+            // la plaza, que es por donde pasa todo el mundo.
+            _obstacles.Add(new Obstacle(Vector3.zero, 4.5f));
+
             var (trunk, crown) = IslandMeshBuilder.BuildTree(26f, 9f);
             var tree = new GameObject("Árbol Nimbo").transform;
             tree.SetParent(island, worldPositionStays: false);
@@ -171,8 +176,16 @@ namespace Nimbo.Art.World
                 zone.localRotation = Quaternion.LookRotation(toCentre.normalized);
 
             if (meshes.Walls != null)
+            {
                 AddMesh(zone, "muros", meshes.Walls, ToonPalette.Solid(ToonPalette.WallCream),
                         solid: true);
+
+                // El bulto sale de la malla que se acaba de levantar, no de un número
+                // escrito a mano: el día que un edificio cambie de tamaño, el rodeo
+                // cambia con él en vez de quedarse desfasado en silencio.
+                var size = meshes.Walls.bounds.size;
+                _obstacles.Add(new Obstacle(centre, Mathf.Max(size.x, size.z) * 0.5f));
+            }
             if (meshes.Roof != null)
                 AddMesh(zone, "tejado", meshes.Roof,
                         ToonPalette.Solid(BuildingMeshBuilder.RoofColor(purpose)));
@@ -350,6 +363,7 @@ namespace Nimbo.Art.World
                 speed *= _personalities.For(islander.Personality).WalkSpeedMultiplier;
 
             var view = IslanderView.Create(islander, speed, _islanders);
+            view.Obstacles = _obstacles;
             view.PlaceAt(PointIn(islander.CurrentZoneId));
             view.SetEmotion(islander.Mood.Emotion);
             _views[islander.Id] = view;

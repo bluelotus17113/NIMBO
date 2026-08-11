@@ -332,6 +332,75 @@ namespace Nimbo.PlayTests
         }
 
         [UnityTest]
+        public IEnumerator ElHuertoSePuedeTrabajarDePrincipioAFin()
+        {
+            // El huerto llevaba escrito y probado desde el módulo, pero no había forma
+            // de tocarlo desde el juego: era código muerto. Esto recorre el ciclo
+            // entero por donde lo recorre el jugador — de pie sobre la casilla, con la
+            // herramienta en la mano.
+            yield return CargarYEmpezar();
+
+            var farm = ServiceRegistry.Get<IFarmingService>();
+            var bag = ServiceRegistry.Get<IInventoryService>();
+
+            Assert.AreEqual(Data.Farming.TileState.Wild, farm.TileAt(0, 0).State);
+            Assert.AreEqual(FarmError.Ok, farm.Till(0, 0));
+            Assert.AreEqual(Data.Farming.TileState.Tilled, farm.TileAt(0, 0).State);
+
+            string seed = null;
+            foreach (var crop in farm.Crops)
+                if (bag.CountOf(crop.SeedId) > 0) { seed = crop.SeedId; break; }
+            Assert.IsNotNull(seed, "empezó sin semillas que sembrar");
+
+            int before = bag.CountOf(seed);
+            Assert.AreEqual(FarmError.Ok, farm.Plant(0, 0, seed));
+            Assert.AreEqual(before - 1, bag.CountOf(seed), "sembrar no gastó la semilla");
+
+            // Regar y pasar los días que pida: tiene que acabar listo para recoger.
+            farm.TryGetCrop(seed, out var definition);
+            for (int day = 0; day < definition.DaysToGrow; day++)
+            {
+                Assert.AreEqual(FarmError.Ok, farm.Water(0, 0));
+                farm.AdvanceDay();
+            }
+
+            Assert.AreEqual(Data.Farming.TileState.Ready, farm.TileAt(0, 0).State,
+                            "regado todos los días y no creció");
+
+            int got = farm.Harvest(0, 0, out var error);
+            Assert.AreEqual(FarmError.Ok, error);
+            Assert.Greater(got, 0, "recoger no dio nada");
+            Assert.Greater(bag.CountOf(definition.CropId), 0, "lo recogido no entró en la mochila");
+        }
+
+        [UnityTest]
+        public IEnumerator ElHuertoSeDibujaDondeSeTrabaja()
+        {
+            // Las dos mitades tienen que estar de acuerdo: la casilla que pisas y la
+            // losa que ves. Con el sitio copiado a mano en dos ficheros, labrarías una
+            // y se pondría marrón otra.
+            yield return CargarYEmpezar();
+            yield return null;
+
+            var farm = ServiceRegistry.Get<IFarmingService>();
+            Assert.IsNotNull(GameObject.Find("Huerto"), "el huerto no se dibujó");
+
+            var losa = GameObject.Find("casilla_0_0");
+            Assert.IsNotNull(losa, "no se dibujó la casilla (0,0)");
+
+            Data.Farming.FarmPlot.CentreOf(0, 0, farm.Width, farm.Height,
+                                           out float x, out float z);
+            Assert.AreEqual(x, losa.transform.position.x, 0.01f);
+            Assert.AreEqual(z, losa.transform.position.z, 0.01f);
+
+            // Y desde ese punto, el juego tiene que decir que estás en (0,0).
+            Assert.IsTrue(Data.Farming.FarmPlot.TileAt(x, z, farm.Width, farm.Height,
+                                                       out int tx, out int ty));
+            Assert.AreEqual(0, tx);
+            Assert.AreEqual(0, ty);
+        }
+
+        [UnityTest]
         public IEnumerator LaIslaTieneSuelo()
         {
             yield return CargarYEmpezar();
