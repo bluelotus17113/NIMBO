@@ -8,7 +8,12 @@
         "Nimbo.UI",
         "Nimbo.Game",
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "Nimbo.Player",
+        "Nimbo.Items",
+        "Nimbo.Farming",
+        "Nimbo.Gathering",
+        "Nimbo.Crafting"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

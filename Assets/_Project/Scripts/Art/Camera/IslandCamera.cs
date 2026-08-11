@@ -98,17 +98,27 @@ namespace Nimbo.Art.CameraWork
         {
             if (_rig == null) return;
 
-            _rig.Target = new CameraPose
-            {
-                Pivot = Vector3.zero,
-                Distance = 150f,
-                Pitch = 45f,
-                Yaw = 0f,
-            };
-            _rig.SnapToTarget();
             _focusedBody = null;
             _followingFocus = false;
-            _followingFocus = false;
+
+            // Si ya hay protagonista, se le encuadra a él y no al plano general.
+            //
+            // Esto no es una comodidad: el mundo y la cámara escuchan los dos el mismo
+            // aviso, y el orden entre ellos no está garantizado. Cuando la cámara
+            // atendía la segunda, ponía el plano general encima del encuadre que el
+            // mundo acababa de pedirle y la partida arrancaba mirando la isla desde
+            // lejos con el muñeco perdido en el medio.
+            _rig.Target = _player != null
+                ? FollowPose(0f)
+                : new CameraPose
+                {
+                    Pivot = Vector3.zero,
+                    Distance = 150f,
+                    Pitch = 45f,
+                    Yaw = 0f,
+                };
+
+            _rig.SnapToTarget();
             ApplyPose();
         }
 
@@ -186,12 +196,20 @@ namespace Nimbo.Art.CameraWork
 
         private void HandleInput()
         {
-            // WASD o flechas → desplazar el pivote.
+            // WASD o flechas → desplazar el pivote, pero SOLO sin protagonista.
+            //
+            // Desde que el jugador tiene cuerpo, esas teclas son suyas: si las leyeran
+            // los dos, cada paso movería al muñeco y arrastraría la cámara al doble de
+            // velocidad, y el muñeco se saldría del plano hacia atrás. Con cuerpo, a la
+            // cámara le quedan el ratón y la rueda.
             Vector3 panInput = Vector3.zero;
-            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))    panInput.z += 1f;
-            if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))  panInput.z -= 1f;
-            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))  panInput.x -= 1f;
-            if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) panInput.x += 1f;
+            if (_player == null)
+            {
+                if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))    panInput.z += 1f;
+                if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))  panInput.z -= 1f;
+                if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))  panInput.x -= 1f;
+                if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) panInput.x += 1f;
+            }
 
             bool orbiting = Input.GetMouseButton(1) || Input.GetMouseButton(2);
             float scroll = Input.mouseScrollDelta.y;
@@ -314,8 +332,40 @@ namespace Nimbo.Art.CameraWork
 
         private void ApplyPose()
         {
-            _cam.transform.position = _rig.Position;
+            _cam.transform.position = Unobstructed(_rig.Current.Pivot, _rig.Position);
             _cam.transform.rotation = _rig.Rotation;
+        }
+
+        [Tooltip("Hueco que se deja entre la cámara y lo que tenga detrás, en metros.")]
+        [SerializeField] private float _cameraPadding = 0.6f;
+
+        /// <summary>
+        /// Acerca la cámara si hay algo entre ella y lo que mira.
+        /// </summary>
+        /// <remarks>
+        /// Sin esto, seguir al protagonista mete la cámara dentro del primer edificio o
+        /// del Árbol Nimbo que le pille por detrás, y el jugador se queda mirando el
+        /// interior de una malla sin entender qué ha pasado. Se vio a la primera
+        /// partida y no lo pilla ningún test: la posición era correcta, lo que estaba
+        /// mal es que había una pared en medio.
+        ///
+        /// El suelo mínimo de <c>CameraRig</c> no basta: aquel evita hundirse en el
+        /// prado, y esto evita meterse en lo que hay de pie sobre él.
+        /// </remarks>
+        private Vector3 Unobstructed(Vector3 pivot, Vector3 desired)
+        {
+            var offset = desired - pivot;
+            float distance = offset.magnitude;
+            if (distance < 0.01f) return desired;
+
+            // QueryTriggerInteraction.Ignore para que un disparador —una puerta, una
+            // zona de aviso— no tire de la cámara hacia delante como si fuera un muro.
+            if (!Physics.Raycast(pivot, offset / distance, out var hit, distance,
+                                 ~0, QueryTriggerInteraction.Ignore))
+                return desired;
+
+            float pulled = Mathf.Max(hit.distance - _cameraPadding, 1.5f);
+            return pivot + offset / distance * pulled;
         }
     }
 }

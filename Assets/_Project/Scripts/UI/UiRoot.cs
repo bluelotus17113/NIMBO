@@ -36,6 +36,7 @@ namespace Nimbo.UI
         private Decor.DecorPanel _decor;
         private Achievements.AchievementsPanel _achievements;
         private Achievements.AchievementToast _toast;
+        private Player.HotbarView _hotbar;
         private HousingEditorPanel _housing;
         private CreatorPanel _creator;
         private VisualElement _islanderStrip;
@@ -55,6 +56,7 @@ namespace Nimbo.UI
             EventBus.Unsubscribe<IslanderCreated>(OnRosterChanged);
             EventBus.Unsubscribe<IslanderLeft>(OnRosterChanged);
             _toast?.Unsubscribe();
+            _hotbar?.Unsubscribe();
             _hud?.Dispose();
             _shop?.Dispose();
             _housing?.Dispose();
@@ -134,6 +136,13 @@ namespace Nimbo.UI
             _toast = new Achievements.AchievementToast();
             _toast.Subscribe();
             root.Add(_toast.Root);
+
+            // La barra va la última y al final de la raíz: es lo que el jugador mira
+            // sin querer, y tiene que quedar pegada abajo por debajo de todo panel.
+            _hotbar = new Player.HotbarView();
+            _hotbar.Subscribe();
+            _hotbar.Rebuild();
+            root.Add(_hotbar.Root);
 
             EventBus.Subscribe<IslanderCreated>(OnRosterChanged);
             EventBus.Subscribe<IslanderLeft>(OnRosterChanged);
@@ -229,6 +238,39 @@ namespace Nimbo.UI
         /// avisa de a quién se mira y la cámara se acerca a él. Cerrarla avisa con el
         /// identificador vacío y la cámara vuelve al plano general.
         /// </summary>
+        /// <summary>
+        /// Enseña en la barra lo que el protagonista tiene delante.
+        /// </summary>
+        /// <remarks>
+        /// La interfaz busca al interactor en la escena en vez de que él le hable:
+        /// <c>Nimbo.UI</c> está por debajo de <c>Nimbo.Art</c> en el grafo de
+        /// ensamblados, y al revés se cerraría un ciclo. Se busca una sola vez.
+        /// </remarks>
+        private Component _interactor;
+        private System.Reflection.PropertyInfo _promptProperty;
+
+        private void RefreshPrompt()
+        {
+            if (_interactor == null)
+            {
+                var found = GameObject.Find("Protagonista");
+                if (found == null) return;
+
+                foreach (var component in found.GetComponents<Component>())
+                {
+                    var property = component.GetType().GetProperty("Prompt");
+                    if (property == null) continue;
+
+                    _interactor = component;
+                    _promptProperty = property;
+                    break;
+                }
+                if (_interactor == null) return;
+            }
+
+            _hotbar.SetPrompt(_promptProperty.GetValue(_interactor) as string);
+        }
+
         private void Toggle(string islanderId)
         {
             if (_panel.IsShowing && _panel.Root.name == islanderId)
@@ -252,6 +294,8 @@ namespace Nimbo.UI
             // Sin escalar: el cartel de logro tiene que terminar de irse aunque el
             // juego esté en pausa, en vez de quedarse clavado en pantalla.
             _toast.Tick(Time.unscaledDeltaTime);
+            _hotbar.Tick();
+            RefreshPrompt();
 
             // Las listas y las barras a ritmo lento: nadie nota que una barra de
             // hambre se mueva dos veces por segundo en vez de sesenta, y reconstruir

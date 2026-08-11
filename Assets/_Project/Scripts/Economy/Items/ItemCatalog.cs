@@ -25,6 +25,13 @@ namespace Nimbo.Economy.Items
             LoadJson(Resources.Load<TextAsset>("Config/catalogo_ropa").text, "Clothing");
             LoadJson(Resources.Load<TextAsset>("Config/catalogo_muebles").text, "Furniture");
             LoadJson(Resources.Load<TextAsset>("Config/catalogo_acabados").text, "Finishes");
+
+            // Las herramientas y los materiales llegaron con el giro a aldea. Sin
+            // darlos de alta aquí, la mochila los rechazaba como desconocidos y el
+            // jugador empezaba sin azada: el crafteo los fabricaba y la recolección
+            // los soltaba, pero para el catálogo no existían.
+            LoadJson(Resources.Load<TextAsset>("Config/catalogo_herramientas").text, "Tool");
+            LoadJson(Resources.Load<TextAsset>("Config/catalogo_materiales").text, "Material");
             All = _byId.Values.ToList().AsReadOnly();
         }
 
@@ -73,6 +80,17 @@ namespace Nimbo.Economy.Items
             "Clothing" => ItemCategory.Clothing,
             "Furniture" => ItemCategory.Furniture,
             "Finishes" => item.surface == "floor" ? ItemCategory.Flooring : ItemCategory.Wallpaper,
+            "Tool" => ItemCategory.Tool,
+
+            // Semillas y cultivos vienen en el mismo fichero que los materiales y se
+            // separan por el prefijo del identificador: son categorías distintas para
+            // la tienda, y tenerlos en tres ficheros no aportaba nada.
+            "Material" => item.catalogId != null && item.catalogId.StartsWith("seed_")
+                              ? ItemCategory.Seed
+                          : item.catalogId != null && item.catalogId.StartsWith("crop_")
+                              ? ItemCategory.Crop
+                          : ItemCategory.Material,
+
             _ => ItemCategory.Furniture,
         };
 

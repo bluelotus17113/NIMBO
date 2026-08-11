@@ -163,27 +163,95 @@ namespace Nimbo.PlayTests
         }
 
         [UnityTest]
-        public IEnumerator LaCamaraEmpiezaEnPlanoGeneral()
+        public IEnumerator ElProtagonistaEmpiezaConCuerpoYHerramientas()
         {
-            // Lo primero que se ve de una partida es el encuadre. Una cámara que
-            // arranca metida en el césped no la ve ninguna prueba de mesa: la malla
-            // está bien, los servicios están bien, y la primera impresión es que el
-            // juego está roto.
+            // La comprobación de la aldea: que exista alguien a quien mover y que
+            // lleve con qué trabajar. La primera vez salió con la mochila vacía —las
+            // herramientas eran salida de receta y drop de nodo, pero no estaban dadas
+            // de alta como objetos, así que la mochila las rechazaba por desconocidas.
+            // Es la clase de agujero que no ve ningún test de un módulo suelto: cada
+            // uno pasaba, lo que estaba roto era la costura.
             yield return CargarYEmpezar();
 
+            var player = ServiceRegistry.Get<Nimbo.Player.PlayerService>();
+            Assert.IsTrue(player.Exists, "la partida empezó sin protagonista");
+
+            var body = GameObject.Find("Protagonista");
+            Assert.IsNotNull(body, "el protagonista no tiene cuerpo en el mundo");
+            Assert.IsNotNull(body.GetComponent<CharacterController>(),
+                             "el protagonista no puede andar");
+
+            var bag = ServiceRegistry.Get<IInventoryService>();
+            Assert.Greater(bag.CountOf("tool_azada"), 0, "empieza sin azada");
+            Assert.Greater(bag.CountOf("tool_regadera"), 0, "empieza sin regadera");
+
+            int seeds = 0;
+            foreach (var crop in ServiceRegistry.Get<IFarmingService>().Crops)
+                seeds += bag.CountOf(crop.SeedId);
+            Assert.Greater(seeds, 0, "empieza sin semillas que sembrar");
+        }
+
+        [UnityTest]
+        public IEnumerator LaIslaTieneCosasQueRecoger()
+        {
+            yield return CargarYEmpezar();
+
+            var gathering = ServiceRegistry.Get<IGatheringService>();
+            Assert.Greater(gathering.Nodes.Count, 50,
+                           "la isla amaneció sin nada que recoger");
+
+            // Y que no hayan caído todos encima de la plaza, que es donde se aparece.
+            int enLaPlaza = 0;
+            foreach (var node in gathering.Nodes)
+                if (node.X * node.X + node.Z * node.Z < 30f * 30f) enLaPlaza++;
+
+            Assert.AreEqual(0, enLaPlaza, $"{enLaPlaza} nodos cayeron en la plaza");
+        }
+
+        [UnityTest]
+        public IEnumerator LaCamaraSigueAlProtagonista()
+        {
+            yield return CargarYEmpezar();
+
+            // La cámara llega suavemente, no aparece: sin dejarla converger se mide
+            // el camino y no el destino.
+            yield return new WaitForSeconds(1.5f);
+
+            var body = GameObject.Find("Protagonista");
             var camera = Camera.main;
+            Assert.IsNotNull(body);
+            Assert.IsNotNull(camera);
+
+            float distance = Vector3.Distance(camera.transform.position, body.transform.position);
+            Assert.Less(distance, 45f,
+                        $"la cámara se quedó a {distance:0} m del protagonista");
+
+            // Y que lo tenga delante, no a la espalda.
+            var toPlayer = (body.transform.position - camera.transform.position).normalized;
+            Assert.Greater(Vector3.Dot(camera.transform.forward, toPlayer), 0.7f,
+                           "la cámara no está mirando al protagonista");
+        }
+
+        [UnityTest]
+        public IEnumerator LaCamaraEmpiezaEncuadrandoAlProtagonista()
+        {
+            // Antes del giro a aldea esta prueba exigía el plano general, y estaba
+            // bien entonces: no había a quien seguir. Ahora lo primero que se ve es tu
+            // muñeco, y el plano general quedó para cuando todavía no existe.
+            yield return CargarYEmpezar();
+            yield return null;
+
+            var camera = Camera.main;
+            var body = GameObject.Find("Protagonista");
             Assert.IsNotNull(camera, "no hay cámara principal en la escena");
+            Assert.IsNotNull(body, "no hay protagonista al que encuadrar");
 
-            var position = camera.transform.position;
-            Assert.Greater(position.y, 40f,
-                           $"la cámara arranca a ras de suelo (y={position.y:0})");
+            Assert.Greater(camera.transform.position.y, body.transform.position.y + 5f,
+                           "la cámara arranca a la altura del suelo");
 
-            float distance = Vector3.Distance(position, Vector3.zero);
-            Assert.That(distance, Is.EqualTo(150f).Within(20f),
-                        $"la cámara no arranca en plano general (está a {distance:0} m)");
-
-            float aim = Vector3.Dot(camera.transform.forward, (-position).normalized);
-            Assert.Greater(aim, 0.97f, "la cámara no está mirando a la isla");
+            float aim = Vector3.Dot(camera.transform.forward,
+                                    (body.transform.position - camera.transform.position).normalized);
+            Assert.Greater(aim, 0.7f, "la cámara no arranca mirando al protagonista");
         }
 
         [UnityTest]

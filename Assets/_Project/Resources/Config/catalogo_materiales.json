@@ -1,0 +1,306 @@
+{
+  "version": 1,
+  "category": "Material",
+  "items": [
+    {
+      "catalogId": "mat_madera",
+      "displayName": "Madera",
+      "description": "Tablas de árbol de nube. Ligera y algo elástica.",
+      "price": 6,
+      "unlockLevel": 1,
+      "tags": [
+        "material"
+      ]
+    },
+    {
+      "catalogId": "mat_savia",
+      "displayName": "Savia",
+      "description": "Pegajosa y con un olor dulce que se queda en las manos.",
+      "price": 12,
+      "unlockLevel": 1,
+      "tags": [
+        "material"
+      ]
+    },
+    {
+      "catalogId": "mat_piedra",
+      "displayName": "Piedra",
+      "description": "Cuesta creer que algo tan pesado flote.",
+      "price": 8,
+      "unlockLevel": 1,
+      "tags": [
+        "material"
+      ]
+    },
+    {
+      "catalogId": "mat_fibra",
+      "displayName": "Fibra",
+      "description": "Hilo vegetal. Se enreda solo con mirarlo.",
+      "price": 4,
+      "unlockLevel": 1,
+      "tags": [
+        "material"
+      ]
+    },
+    {
+      "catalogId": "mat_concha",
+      "displayName": "Concha",
+      "description": "Del borde de la isla. Nadie sabe de qué animal.",
+      "price": 14,
+      "unlockLevel": 1,
+      "tags": [
+        "material"
+      ]
+    },
+    {
+      "catalogId": "mat_petalo",
+      "displayName": "Pétalo",
+      "description": "De las flores de arriba. Conserva el color al secarse.",
+      "price": 10,
+      "unlockLevel": 1,
+      "tags": [
+        "material"
+      ]
+    },
+    {
+      "catalogId": "seed_nimbocereza",
+      "displayName": "Semillas de nimbocereza",
+      "description": "Tardan 3 días en dar. Hay que regarlas.",
+      "price": 38,
+      "unlockLevel": 1,
+      "tags": [
+        "semilla"
+      ]
+    },
+    {
+      "catalogId": "crop_nimbocereza",
+      "displayName": "Nimbocereza",
+      "description": "Un cerezo enano que da frutos del color del cielo al atardecer. Solo crece en tierra que ha sentido el viento de las alturas. Dulce y refrescante, ideal para mermeladas que quitan el vértigo.",
+      "price": 45,
+      "unlockLevel": 1,
+      "tags": [
+        "cultivo"
+      ]
+    },
+    {
+      "catalogId": "seed_alasauce",
+      "displayName": "Semillas de alasauce",
+      "description": "Tardan 4 días en dar. Hay que regarlas.",
+      "price": 44,
+      "unlockLevel": 1,
+      "tags": [
+        "semilla"
+      ]
+    },
+    {
+      "catalogId": "crop_alasauce",
+      "displayName": "Alasauce",
+      "description": "Una planta con hojas en forma de ala que produce unas vainas picantes. Dicen que comer una antes de volar te da mejor maniobrabilidad. Los isleños la usan para salsas que despiertan hasta a las nubes.",
+      "price": 54,
+      "unlockLevel": 1,
+      "tags": [
+        "cultivo"
+      ]
+    },
+    {
+      "catalogId": "seed_cristalovento",
+      "displayName": "Semillas de cristal de viento",
+      "description": "Tardan 6 días en dar. Hay que regarlas.",
+      "price": 56,
+      "unlockLevel": 1,
+      "tags": [
+        "semilla"
+      ]
+    },
+    {
+      "catalogId": "crop_cristalovento",
+      "displayName": "Cristal de viento",
+      "description": "Una formación cristalina que crece en los bordes de las islas, donde el viento pega más fuerte. Al recoger sus fragmentos, vuelve a brotar. Los cristales tintinean con la brisa y se usan para fabricar campanas de meditación.",
+      "price": 72,
+      "unlockLevel": 1,
+      "tags": [
+        "cultivo"
+      ]
+    },
+    {
+      "catalogId": "seed_cetrella",
+      "displayName": "Semillas de cetrella",
+      "description": "Tardan 5 días en dar. Hay que regarlas.",
+      "price": 50,
+      "unlockLevel": 1,
+      "tags": [
+        "semilla"
+      ]
+    },
+    {
+      "catalogId": "crop_cetrella",
+      "displayName": "Cetrella",
+      "description": "Una seta bioluminiscente que crece en la cara inferior de las islas, colgando hacia el vacío. Su luz azulada guía a los viajeros nocturnos. Hay que recogerla con cuidado: si se rompe, tiñe las manos durante días.",
+      "price": 63,
+      "unlockLevel": 1,
+      "tags": [
+        "cultivo"
+      ]
+    },
+    {
+      "catalogId": "seed_nimbocalabaza",
+      "displayName": "Semillas de nimbocalabaza",
+      "description": "Tardan 6 días en dar. Hay que regarlas.",
+      "price": 56,
+      "unlockLevel": 1,
+      "tags": [
+        "semilla"
+      ]
+    },
+    {
+      "catalogId": "crop_nimbocalabaza",
+      "displayName": "Nimbocalabaza",
+      "description": "Una calabaza enorme que crece flotando unos centímetros sobre la tierra. Cuanto más pesa, más alto flota: hay que atarla para que no se escape. Con una sola alcanza para alimentar a media aldea.",
+      "price": 72,
+      "unlockLevel": 1,
+      "tags": [
+        "cultivo"
+      ]
+    },
+    {
+      "catalogId": "seed_musgolante",
+      "displayName": "Semillas de musgolante",
+      "description": "Tardan 5 días en dar. Hay que regarlas.",
+      "price": 50,
+      "unlockLevel": 1,
+      "tags": [
+        "semilla"
+      ]
+    },
+    {
+      "catalogId": "crop_musgolante",
+      "displayName": "Musgolante",
+      "description": "Un musgo dorado que tapiza las rocas flotantes y se regenera solo tras cada cosecha. Machacado suelta un polvo que aligera el peso de quien lo respira: los albañiles de las islas lo usan para cargar piedras como si fueran de corcho.",
+      "price": 63,
+      "unlockLevel": 1,
+      "tags": [
+        "cultivo"
+      ]
+    },
+    {
+      "catalogId": "seed_raisnube",
+      "displayName": "Semillas de raiznube",
+      "description": "Tardan 4 días en dar. Hay que regarlas.",
+      "price": 44,
+      "unlockLevel": 1,
+      "tags": [
+        "semilla"
+      ]
+    },
+    {
+      "catalogId": "crop_raisnube",
+      "displayName": "Raiznube",
+      "description": "Una raíz que absorbe la humedad de las nubes directamente del aire. No necesita riego de lluvia: le basta la neblina del amanecer. Con ella se prepara un caldo que cura el mareo de altura.",
+      "price": 54,
+      "unlockLevel": 1,
+      "tags": [
+        "cultivo"
+      ]
+    },
+    {
+      "catalogId": "seed_azurflor",
+      "displayName": "Semillas de azurflor",
+      "description": "Tardan 7 días en dar. Hay que regarlas.",
+      "price": 62,
+      "unlockLevel": 1,
+      "tags": [
+        "semilla"
+      ]
+    },
+    {
+      "catalogId": "crop_azurflor",
+      "displayName": "Azurflor",
+      "description": "Una flor de seis pétalos color zafiro que solo se abre cuando la isla atraviesa una nube. Su aroma atrae a las libélulas mensajeras. Se necesitan siete días de cuidados para que despliegue todo su esplendor.",
+      "price": 81,
+      "unlockLevel": 1,
+      "tags": [
+        "cultivo"
+      ]
+    },
+    {
+      "catalogId": "seed_trigoeter",
+      "displayName": "Semillas de trigo éter",
+      "description": "Tardan 3 días en dar. Hay que regarlas.",
+      "price": 38,
+      "unlockLevel": 1,
+      "tags": [
+        "semilla"
+      ]
+    },
+    {
+      "catalogId": "crop_trigoeter",
+      "displayName": "Trigo éter",
+      "description": "Un trigo translúcido que crece rápido y da mucho grano. Su harina produce un pan tan ligero que flota sobre el plato. El alimento básico de cualquiera que viva por encima de las nubes.",
+      "price": 45,
+      "unlockLevel": 1,
+      "tags": [
+        "cultivo"
+      ]
+    },
+    {
+      "catalogId": "seed_sombraliquida",
+      "displayName": "Semillas de sombra líquida",
+      "description": "Tardan 8 días en dar. Hay que regarlas.",
+      "price": 68,
+      "unlockLevel": 1,
+      "tags": [
+        "semilla"
+      ]
+    },
+    {
+      "catalogId": "crop_sombraliquida",
+      "displayName": "Sombra líquida",
+      "description": "La planta más rara y valiosa: crece en la umbría perpetua bajo las islas mayores, donde no llega el sol. Su fruto suelta un líquido negro como tinta que los escribas usan para redactar contratos irrompibles. Tarda una eternidad en madurar.",
+      "price": 90,
+      "unlockLevel": 1,
+      "tags": [
+        "cultivo"
+      ]
+    },
+    {
+      "catalogId": "seed_esporaalba",
+      "displayName": "Semillas de espora alba",
+      "description": "Tardan 4 días en dar. Hay que regarlas.",
+      "price": 44,
+      "unlockLevel": 1,
+      "tags": [
+        "semilla"
+      ]
+    },
+    {
+      "catalogId": "crop_esporaalba",
+      "displayName": "Espora alba",
+      "description": "Un hongo que brota al amanecer y se recoge al anochecer, pero no muere: vuelve a asomar al día siguiente. Sus esporas brillan con luz propia y sirven para fabricar antorchas que nunca se apagan.",
+      "price": 54,
+      "unlockLevel": 1,
+      "tags": [
+        "cultivo"
+      ]
+    },
+    {
+      "catalogId": "seed_vidrioestelar",
+      "displayName": "Semillas de vidrio estelar",
+      "description": "Tardan 2 días en dar. Hay que regarlas.",
+      "price": 32,
+      "unlockLevel": 1,
+      "tags": [
+        "semilla"
+      ]
+    },
+    {
+      "catalogId": "crop_vidrioestelar",
+      "displayName": "Vidrio estelar",
+      "description": "Brotan de noche, como si las estrellas dejasen caer semillas al pasar. En solo dos días produce unas esferas transparentes con motitas brillantes dentro. Frágiles y preciosas, se venden bien en cualquier mercadillo.",
+      "price": 36,
+      "unlockLevel": 1,
+      "tags": [
+        "cultivo"
+      ]
+    }
+  ]
+}

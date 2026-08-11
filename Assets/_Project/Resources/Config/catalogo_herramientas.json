@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "category": "Tool",
+  "items": [
+    {
+      "catalogId": "tool_azada",
+      "displayName": "Azada",
+      "description": "Para abrir la tierra antes de sembrar. La punta está mellada de fábrica.",
+      "price": 120,
+      "unlockLevel": 1,
+      "tags": [
+        "herramienta"
+      ],
+      "toolKind": "Hoe"
+    },
+    {
+      "catalogId": "tool_regadera",
+      "displayName": "Regadera",
+      "description": "Guarda agua de nube, que pesa la mitad y riega igual.",
+      "price": 90,
+      "unlockLevel": 1,
+      "tags": [
+        "herramienta"
+      ],
+      "toolKind": "WateringCan"
+    },
+    {
+      "catalogId": "tool_hacha",
+      "displayName": "Hacha",
+      "description": "Corta madera y poco más. Nadie de la isla la ha usado nunca para otra cosa.",
+      "price": 150,
+      "unlockLevel": 1,
+      "tags": [
+        "herramienta"
+      ],
+      "toolKind": "Axe"
+    },
+    {
+      "catalogId": "tool_pico",
+      "displayName": "Pico",
+      "description": "Pesa lo suyo. La piedra de aquí arriba es más blanda de lo que parece.",
+      "price": 160,
+      "unlockLevel": 1,
+      "tags": [
+        "herramienta"
+      ],
+      "toolKind": "Pickaxe"
+    },
+    {
+      "catalogId": "tool_guadana",
+      "displayName": "Guadaña",
+      "description": "Para la hierba alta. Da un respeto que no se merece.",
+      "price": 140,
+      "unlockLevel": 1,
+      "tags": [
+        "herramienta"
+      ],
+      "toolKind": "Scythe"
+    }
+  ]
+}

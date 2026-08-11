@@ -77,8 +77,8 @@ namespace Nimbo.Tests
             return new FakeEconomyService()
                 .WithItem("manzana", ItemCategory.Food)
                 .WithItem("madera", ItemCategory.Material)
-                .WithItem("azada", ItemCategory.Tool)
-                .WithItem("pico", ItemCategory.Tool)
+                .WithItem("hoe", ItemCategory.Tool)
+                .WithItem("pickaxe", ItemCategory.Tool)
                 .WithItem("semilla_trigo", ItemCategory.Seed);
         }
 
@@ -243,13 +243,13 @@ namespace Nimbo.Tests
             var economy = NewEconomy();
             var service = new InventoryService(player, economy);
 
-            service.TryStore("azada", 1, out _);
-            service.TryStore("azada", 1, out _);
+            service.TryStore("hoe", 1, out _);
+            service.TryStore("hoe", 1, out _);
 
-            Assert.AreEqual("azada", service.At(0).CatalogId);
+            Assert.AreEqual("hoe", service.At(0).CatalogId);
             Assert.AreEqual(1, service.At(0).Quantity,
                 "Una herramienta no puede tener cantidad > 1");
-            Assert.AreEqual("azada", service.At(1).CatalogId,
+            Assert.AreEqual("hoe", service.At(1).CatalogId,
                 "La segunda azada debería ocupar su propio hueco");
             Assert.AreEqual(1, service.At(1).Quantity);
         }
@@ -299,7 +299,7 @@ namespace Nimbo.Tests
             var economy = NewEconomy();
             var service = new InventoryService(player, economy);
 
-            service.TryStore("azada", 1, out _);      // va al hueco 0, que es el seleccionado
+            service.TryStore("hoe", 1, out _);      // va al hueco 0, que es el seleccionado
             Assert.AreEqual(ToolKind.Hoe, service.ToolInHand);
         }
 

@@ -1,0 +1,482 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "recipeId": "recipe_azada",
+      "displayName": "Azada de mano",
+      "description": "Un palo y una piedra afilada. No es elegante, pero la tierra no se va a labrar sola.",
+      "station": "Hand",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 2 },
+        { "catalogId": "mat_piedra", "quantity": 1 }
+      ],
+      "outputId": "tool_azada",
+      "outputQuantity": 1,
+      "unlockLevel": 1
+    },
+    {
+      "recipeId": "recipe_regadera",
+      "displayName": "Regadera improvisada",
+      "description": "Madera ahuecada sellada con savia. Riega sin gotear… casi siempre.",
+      "station": "Hand",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 1 },
+        { "catalogId": "mat_savia", "quantity": 2 }
+      ],
+      "outputId": "tool_regadera",
+      "outputQuantity": 1,
+      "unlockLevel": 1
+    },
+    {
+      "recipeId": "recipe_hacha",
+      "displayName": "Hacha de mano",
+      "description": "Filo de piedra sobre un mango de madera. Lo justo para los árboles pequeños.",
+      "station": "Hand",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 2 },
+        { "catalogId": "mat_piedra", "quantity": 2 }
+      ],
+      "outputId": "tool_hacha",
+      "outputQuantity": 1,
+      "unlockLevel": 2
+    },
+    {
+      "recipeId": "recipe_pico",
+      "displayName": "Pico improvisado",
+      "description": "Piedra tallada atada con fibra. Para rocas tercas y días largos.",
+      "station": "Hand",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 2 },
+        { "catalogId": "mat_piedra", "quantity": 3 }
+      ],
+      "outputId": "tool_pico",
+      "outputQuantity": 1,
+      "unlockLevel": 2
+    },
+    {
+      "recipeId": "recipe_guadana",
+      "displayName": "Guadaña casera",
+      "description": "Hoja curva de piedra sobre un mango largo. Para segar sin agacharse.",
+      "station": "Hand",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 3 },
+        { "catalogId": "mat_piedra", "quantity": 2 },
+        { "catalogId": "mat_fibra", "quantity": 2 }
+      ],
+      "outputId": "tool_guadana",
+      "outputQuantity": 1,
+      "unlockLevel": 3
+    },
+    {
+      "recipeId": "recipe_farolillo",
+      "displayName": "Farolillo de papel",
+      "description": "Fibra prensada con pétalos dentro. Cuando se enciende, tiñe el suelo de rosa.",
+      "station": "Hand",
+      "ingredients": [
+        { "catalogId": "mat_fibra", "quantity": 2 },
+        { "catalogId": "mat_petalo", "quantity": 1 }
+      ],
+      "outputId": "deco_farolillo_papel",
+      "outputQuantity": 1,
+      "unlockLevel": 1
+    },
+    {
+      "recipeId": "recipe_valla_madera",
+      "displayName": "Valla flotante",
+      "description": "Listones que levitan dos dedos sobre el suelo. Saltarlos es opcional.",
+      "station": "Hand",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 3 },
+        { "catalogId": "mat_fibra", "quantity": 1 }
+      ],
+      "outputId": "deco_valla_madera",
+      "outputQuantity": 1,
+      "unlockLevel": 1
+    },
+    {
+      "recipeId": "recipe_maceta_colgante",
+      "displayName": "Maceta colgante",
+      "description": "Helecho plateado que crece hacia abajo. Gotea agua con sabor a menta.",
+      "station": "Hand",
+      "ingredients": [
+        { "catalogId": "mat_fibra", "quantity": 3 },
+        { "catalogId": "mat_petalo", "quantity": 1 }
+      ],
+      "outputId": "deco_maceta_colgante",
+      "outputQuantity": 1,
+      "unlockLevel": 1
+    },
+    {
+      "recipeId": "recipe_arbusto_nimbo",
+      "displayName": "Arbusto nimbo",
+      "description": "Mata redonda y esponjosa que suelta pelusilla blanca en primavera. Huele a limpio.",
+      "station": "Hand",
+      "ingredients": [
+        { "catalogId": "mat_fibra", "quantity": 2 },
+        { "catalogId": "mat_petalo", "quantity": 1 }
+      ],
+      "outputId": "deco_arbusto_nimbo",
+      "outputQuantity": 1,
+      "unlockLevel": 1
+    },
+    {
+      "recipeId": "recipe_cartel_bienvenida",
+      "displayName": "Cartel de bienvenida",
+      "description": "Un letrero que dice «Pasa y siéntate». La caligrafía cambia según quién lo mire.",
+      "station": "Hand",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 3 },
+        { "catalogId": "mat_petalo", "quantity": 1 }
+      ],
+      "outputId": "deco_cartel_bienvenida",
+      "outputQuantity": 1,
+      "unlockLevel": 2
+    },
+    {
+      "recipeId": "recipe_silla_sencilla",
+      "displayName": "Silla de madera sencilla",
+      "description": "Cuatro patas y un respaldo. Hace su trabajo sin quejarse.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 4 }
+      ],
+      "outputId": "furn_silla_de_madera_sencilla",
+      "outputQuantity": 1,
+      "unlockLevel": 1
+    },
+    {
+      "recipeId": "recipe_banqueta",
+      "displayName": "Banqueta acolchada",
+      "description": "Taburete bajo con un cojín de pétalos prensados. Para los pies o las visitas extra.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 2 },
+        { "catalogId": "mat_fibra", "quantity": 2 },
+        { "catalogId": "mat_petalo", "quantity": 1 }
+      ],
+      "outputId": "furn_banqueta_acolchada",
+      "outputQuantity": 1,
+      "unlockLevel": 2
+    },
+    {
+      "recipeId": "recipe_atrapasuenos",
+      "displayName": "Atrapasueños artesanal",
+      "description": "Aro de fibra trenzada con plumas de pétalo y cuentas de concha. Filtra hasta la peor pesadilla.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_fibra", "quantity": 3 },
+        { "catalogId": "mat_petalo", "quantity": 2 },
+        { "catalogId": "mat_concha", "quantity": 1 }
+      ],
+      "outputId": "furn_atrapasuenos_artesanal",
+      "outputQuantity": 1,
+      "unlockLevel": 2
+    },
+    {
+      "recipeId": "recipe_taburete",
+      "displayName": "Taburete de barra alto",
+      "description": "Metal y madera para islas de cocina. La altura justa para picar sin doblar la espalda.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 2 },
+        { "catalogId": "mat_piedra", "quantity": 1 }
+      ],
+      "outputId": "furn_taburete_de_barra_alto",
+      "outputQuantity": 1,
+      "unlockLevel": 3
+    },
+    {
+      "recipeId": "recipe_cajonera",
+      "displayName": "Cajonera de plástico colorida",
+      "description": "Cajones apilables de colores vivos. Organizar nunca fue tan alegre.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 2 },
+        { "catalogId": "mat_savia", "quantity": 1 },
+        { "catalogId": "mat_concha", "quantity": 1 }
+      ],
+      "outputId": "furn_cajonera_de_plastico_colorida",
+      "outputQuantity": 1,
+      "unlockLevel": 3
+    },
+    {
+      "recipeId": "recipe_mesita_noche",
+      "displayName": "Mesita de noche",
+      "description": "Una mesa pequeña para el despertador y el libro que nunca terminas.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 3 },
+        { "catalogId": "mat_savia", "quantity": 1 }
+      ],
+      "outputId": "furn_mesita_de_noche",
+      "outputQuantity": 1,
+      "unlockLevel": 3
+    },
+    {
+      "recipeId": "recipe_jarron",
+      "displayName": "Jarrón de cerámica artesanal",
+      "description": "Hecho a mano con esmalte azul y blanco. Para flores o para mirarlo de reojo.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_piedra", "quantity": 2 },
+        { "catalogId": "mat_concha", "quantity": 1 },
+        { "catalogId": "mat_petalo", "quantity": 1 }
+      ],
+      "outputId": "furn_jarron_de_ceramica_artesanal",
+      "outputQuantity": 1,
+      "unlockLevel": 4
+    },
+    {
+      "recipeId": "recipe_cuadro",
+      "displayName": "Cuadro de paisaje nimbo",
+      "description": "Lienzo tensado sobre marco de madera con pigmentos de pétalo. La isla al atardecer, según quien la mira.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 2 },
+        { "catalogId": "mat_fibra", "quantity": 1 },
+        { "catalogId": "mat_petalo", "quantity": 2 }
+      ],
+      "outputId": "furn_cuadro_de_paisaje_nimbo",
+      "outputQuantity": 1,
+      "unlockLevel": 4
+    },
+    {
+      "recipeId": "recipe_caracolas",
+      "displayName": "Colección de caracolas gigantes",
+      "description": "Tres caracolas que, si acercas el oído, te cuentan de dónde vienen. Nadie sabe cómo llegaron hasta aquí.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_concha", "quantity": 3 },
+        { "catalogId": "mat_piedra", "quantity": 1 }
+      ],
+      "outputId": "furn_coleccion_de_caracolas_gigantes",
+      "outputQuantity": 1,
+      "unlockLevel": 4
+    },
+    {
+      "recipeId": "recipe_mesa_plegable",
+      "displayName": "Mesa plegable multiusos",
+      "description": "Se pliega y se guarda contra la pared. Para manualidades, banquetes y emergencias.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 3 },
+        { "catalogId": "mat_piedra", "quantity": 1 }
+      ],
+      "outputId": "furn_mesa_plegable_multiusos",
+      "outputQuantity": 1,
+      "unlockLevel": 5
+    },
+    {
+      "recipeId": "recipe_zapatero",
+      "displayName": "Zapatero inclinado",
+      "description": "Mueble estrecho para zapatos. Cada par tiene por fin su sitio.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 3 },
+        { "catalogId": "mat_savia", "quantity": 1 }
+      ],
+      "outputId": "furn_zapatero_inclinado",
+      "outputQuantity": 1,
+      "unlockLevel": 5
+    },
+    {
+      "recipeId": "recipe_mesa_centro",
+      "displayName": "Mesa de centro redonda",
+      "description": "Mesa baja con barniz de savia. Para el té, las galletas y las charlas que se alargan.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 4 },
+        { "catalogId": "mat_savia", "quantity": 1 }
+      ],
+      "outputId": "furn_mesa_de_centro_redonda",
+      "outputQuantity": 1,
+      "unlockLevel": 6
+    },
+    {
+      "recipeId": "recipe_comoda",
+      "displayName": "Cómoda de tres cajones",
+      "description": "Cómoda baja con tiradores dorados. Calcetines arriba, sueños abajo.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 4 },
+        { "catalogId": "mat_savia", "quantity": 2 }
+      ],
+      "outputId": "furn_comoda_de_tres_cajones",
+      "outputQuantity": 1,
+      "unlockLevel": 6
+    },
+    {
+      "recipeId": "recipe_perchero",
+      "displayName": "Perchero de pie elegante",
+      "description": "Madera torneada con ganchos para abrigos, bufandas y sombreros. El recibidor lo agradece.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 3 },
+        { "catalogId": "mat_savia", "quantity": 1 }
+      ],
+      "outputId": "furn_perchero_de_pie_elegante",
+      "outputQuantity": 1,
+      "unlockLevel": 6
+    },
+    {
+      "recipeId": "recipe_estanteria",
+      "displayName": "Estantería alta de madera",
+      "description": "Cinco baldas para libros, fotos y objetos de otras islas. Crece con tu biblioteca.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 5 },
+        { "catalogId": "mat_piedra", "quantity": 1 }
+      ],
+      "outputId": "furn_estanteria_alta_de_madera",
+      "outputQuantity": 1,
+      "unlockLevel": 7
+    },
+    {
+      "recipeId": "recipe_antorcha",
+      "displayName": "Antorcha flotante",
+      "description": "Una antorcha que se sostiene sola a metro y medio del suelo. La savia la mantiene encendida sin llama.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 2 },
+        { "catalogId": "mat_savia", "quantity": 2 },
+        { "catalogId": "mat_concha", "quantity": 1 }
+      ],
+      "outputId": "deco_antorcha_flotante",
+      "outputQuantity": 1,
+      "unlockLevel": 7
+    },
+    {
+      "recipeId": "recipe_caballete",
+      "displayName": "Caballete de pintura",
+      "description": "Trípode de madera con lienzo incorporado. Para pintar atardeceres nimbo sin moverte del salón.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 3 },
+        { "catalogId": "mat_fibra", "quantity": 2 }
+      ],
+      "outputId": "furn_caballete_de_pintura",
+      "outputQuantity": 1,
+      "unlockLevel": 8
+    },
+    {
+      "recipeId": "recipe_estatua",
+      "displayName": "Estatua del Fundador",
+      "description": "Un nimbo anciano señalando al horizonte. Nadie sabe hacia dónde, pero todo el mundo asiente.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_piedra", "quantity": 5 },
+        { "catalogId": "mat_concha", "quantity": 2 }
+      ],
+      "outputId": "deco_estatua_fundador",
+      "outputQuantity": 1,
+      "unlockLevel": 8
+    },
+    {
+      "recipeId": "recipe_banco_nube",
+      "displayName": "Banco de nube",
+      "description": "Banco de madera y fibra prensada. Incómodo al principio, pero al rato todo el mundo acaba sentado.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_madera", "quantity": 4 },
+        { "catalogId": "mat_fibra", "quantity": 3 }
+      ],
+      "outputId": "deco_banco_nube",
+      "outputQuantity": 1,
+      "unlockLevel": 9
+    },
+    {
+      "recipeId": "recipe_monolito",
+      "displayName": "Monolito del viento",
+      "description": "Columna de piedra con agujeros que silban cuando sopla el este. Dicen que fue el primer habitante.",
+      "station": "Bench",
+      "ingredients": [
+        { "catalogId": "mat_piedra", "quantity": 6 },
+        { "catalogId": "mat_concha", "quantity": 3 }
+      ],
+      "outputId": "deco_monolito_viento",
+      "outputQuantity": 1,
+      "unlockLevel": 10
+    },
+    {
+      "recipeId": "recipe_palomitas",
+      "displayName": "Palomitas de cúmulo",
+      "description": "Maíz reventado con un toque de savia caramelizada. El snack oficial de las tardes de cine.",
+      "station": "Kitchen",
+      "ingredients": [
+        { "catalogId": "mat_fibra", "quantity": 2 },
+        { "catalogId": "mat_savia", "quantity": 1 }
+      ],
+      "outputId": "food_palomitas_de_cumulo",
+      "outputQuantity": 1,
+      "unlockLevel": 1
+    },
+    {
+      "recipeId": "recipe_ensalada",
+      "displayName": "Ensalada de zafiro",
+      "description": "Hojas frescas con pétalos comestibles y un hilo de savia como aderezo. Ligera y crujiente.",
+      "station": "Kitchen",
+      "ingredients": [
+        { "catalogId": "mat_fibra", "quantity": 2 },
+        { "catalogId": "mat_petalo", "quantity": 1 },
+        { "catalogId": "mat_savia", "quantity": 1 }
+      ],
+      "outputId": "food_ensalada_de_zafiro",
+      "outputQuantity": 1,
+      "unlockLevel": 4
+    },
+    {
+      "recipeId": "recipe_galletas",
+      "displayName": "Galletas de la suerte nimba",
+      "description": "Cada galleta esconde un mensaje dentro. Hoy el tuyo dice: «Alguien te está pensando».",
+      "station": "Kitchen",
+      "ingredients": [
+        { "catalogId": "mat_fibra", "quantity": 2 },
+        { "catalogId": "mat_petalo", "quantity": 1 },
+        { "catalogId": "mat_concha", "quantity": 1 }
+      ],
+      "outputId": "food_galletas_de_la_suerte_nimba",
+      "outputQuantity": 1,
+      "unlockLevel": 5
+    },
+    {
+      "recipeId": "recipe_tortilla",
+      "displayName": "Tortilla de la abuela nimba",
+      "description": "Con fibra vegetal y un toque salado de concha molida. Sabe a casa, aunque tu casa flote.",
+      "station": "Kitchen",
+      "ingredients": [
+        { "catalogId": "mat_fibra", "quantity": 2 },
+        { "catalogId": "mat_concha", "quantity": 1 }
+      ],
+      "outputId": "food_tortilla_de_la_abuela_nimba",
+      "outputQuantity": 1,
+      "unlockLevel": 6
+    },
+    {
+      "recipeId": "recipe_croquetas",
+      "displayName": "Croquetas de jamón del cielo",
+      "description": "Crujientes por fuera, cremosas por dentro. Llevan savia en la bechamel: el secreto de la isla.",
+      "station": "Kitchen",
+      "ingredients": [
+        { "catalogId": "mat_fibra", "quantity": 3 },
+        { "catalogId": "mat_concha", "quantity": 1 },
+        { "catalogId": "mat_savia", "quantity": 1 }
+      ],
+      "outputId": "food_croquetas_de_jamon_del_cielo",
+      "outputQuantity": 1,
+      "unlockLevel": 9
+    },
+    {
+      "recipeId": "recipe_sopa_nube",
+      "displayName": "Sopa de nube",
+      "description": "Caldo humeante con verduras del huerto aéreo. Reconforta el alma en los días de tormenta.",
+      "station": "Kitchen",
+      "ingredients": [
+        { "catalogId": "mat_fibra", "quantity": 3 },
+        { "catalogId": "mat_petalo", "quantity": 2 }
+      ],
+      "outputId": "food_sopa_de_nube",
+      "outputQuantity": 1,
+      "unlockLevel": 10
+    }
+  ]
+}

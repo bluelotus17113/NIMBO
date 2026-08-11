@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Nimbo.Core.Events;
 using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
@@ -127,11 +128,24 @@ namespace Nimbo.Tests
         }
 
         [Test]
-        public void Catalog_LoadsRealFiles_Has225UniqueItems()
+        public void Catalog_LoadsRealFiles_HasUniqueItems()
         {
             // Este test usa Resources.Load y solo funciona en el Unity Test Runner.
             var catalog = new ItemCatalog();
-            Assert.AreEqual(225, catalog.Count);
+
+            // Antes exigía exactamente 225 y el giro a aldea añadió herramientas,
+            // materiales, semillas y cultivos. Se pide un mínimo en vez de un número
+            // exacto: lo que esta prueba tiene que cazar es un catálogo que no carga
+            // —que da cero— no que alguien haya añadido contenido, que es lo normal.
+            Assert.Greater(catalog.Count, 200,
+                $"el catálogo cargó solo {catalog.Count} objetos: falta algún fichero");
+
+            // Y que estén los seis ficheros, no cinco y uno vacío.
+            foreach (var category in new[] { ItemCategory.Food, ItemCategory.Clothing,
+                                             ItemCategory.Furniture, ItemCategory.Tool,
+                                             ItemCategory.Material, ItemCategory.Seed })
+                Assert.IsNotEmpty(catalog.ItemsOfCategory(category).ToList(),
+                                  $"no se cargó nada de la categoría {category}");
 
             var ids = new HashSet<string>();
             for (int i = 0; i < catalog.All.Count; i++)

@@ -12,6 +12,10 @@ using Nimbo.Economy.Items;
 using Nimbo.Housing;
 using Nimbo.Housing.Catalog;
 using Nimbo.Island;
+using Nimbo.Crafting;
+using Nimbo.Gathering;
+using Nimbo.Farming;
+using Nimbo.Items;
 using Nimbo.Island.Decor;
 using Nimbo.Personality.Runtime;
 using Nimbo.Player;
@@ -71,6 +75,10 @@ namespace Nimbo.Game.Bootstrap
         private WardrobeService _wardrobe;
         private AchievementService _achievements;
         private PlayerService _player;
+        private InventoryService _inventory;
+        private FarmingService _farming;
+        private GatheringService _gathering;
+        private CraftingService _crafting;
 
         private IslanderRegistry _registry;
         private long _lastAutosaveMinute;
@@ -131,7 +139,16 @@ namespace Nimbo.Game.Bootstrap
             Debug.Log($"Isla Nimbo lista — {_registry.Count} habitantes, {_clock}");
         }
 
-        private void OnDayPassed(DayPassed evt) => ApplyDayRhythm(evt.Day);
+        private void OnDayPassed(DayPassed evt)
+        {
+            ApplyDayRhythm(evt.Day);
+
+            // El huerto y los nodos avanzan por días, no por fotogramas, y por este
+            // mismo camino: al volver de estar fuera el reloj publica un DayPassed por
+            // cada día saltado, así que ponerse al día no necesita código aparte.
+            _farming.AdvanceDay();
+            _gathering.AdvanceDay();
+        }
 
         /// <summary>
         /// Paga el logro. Lo hace el arranque y no el servicio de logros a propósito:
@@ -211,6 +228,14 @@ namespace Nimbo.Game.Bootstrap
             // ahí ya hay a quien seguir.
             _player = new PlayerService(_save.Player, _clock);
 
+            // El orden aquí sí manda: la mochila la necesitan los otros tres, y el
+            // crafteo necesita además la isla para saber de qué nivel va.
+            _inventory = new InventoryService(_save.Player, _economy);
+            _farming = new FarmingService(new CropCatalog(), _save.Farm, _inventory);
+            _gathering = new GatheringService(new NodeCatalog(), _save.Gathering,
+                                              _inventory, _clock);
+            _crafting = new CraftingService(new RecipeCatalog(), _inventory, _island);
+
             // La paga se engancha aquí y no al encender la partida, y no es un
             // detalle: poblar una isla nueva ya desbloquea logros —el primer
             // edificio, el primer amigo— y esos avisos salen dentro de este mismo
@@ -243,12 +268,21 @@ namespace Nimbo.Game.Bootstrap
             ServiceRegistry.Register<IDecorService>(decor);
             ServiceRegistry.Register<IAchievementService>(_achievements);
             ServiceRegistry.Register<PlayerService>(_player);
+            ServiceRegistry.Register<IInventoryService>(_inventory);
+            ServiceRegistry.Register<IFarmingService>(_farming);
+            ServiceRegistry.Register<IGatheringService>(_gathering);
+            ServiceRegistry.Register<ICraftingService>(_crafting);
             ServiceRegistry.Register<IIslanderFactory>(factory);
             ServiceRegistry.Register<IJobService>(_jobs);
             ServiceRegistry.Register<NimboTree>(_tree);
             ServiceRegistry.Register<WardrobeService>(_wardrobe);
 
-            if (isNewGame) PopulateNewIsland(registry, factory);
+            if (isNewGame)
+            {
+                PopulateNewIsland(registry, factory);
+                GiveStarterKit();
+                CreateProtagonist(factory);
+            }
 
             // Que nadie empiece en paro: la economía no cierra sin sueldos, y buscar
             // trabajo a mano para doce habitantes no es una decisión interesante.
@@ -256,6 +290,41 @@ namespace Nimbo.Game.Bootstrap
 
             _registry = registry;
             _built = true;
+        }
+
+        /// <summary>
+        /// Crea al protagonista con un aspecto sorteado.
+        /// </summary>
+        /// <remarks>
+        /// Provisional: el creador de personajes tiene que salir al empezar y ser el
+        /// jugador quien lo haga. Mientras eso se cablea, el protagonista existe con
+        /// una cara al azar, porque sin él no hay a quien seguir y la isla se queda
+        /// sin nadie a los mandos.
+        /// </remarks>
+        private void CreateProtagonist(IIslanderFactory factory)
+        {
+            if (_save.Player.Created) return;
+
+            var sample = factory.CreateRandom();
+            _player.Create(sample.Identity.DisplayName, sample.Appearance,
+                           new Vector3(14f, 3f, 14f));
+        }
+
+        /// <summary>
+        /// Lo que lleva encima el primer día: las herramientas y unas semillas.
+        /// </summary>
+        /// <remarks>
+        /// Se da de salida en vez de venderlo porque sin azada no se puede empezar el
+        /// huerto, y sin huerto el primer día es solo pasear. Un juego que te hace
+        /// ahorrar antes de dejarte jugar empieza mal.
+        /// </remarks>
+        private void GiveStarterKit()
+        {
+            foreach (var tool in new[] { "tool_azada", "tool_regadera", "tool_hacha", "tool_pico" })
+                _inventory.TryStore(tool, 1, out _);
+
+            var crops = _farming.Crops;
+            if (crops.Count > 0) _inventory.TryStore(crops[0].SeedId, 8, out _);
         }
 
         /// <summary>
