@@ -332,6 +332,31 @@ namespace Nimbo.PlayTests
         }
 
         [UnityTest]
+        public IEnumerator ApareceAlLadoDeSuHuerto()
+        {
+            // La primera partida jugada acabó con cero casillas trabajadas y cero
+            // nodos recogidos, y no por un fallo: aparecías a treinta y cuatro metros
+            // de tu parcela, con los nodos aún más lejos, en una plaza vacía. Lo
+            // primero que ves tiene que ser algo que puedas tocar.
+            yield return CargarYEmpezar();
+
+            var body = GameObject.Find("Protagonista");
+            var farm = ServiceRegistry.Get<IFarmingService>();
+            Assert.IsNotNull(body);
+
+            Data.Farming.FarmPlot.CentreOf(farm.Width / 2, farm.Height / 2,
+                                           farm.Width, farm.Height,
+                                           out float fx, out float fz);
+
+            float distance = Vector2.Distance(
+                new Vector2(body.transform.position.x, body.transform.position.z),
+                new Vector2(fx, fz));
+
+            Assert.Less(distance, 16f,
+                        $"apareció a {distance:0} m de su huerto: el primer minuto es andar");
+        }
+
+        [UnityTest]
         public IEnumerator ElHuertoSePuedeTrabajarDePrincipioAFin()
         {
             // El huerto llevaba escrito y probado desde el módulo, pero no había forma

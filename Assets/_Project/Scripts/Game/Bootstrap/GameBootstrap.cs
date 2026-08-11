@@ -328,7 +328,11 @@ namespace Nimbo.Game.Bootstrap
                 ? factory.CreateRandom().Identity.DisplayName
                 : typed;
 
-            _player.Create(name, look, new Vector3(14f, 3f, 14f));
+            // Justo al norte de tu huerto, mirándolo. Antes aparecías al otro lado de
+            // la plaza, a treinta y cuatro metros de la parcela y con los nodos de
+            // recoger todavía más lejos: el primer minuto era una plaza vacía sin nada
+            // que tocar, con la azada en la mano y sin saber para qué.
+            _player.Create(name, look, new Vector3(18f, 3f, -11f));
         }
 
         /// <summary>

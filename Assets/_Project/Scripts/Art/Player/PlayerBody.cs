@@ -204,7 +204,7 @@ namespace Nimbo.Art.PlayerView
                 return;
             }
 
-            var rescue = _lastSafe.sqrMagnitude > 0.01f ? _lastSafe : new Vector3(14f, 3f, 14f);
+            var rescue = _lastSafe.sqrMagnitude > 0.01f ? _lastSafe : new Vector3(18f, 3f, -11f);
 
             // Hay que apagar el controlador para teletransportarlo: si no, se come el
             // cambio de posición y lo deja donde estaba.
