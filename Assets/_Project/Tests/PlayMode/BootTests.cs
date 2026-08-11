@@ -354,6 +354,17 @@ namespace Nimbo.PlayTests
 
             Assert.Less(distance, 16f,
                         $"apareció a {distance:0} m de su huerto: el primer minuto es andar");
+
+            // Y que lo tenga DELANTE, no a la espalda. La distancia sola no basta: con
+            // la cámara detrás del protagonista, apareciendo al otro lado de la parcela
+            // la cámara caía encima de ella y salías mirando al lado contrario. Estabas
+            // a cinco metros de tu huerto y no lo veías.
+            yield return null;
+
+            var camera = Camera.main;
+            var toFarm = new Vector3(fx, camera.transform.position.y, fz) - camera.transform.position;
+            Assert.Greater(Vector3.Dot(camera.transform.forward.normalized, toFarm.normalized), 0.2f,
+                           "el huerto queda detrás de la cámara al empezar");
         }
 
         [UnityTest]

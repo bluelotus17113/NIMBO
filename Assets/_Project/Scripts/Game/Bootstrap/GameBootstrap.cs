@@ -328,11 +328,14 @@ namespace Nimbo.Game.Bootstrap
                 ? factory.CreateRandom().Identity.DisplayName
                 : typed;
 
-            // Justo al norte de tu huerto, mirándolo. Antes aparecías al otro lado de
-            // la plaza, a treinta y cuatro metros de la parcela y con los nodos de
-            // recoger todavía más lejos: el primer minuto era una plaza vacía sin nada
-            // que tocar, con la azada en la mano y sin saber para qué.
-            _player.Create(name, look, new Vector3(18f, 3f, -11f));
+            // Al sur del huerto, con la parcela y la cabaña por delante.
+            //
+            // El lado importa tanto como la distancia. La cámara arranca detrás del
+            // protagonista, o sea unos diez metros hacia -z: apareciendo al norte de
+            // la parcela, la cámara caía justo encima de ella y el jugador miraba al
+            // lado contrario — salías de espaldas a tu propio huerto. Desde aquí lo
+            // primero que se ve es la tierra, y detrás la casa.
+            _player.Create(name, look, new Vector3(18f, 3f, -25f));
         }
 
         /// <summary>
