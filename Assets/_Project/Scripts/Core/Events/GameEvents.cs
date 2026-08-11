@@ -383,6 +383,25 @@ namespace Nimbo.Core.Events
 
     public readonly struct NewGameRequested { }
 
+    /// <summary>
+    /// El jugador ya se ha hecho a sí mismo en el creador. La partida puede empezar.
+    /// </summary>
+    /// <remarks>
+    /// Va aparte de <c>NewGameRequested</c> porque entre las dos cosas hay una
+    /// pantalla: pedir partida nueva abre el creador, y es terminar el creador lo que
+    /// enciende la isla. Sin este paso intermedio no habría dónde meter el creador
+    /// salvo dentro del arranque, que es justo el sitio donde no puede ir.
+    /// </remarks>
+    public readonly struct ProtagonistCreated
+    {
+        public readonly string DisplayName;
+        public readonly Data.Islanders.AppearanceData Appearance;
+        public ProtagonistCreated(string displayName, Data.Islanders.AppearanceData appearance)
+        {
+            DisplayName = displayName; Appearance = appearance;
+        }
+    }
+
     public readonly struct ContinueRequested { }
 
     /// <summary>Volver al menú principal desde la partida, guardando antes.</summary>

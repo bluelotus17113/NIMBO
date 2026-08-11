@@ -50,12 +50,17 @@ namespace Nimbo.PlayTests
         /// es exactamente lo que hace el botón «Empezar», así que estas pruebas
         /// recorren el mismo camino que el jugador en vez de un atajo.
         /// </remarks>
-        private static IEnumerator CargarYEmpezar()
+        private static IEnumerator CargarYEmpezar(
+            string nombre = "Prueba", Data.Islanders.AppearanceData? cara = null)
         {
             yield return SceneManager.LoadSceneAsync("Isla", LoadSceneMode.Single);
             yield return null;
 
-            EventBus.Publish(new NewGameRequested());
+            // Es lo que publica el creador al pulsar «Este soy yo». `NewGameRequested`
+            // ya no enciende nada: solo abre el creador, y desde un test no se puede
+            // rellenar un formulario.
+            EventBus.Publish(new ProtagonistCreated(
+                nombre, cara ?? Data.Islanders.AppearanceData.Default));
             yield return null;
             yield return null;
         }
@@ -71,6 +76,46 @@ namespace Nimbo.PlayTests
 
             Assert.IsFalse(ServiceRegistry.IsRegistered<IIslanderRegistry>(),
                            "la partida se montó sola sin que nadie le diera a empezar");
+        }
+
+        [UnityTest]
+        public IEnumerator PedirPartidaNuevaAbreElCreadorYNoLaIsla()
+        {
+            // Entre pedir partida y tener partida hay una pantalla. Si la isla se
+            // encendiera aquí, el creador saldría encima de una partida ya empezada y
+            // el protagonista nacería con la cara sorteada antes de que la eligieras.
+            yield return SceneManager.LoadSceneAsync("Isla", LoadSceneMode.Single);
+            yield return null;
+
+            EventBus.Publish(new NewGameRequested());
+            yield return null;
+            yield return null;
+
+            Assert.IsFalse(ServiceRegistry.IsRegistered<IIslanderRegistry>(),
+                           "la isla se encendió sin pasar por el creador");
+        }
+
+        [UnityTest]
+        public IEnumerator LaCaraDelCreadorEsLaDelMuneco()
+        {
+            // La comprobación de que el creador sirve para algo: que lo que eliges
+            // llegue hasta el muñeco que anda por la isla, y no se quede por el camino.
+            var cara = Data.Islanders.AppearanceData.Default;
+            cara.HairStyle = 17;
+            cara.SkinTone = new Color32(210, 150, 110, 255);
+            cara.HairColor = new Color32(190, 60, 60, 255);
+
+            yield return CargarYEmpezar("Marisol", cara);
+
+            var player = ServiceRegistry.Get<Nimbo.Player.PlayerService>();
+            Assert.AreEqual("Marisol", player.State.DisplayName);
+            Assert.AreEqual(17, player.State.Appearance.HairStyle,
+                            "el peinado que elegiste no llegó al protagonista");
+            Assert.AreEqual(cara.HairColor.r, player.State.Appearance.HairColor.r,
+                            "el color de pelo no llegó al protagonista");
+
+            Assert.IsNotNull(GameObject.Find("Protagonista"),
+                             "se guardó la cara pero no se dibujó a nadie");
         }
 
         [UnityTest]
@@ -223,7 +268,10 @@ namespace Nimbo.PlayTests
             Assert.IsNotNull(camera);
 
             float distance = Vector3.Distance(camera.transform.position, body.transform.position);
-            Assert.Less(distance, 45f,
+            // El tope es generoso a propósito: lo que se comprueba es que la cámara
+            // le siga, no el encuadre exacto, que es una decisión de diseño y se
+            // retoca. Un test que fija la distancia se rompe cada vez que se ajusta.
+            Assert.Less(distance, 30f,
                         $"la cámara se quedó a {distance:0} m del protagonista");
 
             // Y que lo tenga delante, no a la espalda.

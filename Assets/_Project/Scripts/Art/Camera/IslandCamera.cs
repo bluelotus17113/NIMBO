@@ -25,9 +25,13 @@ namespace Nimbo.Art.CameraWork
         private Transform _player;
 
         [Header("Seguimiento del protagonista")]
-        [SerializeField] private float _followDistance = 26f;
-        [SerializeField] private float _followPitch = 42f;
-        [SerializeField] private float _followHeight = 1.2f;
+        // A 26 metros el muñeco era un punto en mitad del prado: valía para mirar la
+        // isla, que es para lo que estaba hecha esta cámara, pero no para jugar. A 15
+        // se le ve la cara y se distingue hacia dónde mira, que es lo que hace falta
+        // para saber con qué vas a interactuar.
+        [SerializeField] private float _followDistance = 15f;
+        [SerializeField] private float _followPitch = 48f;
+        [SerializeField] private float _followHeight = 1.1f;
 
         /// <summary>
         /// Le dice a quién seguir. Lo llama el arranque en cuanto el cuerpo existe;

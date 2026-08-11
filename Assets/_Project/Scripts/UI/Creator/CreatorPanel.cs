@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Nimbo.Core.Events;
 using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
 using Nimbo.Core.Util;
@@ -32,6 +33,11 @@ namespace Nimbo.UI.Creator
         private readonly Dictionary<string, SliderInt> _ints = new();
         private readonly Slider[] _axes = new Slider[4];
 
+        /// <summary>El bloque de personalidad, para poder esconderlo al protagonista.</summary>
+        private VisualElement _personalityBlock;
+        private Button _done;
+        private bool _forProtagonist;
+
         private IslanderData _draft;
         private Rng _rng = Rng.FromTime();
 
@@ -58,7 +64,8 @@ namespace Nimbo.UI.Creator
 
             // La personalidad va arriba del todo, antes que la cara: es lo que decide
             // cómo se va a comportar, y la cara es lo que decide cómo se ve.
-            header.Add(BuildPersonality(out _typeName, out _typeTagline));
+            _personalityBlock = BuildPersonality(out _typeName, out _typeTagline);
+            header.Add(_personalityBlock);
             scroll.Add(header);
 
             _sections = new VisualElement();
@@ -75,9 +82,9 @@ namespace Nimbo.UI.Creator
             random.style.flexGrow = 1;
             buttons.Add(random);
 
-            var done = UiTheme.Action("Listo", Finish);
-            done.style.flexGrow = 1;
-            buttons.Add(done);
+            _done = UiTheme.Action("Listo", Finish);
+            _done.style.flexGrow = 1;
+            buttons.Add(_done);
             Root.Add(buttons);
 
             BuildAppearanceSections();
@@ -88,9 +95,45 @@ namespace Nimbo.UI.Creator
         /// <summary>Abre el creador con un habitante en blanco listo para modelar.</summary>
         public void Show()
         {
+            _forProtagonist = false;
+            if (_personalityBlock != null) _personalityBlock.style.display = DisplayStyle.Flex;
+            if (_done != null) _done.text = "Listo";
+
+            OpenWithDraft();
+        }
+
+        /// <summary>
+        /// Abre el creador para hacerte a ti, no a un vecino.
+        /// </summary>
+        /// <remarks>
+        /// Se esconde la personalidad, y no es por ahorrar pantalla: la de un vecino
+        /// decide cómo se va a comportar solo, y al protagonista lo mueves tú. Poner
+        /// cuatro deslizadores que no hacen nada sería mentir sobre lo que el juego
+        /// hace con ellos.
+        ///
+        /// También funciona antes de que exista la partida —el creador sale nada más
+        /// darle a Empezar—, por eso todo lo que pide a los servicios tiene camino
+        /// alternativo.
+        /// </remarks>
+        public void ShowForProtagonist()
+        {
+            _forProtagonist = true;
+            if (_personalityBlock != null) _personalityBlock.style.display = DisplayStyle.None;
+            if (_done != null) _done.text = "Este soy yo";
+
+            OpenWithDraft();
+        }
+
+        private void OpenWithDraft()
+        {
             _draft = ServiceRegistry.TryGet<IIslanderFactory>(out var factory)
                 ? factory.CreateBlank()
                 : NewBlankDraft();
+
+            // Sin servicios el borrador en blanco sale con la cara por defecto, que es
+            // la misma para todo el mundo. Se sortea para que la primera pantalla del
+            // juego no sea un maniquí gris.
+            if (_forProtagonist) Randomize();
 
             PushToControls();
             Root.style.display = DisplayStyle.Flex;
@@ -436,6 +479,16 @@ namespace Nimbo.UI.Creator
             var finished = _draft;
             _draft = null;
             Hide();
+
+            if (_forProtagonist)
+            {
+                // El protagonista no entra en el censo: no es un vecino más, y meterlo
+                // ahí lo pondría a trabajar, a tener necesidades y a que la simulación
+                // lo mande de un lado a otro.
+                EventBus.Publish(new ProtagonistCreated(
+                    finished.Identity.DisplayName, finished.Appearance));
+                return;
+            }
 
             OnFinished?.Invoke(finished);
         }

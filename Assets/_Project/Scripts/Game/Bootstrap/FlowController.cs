@@ -28,7 +28,7 @@ namespace Nimbo.Game.Bootstrap
 
         private void OnEnable()
         {
-            EventBus.Subscribe<NewGameRequested>(OnNewGame);
+            EventBus.Subscribe<ProtagonistCreated>(OnProtagonistCreated);
             EventBus.Subscribe<ContinueRequested>(OnContinue);
             EventBus.Subscribe<ReturnToMenuRequested>(OnReturnToMenu);
             EventBus.Subscribe<QuitRequested>(OnQuit);
@@ -37,7 +37,7 @@ namespace Nimbo.Game.Bootstrap
 
         private void OnDisable()
         {
-            EventBus.Unsubscribe<NewGameRequested>(OnNewGame);
+            EventBus.Unsubscribe<ProtagonistCreated>(OnProtagonistCreated);
             EventBus.Unsubscribe<ContinueRequested>(OnContinue);
             EventBus.Unsubscribe<ReturnToMenuRequested>(OnReturnToMenu);
             EventBus.Unsubscribe<QuitRequested>(OnQuit);
@@ -48,7 +48,17 @@ namespace Nimbo.Game.Bootstrap
             Time.timeScale = 1f;
         }
 
-        private void OnNewGame(NewGameRequested _) => _bootstrap?.StartGame(newGame: true);
+        /// <summary>
+        /// El creador terminó: ahora sí se enciende la isla, con la cara que el
+        /// jugador acaba de hacerse.
+        /// </summary>
+        /// <remarks>
+        /// Ya no se arranca con <c>NewGameRequested</c>: ese aviso solo abre el
+        /// creador. Entre pedir partida y tener partida hay una pantalla, y meterla
+        /// dentro del arranque habría obligado a que el arranque conociera la interfaz.
+        /// </remarks>
+        private void OnProtagonistCreated(ProtagonistCreated evt) =>
+            _bootstrap?.StartGame(newGame: true, evt.DisplayName, evt.Appearance);
 
         private void OnContinue(ContinueRequested _) => _bootstrap?.StartGame(newGame: false);
 

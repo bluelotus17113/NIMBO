@@ -19,7 +19,7 @@ namespace Nimbo.UI.Menu
     [RequireComponent(typeof(UIDocument))]
     public sealed class MainMenuView : MonoBehaviour
     {
-        private enum Screen { Title, Pause, Options, Hidden }
+        private enum Screen { Title, Pause, Options, Creator, Hidden }
 
         private UIDocument _document;
         private VisualElement _root;
@@ -29,6 +29,7 @@ namespace Nimbo.UI.Menu
         private TitleScreen _title;
         private PausePanel _pause;
         private OptionsPanel _options;
+        private Creator.CreatorPanel _creator;
 
         private Screen _screen = Screen.Title;
         private Screen _optionsCameFrom = Screen.Title;
@@ -40,12 +41,14 @@ namespace Nimbo.UI.Menu
         {
             EventBus.Subscribe<GameLoaded>(OnGameLoaded);
             EventBus.Subscribe<GamePaused>(OnGamePaused);
+            EventBus.Subscribe<NewGameRequested>(OnNewGameRequested);
         }
 
         private void OnDisable()
         {
             EventBus.Unsubscribe<GameLoaded>(OnGameLoaded);
             EventBus.Unsubscribe<GamePaused>(OnGamePaused);
+            EventBus.Unsubscribe<NewGameRequested>(OnNewGameRequested);
         }
 
         private void Start()
@@ -53,6 +56,15 @@ namespace Nimbo.UI.Menu
             Build();
             Show(Screen.Title);
         }
+
+        /// <summary>
+        /// Pidió partida nueva: antes de encender nada, que se haga a sí mismo.
+        /// </summary>
+        /// <remarks>
+        /// Lo primero que se ve del juego es tu cara, no la isla. La isla la enciende
+        /// el aviso de que el creador ha terminado, y lo recoge el control de flujo.
+        /// </remarks>
+        private void OnNewGameRequested(NewGameRequested _) => Show(Screen.Creator);
 
         /// <summary>Ya hay partida: el menú se aparta y se queda esperando a Escape.</summary>
         private void OnGameLoaded(GameLoaded _)
@@ -92,6 +104,7 @@ namespace Nimbo.UI.Menu
                 onResume: () => EventBus.Publish(new GamePaused(false)),
                 onOptions: () => Show(Screen.Options, from: Screen.Pause));
             _options = new OptionsPanel(() => Show(_optionsCameFrom));
+            _creator = new Creator.CreatorPanel();
         }
 
         private void Show(Screen screen, Screen from = Screen.Title)
@@ -115,7 +128,8 @@ namespace Nimbo.UI.Menu
                 ? new Color(UiTheme.Sky.r, UiTheme.Sky.g, UiTheme.Sky.b, 0.82f)
                 : UiTheme.Sky;
 
-            _clouds.style.display = _gameRunning ? DisplayStyle.None : DisplayStyle.Flex;
+            _clouds.style.display = _gameRunning || screen == Screen.Creator
+                ? DisplayStyle.None : DisplayStyle.Flex;
 
             switch (screen)
             {
@@ -128,6 +142,10 @@ namespace Nimbo.UI.Menu
                     break;
                 case Screen.Options:
                     _content.Add(_options.Root);
+                    break;
+                case Screen.Creator:
+                    _content.Add(_creator.Root);
+                    _creator.ShowForProtagonist();
                     break;
             }
         }
@@ -190,6 +208,7 @@ namespace Nimbo.UI.Menu
             {
                 if (_screen == Screen.Hidden) EventBus.Publish(new GamePaused(true));
                 else if (_screen == Screen.Options) Show(_optionsCameFrom);
+                else if (_screen == Screen.Creator) Show(Screen.Title);
                 else EventBus.Publish(new GamePaused(false));
             }
 

@@ -61,6 +61,8 @@ namespace Nimbo.Game.Bootstrap
         [SerializeField] private bool _startFromMenu = true;
 
         private bool _forceNewGame;
+        private string _protagonistName;
+        private AppearanceData? _protagonistLook;
 
         private GameClock _clock;
         private SaveGame _save;
@@ -111,11 +113,20 @@ namespace Nimbo.Game.Bootstrap
         /// <param name="newGame">
         /// Cierto para empezar de cero dejando atrás lo guardado.
         /// </param>
-        public void StartGame(bool newGame)
+        /// <param name="displayName">
+        /// Cómo se llama el protagonista. Vacío para que lo ponga la fábrica.
+        /// </param>
+        /// <param name="appearance">
+        /// La cara que el jugador acaba de hacerse en el creador. Null para sortearla.
+        /// </param>
+        public void StartGame(bool newGame, string displayName = null,
+                              AppearanceData? appearance = null)
         {
             if (_built) return;
 
             _forceNewGame = newGame;
+            _protagonistName = displayName;
+            _protagonistLook = appearance;
             Build();
             Launch();
         }
@@ -293,21 +304,27 @@ namespace Nimbo.Game.Bootstrap
         }
 
         /// <summary>
-        /// Crea al protagonista con un aspecto sorteado.
+        /// Crea al protagonista con lo que el jugador se hizo en el creador.
         /// </summary>
         /// <remarks>
-        /// Provisional: el creador de personajes tiene que salir al empezar y ser el
-        /// jugador quien lo haga. Mientras eso se cablea, el protagonista existe con
-        /// una cara al azar, porque sin él no hay a quien seguir y la isla se queda
-        /// sin nadie a los mandos.
+        /// Si no viene nada —una partida arrancada desde un test, o desde el editor
+        /// con el menú apagado— se sortea. Que exista siempre es más importante que
+        /// que sea tuyo: sin él no hay a quien seguir y la isla se queda sin nadie a
+        /// los mandos, que es peor que una cara al azar.
+        ///
+        /// Aparece al borde de la plaza y no en el centro: en el centro está el Árbol
+        /// Nimbo, que mide veintiséis metros.
         /// </remarks>
         private void CreateProtagonist(IIslanderFactory factory)
         {
             if (_save.Player.Created) return;
 
-            var sample = factory.CreateRandom();
-            _player.Create(sample.Identity.DisplayName, sample.Appearance,
-                           new Vector3(14f, 3f, 14f));
+            var look = _protagonistLook ?? factory.CreateRandom().Appearance;
+            string name = string.IsNullOrWhiteSpace(_protagonistName)
+                ? factory.CreateRandom().Identity.DisplayName
+                : _protagonistName.Trim();
+
+            _player.Create(name, look, new Vector3(14f, 3f, 14f));
         }
 
         /// <summary>
