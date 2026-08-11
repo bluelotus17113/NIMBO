@@ -66,6 +66,19 @@ namespace Nimbo.Data.Save
         /// <summary>Solo los logros que se han tocado alguna vez; el resto son cero.</summary>
         public List<AchievementRecord> Achievements = new List<AchievementRecord>();
 
+        // ── La aldea ────────────────────────────────────────────────────────
+        //
+        // Lo que trajo el giro a aldea que se recorre. Va aquí y no en IslandState
+        // porque es del jugador y de su partida, no del sitio: el día que haya una
+        // segunda isla, el huerto y la mochila siguen siendo los mismos.
+
+        public Player.PlayerState Player = new Player.PlayerState();
+        public Farming.FarmState Farm = new Farming.FarmState();
+        public World.GatheringState Gathering = new World.GatheringState();
+
+        /// <summary>Recetas que ha aprendido. Las de nivel 1 valen sin estar aquí.</summary>
+        public List<string> KnownRecipes = new List<string>();
+
         /// <summary>Contadores sueltos del juego (eventos vistos, tutoriales, rachas).</summary>
         public List<string> Flags = new List<string>();
 

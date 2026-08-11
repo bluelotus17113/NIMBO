@@ -236,6 +236,74 @@ namespace Nimbo.Core.Events
         }
     }
 
+    // --- la aldea: mochila, huerto, recolección y crafteo --------------------
+
+    public readonly struct InventoryChanged
+    {
+        public readonly int Slot;   // -1 si cambió más de uno
+        public InventoryChanged(int slot) => Slot = slot;
+    }
+
+    public readonly struct SlotSelected
+    {
+        public readonly int Slot;
+        public SlotSelected(int slot) => Slot = slot;
+    }
+
+    public readonly struct NodeGathered
+    {
+        public readonly string InstanceId;
+        public readonly string DropId;
+        public readonly int Quantity;
+        public NodeGathered(string instanceId, string dropId, int quantity)
+        {
+            InstanceId = instanceId; DropId = dropId; Quantity = quantity;
+        }
+    }
+
+    public readonly struct NodeRespawned
+    {
+        public readonly string InstanceId;
+        public NodeRespawned(string instanceId) => InstanceId = instanceId;
+    }
+
+    public readonly struct TileChanged
+    {
+        public readonly int X;
+        public readonly int Y;
+        public TileChanged(int x, int y) { X = x; Y = y; }
+    }
+
+    public readonly struct CropHarvested
+    {
+        public readonly string CropId;
+        public readonly int Quantity;
+        public CropHarvested(string cropId, int quantity)
+        {
+            CropId = cropId; Quantity = quantity;
+        }
+    }
+
+    public readonly struct ItemCrafted
+    {
+        public readonly string RecipeId;
+        public readonly string OutputId;
+        public readonly int Quantity;
+        public ItemCrafted(string recipeId, string outputId, int quantity)
+        {
+            RecipeId = recipeId; OutputId = outputId; Quantity = quantity;
+        }
+    }
+
+    /// <summary>El protagonista ya existe y está puesto en el mundo.</summary>
+    public readonly struct PlayerSpawned { }
+
+    public readonly struct VigorChanged
+    {
+        public readonly float Vigor;
+        public VigorChanged(float vigor) => Vigor = vigor;
+    }
+
     // --- logros -------------------------------------------------------------
 
     public readonly struct AchievementUnlocked

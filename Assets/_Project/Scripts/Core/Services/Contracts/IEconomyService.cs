@@ -14,6 +14,25 @@ namespace Nimbo.Core.Services.Contracts
         Consumable = 5,
         Wallpaper = 6,
         Flooring = 7,
+
+        // Los cuatro de la aldea. Van al final y con su número escrito: los catálogos
+        // guardan la categoría por nombre, pero el número acaba en las partidas, y
+        // reordenar esto convertiría la comida de alguien en una azada.
+        Tool = 8,      // azada, regadera, hacha, pico. No se apilan.
+        Material = 9,  // madera, piedra, fibra: lo que se recoge y se craftea
+        Seed = 10,     // se siembran
+        Crop = 11,     // lo que sale de sembrar
+    }
+
+    /// <summary>Qué herramienta es. <c>None</c> para todo lo que no lo sea.</summary>
+    public enum ToolKind
+    {
+        None = 0,
+        Hoe = 1,          // labra la tierra
+        WateringCan = 2,  // riega
+        Axe = 3,          // madera
+        Pickaxe = 4,      // piedra
+        Scythe = 5,       // hierba y cosecha rápida
     }
 
     /// <summary>Una entrada del catálogo. Solo lectura: el catálogo se define en datos, no en código.</summary>

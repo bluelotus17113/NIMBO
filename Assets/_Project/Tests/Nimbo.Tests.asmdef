@@ -15,7 +15,12 @@
         "Nimbo.Art",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "Unity.Nuget.Newtonsoft-Json"
+        "Unity.Nuget.Newtonsoft-Json",
+        "Nimbo.Items",
+        "Nimbo.Farming",
+        "Nimbo.Gathering",
+        "Nimbo.Crafting",
+        "Nimbo.Player"
     ],
     "includePlatforms": [
         "Editor"

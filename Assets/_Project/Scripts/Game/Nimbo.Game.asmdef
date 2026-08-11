@@ -14,7 +14,12 @@
         "Nimbo.Events",
         "Nimbo.Art",
         "Nimbo.UI",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Nimbo.Items",
+        "Nimbo.Farming",
+        "Nimbo.Gathering",
+        "Nimbo.Crafting",
+        "Nimbo.Player"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
