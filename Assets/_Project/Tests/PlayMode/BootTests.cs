@@ -449,7 +449,11 @@ namespace Nimbo.PlayTests
             var from = Data.World.Archipelago.BridgeFromVillage;
             var to = Data.World.Archipelago.BridgeToHome;
 
-            for (int i = 0; i <= 20; i++)
+            // Se mira MÁS ALLÁ de los dos extremos, no solo entre ellos. La versión
+            // anterior de esta prueba iba de punta a punta y pasaba: el hueco no
+            // estaba en el puente, estaba en la junta con la isla, justo después de
+            // donde dejaba de mirar. Se cayó jugando y la prueba decía que bien.
+            for (int i = -4; i <= 24; i++)
             {
                 var point = Vector3.Lerp(from, to, i / 20f);
                 bool ground = Physics.Raycast(point + Vector3.up * 3f, Vector3.down,

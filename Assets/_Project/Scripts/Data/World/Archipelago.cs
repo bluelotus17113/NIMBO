@@ -37,9 +37,18 @@ namespace Nimbo.Data.World
         /// <summary>Ancho del puente de madera que las une.</summary>
         public const float BridgeWidth = 4.5f;
 
-        /// <summary>Dónde arranca el puente en la aldea y dónde acaba en tu isla.</summary>
-        public static readonly Vector3 BridgeFromVillage = new(0f, 0f, -86f);
-        public static readonly Vector3 BridgeToHome = new(0f, 0f, -124f);
+        /// <summary>
+        /// Dónde arranca el puente en la aldea y dónde acaba en tu isla.
+        /// </summary>
+        /// <remarks>
+        /// Los dos extremos se meten **dentro** de su isla a propósito, unos metros
+        /// más allá del borde nominal. El contorno de un prado es irregular —va del
+        /// 0,86 al 1,0 del radio— así que un puente que llegue justo al radio deja
+        /// hasta dos metros y medio de vacío donde el borde se mete hacia dentro. Se
+        /// vio jugando: se cruzaba y se caía por la junta.
+        /// </remarks>
+        public static readonly Vector3 BridgeFromVillage = new(0f, 0f, -80f);
+        public static readonly Vector3 BridgeToHome = new(0f, 0f, -132f);
 
         /// <summary>En qué isla cae ese punto. Fuera de las dos, la más cercana.</summary>
         public static IslandSide SideOf(Vector3 position)
