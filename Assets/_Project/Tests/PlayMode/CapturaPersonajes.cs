@@ -34,7 +34,7 @@ namespace Nimbo.PlayTests
             Estudio.Nuevo("estudio_munecos");
             yield return null;
 
-            Luz();
+            Estudio.Sol();
             Suelo();
 
             var camera = Camara(new Vector3(0f, 0.62f, -4.4f), Quaternion.Euler(2f, 0f, 0f));
@@ -113,21 +113,6 @@ namespace Nimbo.PlayTests
                 ToonPalette.Solid(new Color(0.90f, 0.92f, 0.94f));
         }
 
-        private static void Luz()
-        {
-            var go = new GameObject("sol");
-            var light = go.AddComponent<Light>();
-            light.type = LightType.Directional;
-            light.color = new Color(1f, 0.96f, 0.88f);
-            light.intensity = 1.35f;
-            light.shadows = LightShadows.Soft;
-            go.transform.rotation = Quaternion.Euler(48f, -35f, 0f);
-
-            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(0.68f, 0.81f, 0.93f);
-            RenderSettings.ambientEquatorColor = new Color(0.74f, 0.72f, 0.66f);
-            RenderSettings.ambientGroundColor = new Color(0.52f, 0.50f, 0.42f);
-        }
 
         private static Camera Camara(Vector3 at, Quaternion looking)
         {

@@ -40,5 +40,11 @@ namespace Nimbo.PlayTests
 
             return escena;
         }
+
+        /// <summary>El sol de la isla, sobre el plató.</summary>
+        public static Light Sol()
+        {
+            return Art.World.IslandLighting.Apply(new GameObject("sol").AddComponent<Light>());
+        }
     }
 }

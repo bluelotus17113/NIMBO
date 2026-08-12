@@ -104,23 +104,10 @@ namespace Nimbo.EditorTools
 
         private static void BuildLighting()
         {
+            // Los números viven en IslandLighting, que es de donde los sacan también
+            // las herramientas de captura: el plató tiene que alumbrar como la isla.
             var go = new GameObject("Sol");
-            var light = go.AddComponent<Light>();
-            light.type = LightType.Directional;
-            light.color = new Color(1f, 0.96f, 0.88f);
-            light.intensity = 1.35f;
-            light.shadows = LightShadows.Soft;
-            go.transform.rotation = Quaternion.Euler(48f, -35f, 0f);
-
-            // La luz de relleno, y es la que decide de qué color se ve una pared a la
-            // sombra. Con el equador y el suelo en gris azulado, una fachada crema en
-            // sombra se veía gris marengo: el edificio parecía de hormigón y no de la
-            // isla. Se calienta el rebote de abajo —el prado devuelve verde y tierra,
-            // no azul— y la sombra pasa a leerse como crema en penumbra.
-            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(0.68f, 0.81f, 0.93f);
-            RenderSettings.ambientEquatorColor = new Color(0.74f, 0.72f, 0.66f);
-            RenderSettings.ambientGroundColor = new Color(0.52f, 0.50f, 0.42f);
+            IslandLighting.Apply(go.AddComponent<Light>());
         }
 
         private static void BuildGame(PanelSettings panelSettings)
