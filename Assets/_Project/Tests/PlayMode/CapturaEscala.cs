@@ -31,9 +31,7 @@ namespace Nimbo.PlayTests
         [UnityTest]
         public IEnumerator RetrataLaEscala()
         {
-            // Nombre propio y no «estudio»: si se lanzan las dos herramientas de una
-            // pasada, la segunda choca con la escena que dejó abierta la primera.
-            SceneManager.SetActiveScene(SceneManager.CreateScene("estudio_escala"));
+            Estudio.Nuevo("estudio_escala");
             yield return null;
 
             Luz();

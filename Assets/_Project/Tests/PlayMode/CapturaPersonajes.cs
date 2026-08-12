@@ -31,7 +31,7 @@ namespace Nimbo.PlayTests
         {
             // Escena nueva y en blanco: nada de cargar «Isla», que traería el prado,
             // los vecinos y su cámara. Aquí lo que se quiere es el muñeco a solas.
-            SceneManager.SetActiveScene(SceneManager.CreateScene("estudio"));
+            Estudio.Nuevo("estudio_munecos");
             yield return null;
 
             Luz();

@@ -39,3 +39,9 @@
 crashlytics-build.properties
 
 sysinfo.txt
+
+# Restos de una pasada de pruebas que se fue a la mitad: la escena que monta el
+# corredor y el volcado de Mono cuando el editor se cae.
+/Assets/InitTestScene*.unity
+/Assets/InitTestScene*.unity.meta
+/mono_crash.*.blob

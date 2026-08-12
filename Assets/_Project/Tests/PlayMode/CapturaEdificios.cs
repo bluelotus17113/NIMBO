@@ -31,7 +31,7 @@ namespace Nimbo.PlayTests
         [UnityTest]
         public IEnumerator RetrataLosEdificios()
         {
-            SceneManager.SetActiveScene(SceneManager.CreateScene("estudio"));
+            Estudio.Nuevo("estudio_edificios");
             yield return null;
 
             Luz();

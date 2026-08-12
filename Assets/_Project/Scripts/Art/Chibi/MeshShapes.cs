@@ -262,8 +262,8 @@ namespace Nimbo.Art.Chibi
             for (int face = 0; face < 6; face++)
             {
                 int v = face * 4, t = face * 6;
-                triangles[t] = v; triangles[t + 1] = v + 2; triangles[t + 2] = v + 1;
-                triangles[t + 3] = v; triangles[t + 4] = v + 3; triangles[t + 5] = v + 2;
+                triangles[t] = v; triangles[t + 1] = v + 1; triangles[t + 2] = v + 2;
+                triangles[t + 3] = v; triangles[t + 4] = v + 2; triangles[t + 5] = v + 3;
             }
 
             var uv = new Vector2[24];
