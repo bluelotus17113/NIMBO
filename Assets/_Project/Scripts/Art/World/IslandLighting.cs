@@ -37,7 +37,25 @@ namespace Nimbo.Art.World
             light.transform.rotation = SunRotation;
 
             ApplyAmbient();
+            ApplyHaze();
             return light;
+        }
+
+        /// <summary>
+        /// La bruma del fondo: lo lejano se va destiñendo hacia el color del cielo.
+        /// </summary>
+        /// <remarks>
+        /// Es lo que hace que una isla flotante se lea como una isla flotante y no
+        /// como una maqueta recortada contra un fondo liso. Empieza a sesenta
+        /// metros: dentro de la aldea no se nota, y en el mirador sí.
+        /// </remarks>
+        public static void ApplyHaze()
+        {
+            RenderSettings.fog = true;
+            RenderSettings.fogMode = FogMode.Linear;
+            RenderSettings.fogColor = new Color(0.78f, 0.90f, 0.96f);
+            RenderSettings.fogStartDistance = 60f;
+            RenderSettings.fogEndDistance = 280f;
         }
 
         /// <summary>

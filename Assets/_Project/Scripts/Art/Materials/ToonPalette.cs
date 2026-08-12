@@ -46,7 +46,10 @@ namespace Nimbo.Art.Materials
             {
                 if (_lit != null) return _lit;
 
-                _lit = Shader.Find("Universal Render Pipeline/Lit");
+                // El de la isla primero; URP/Lit es el paracaídas. Si el shader
+                // propio se queda fuera del empaquetado, el juego se ve más soso
+                // pero se ve, que es mejor que magenta.
+                _lit = Shader.Find("Nimbo/Toon") ?? Shader.Find("Universal Render Pipeline/Lit");
                 if (_lit == null)
                 {
                     // En un ejecutable esto significa casi siempre que el shader se

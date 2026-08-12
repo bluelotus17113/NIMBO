@@ -8,6 +8,8 @@ using Nimbo.UI.Menu;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
@@ -30,6 +32,7 @@ namespace Nimbo.EditorTools
         private const string ScenesDir = "Assets/_Project/Scenes";
         private const string ThemePath = SettingsDir + "/NimboRuntimeTheme.tss";
         private const string PanelPath = SettingsDir + "/NimboPanelSettings.asset";
+        private const string VolumePath = SettingsDir + "/NimboVolume.asset";
         private const string ScenePath = ScenesDir + "/Isla.unity";
 
         [MenuItem("Isla Nimbo/Reconstruir escena")]
@@ -39,10 +42,12 @@ namespace Nimbo.EditorTools
             Directory.CreateDirectory(ScenesDir);
 
             var panelSettings = BuildPanelSettings();
+            var volumeProfile = BuildVolumeProfile();
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
             BuildCamera();
             BuildLighting();
+            BuildGrade(volumeProfile);
             BuildGame(panelSettings);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -94,12 +99,79 @@ namespace Nimbo.EditorTools
             camera.farClipPlane = 600f;
             go.tag = "MainCamera";
 
+            // Sin esto la cámara se salta el revelado entero y da igual lo que diga
+            // el volumen: el mapeo de tonos, el color y el velo no llegan a aplicarse.
+            camera.GetUniversalAdditionalCameraData().renderPostProcessing = true;
+
             go.AddComponent<AudioListener>();
 
             // La posición de arriba es solo la del primer fotograma, antes de que
             // cargue nada. En cuanto hay partida manda esto: orbita, acerca y se va
             // a mirar de cerca al habitante cuya ficha abras.
             go.AddComponent<IslandCamera>();
+        }
+
+        /// <summary>
+        /// El revelado: cómo se convierte la luz calculada en los colores que salen
+        /// por pantalla.
+        /// </summary>
+        /// <remarks>
+        /// Hasta ahora no había ninguno, y por eso una pared crema al sol saturaba a
+        /// blanco puro: sin curva de revelado, todo lo que pasa de uno se recorta.
+        /// El mapeo neutro dobla esa parte alta en vez de cortarla, que es lo que
+        /// deja ver una ventana en una fachada iluminada.
+        ///
+        /// El resto son las tres cosas que separan una tarde amable de una foto:
+        /// blancos algo cálidos, color un punto más vivo, y un velo de luz en lo que
+        /// más brilla. Todo flojo — en cuanto se nota, deja de parecer un juguete y
+        /// empieza a parecer un filtro.
+        /// </remarks>
+        private static VolumeProfile BuildVolumeProfile()
+        {
+            AssetDatabase.DeleteAsset(VolumePath);
+
+            var profile = ScriptableObject.CreateInstance<VolumeProfile>();
+            AssetDatabase.CreateAsset(profile, VolumePath);
+
+            var tonemapping = profile.Add<Tonemapping>();
+            tonemapping.mode.overrideState = true;
+            tonemapping.mode.value = TonemappingMode.Neutral;
+
+            var white = profile.Add<WhiteBalance>();
+            white.temperature.overrideState = true;
+            white.temperature.value = 8f;
+
+            var color = profile.Add<ColorAdjustments>();
+            color.saturation.overrideState = true;
+            color.saturation.value = 14f;
+            color.contrast.overrideState = true;
+            color.contrast.value = 2f;
+            color.postExposure.overrideState = true;
+            color.postExposure.value = 0.2f;
+
+            // Aquí NO se tiñe la sombra. Lo hace el shader, y hacerlo también en el
+            // revelado lo aplicaba dos veces: la mitad de la aldea que no daba al sol
+            // se veía de cemento violáceo. El color de la sombra se decide en un solo
+            // sitio, y es el que sabe qué está iluminado y qué no.
+            var bloom = profile.Add<Bloom>();
+            bloom.threshold.overrideState = true;
+            bloom.threshold.value = 1.05f;
+            bloom.intensity.overrideState = true;
+            bloom.intensity.value = 0.55f;
+            bloom.scatter.overrideState = true;
+            bloom.scatter.value = 0.72f;
+
+            EditorUtility.SetDirty(profile);
+            return profile;
+        }
+
+        private static void BuildGrade(VolumeProfile profile)
+        {
+            var go = new GameObject("Revelado");
+            var volume = go.AddComponent<Volume>();
+            volume.isGlobal = true;
+            volume.priority = 0f;
+            volume.sharedProfile = profile;
         }
 
         private static void BuildLighting()

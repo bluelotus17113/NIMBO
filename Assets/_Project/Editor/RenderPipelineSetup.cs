@@ -42,11 +42,17 @@ namespace Nimbo.EditorTools
                 AssetDatabase.CreateAsset(pipeline, PipelinePath);
             }
 
-            // Sombras suaves y a media distancia: la cámara mira la isla entera, y
-            // sombras de 500 m no se ven pero sí se pagan.
-            pipeline.shadowDistance = 160f;
+            // Sombras a la distancia que se anda, no a la que se ve: 160 m con una
+            // sola cascada daban 15 cm de mundo por téxel y los bordes salían en
+            // dientes de sierra. Con 70 y cuatro, el téxel baja a un centímetro.
+            pipeline.shadowDistance = 70f;
+            pipeline.shadowCascadeCount = 4;
             pipeline.supportsHDR = true;
             pipeline.msaaSampleCount = 4;
+
+            // El color se ajusta en alto rango: es lo que hace que una pared crema
+            // al sol se doble en vez de saturar a blanco.
+            pipeline.colorGradingMode = ColorGradingMode.HighDynamicRange;
 
             GraphicsSettings.defaultRenderPipeline = pipeline;
             QualitySettings.renderPipeline = pipeline;
@@ -78,6 +84,10 @@ namespace Nimbo.EditorTools
             {
                 "Universal Render Pipeline/Lit",
                 "Universal Render Pipeline/Unlit",
+
+                // El de la isla. Le pasa lo mismo que a los de URP y peor: no hay
+                // ni un material en disco que lo referencie.
+                "Nimbo/Toon",
             };
 
             var graphics = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset");
