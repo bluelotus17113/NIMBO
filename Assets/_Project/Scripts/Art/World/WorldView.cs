@@ -264,6 +264,11 @@ namespace Nimbo.Art.World
                 AddMesh(zone, "detalle", meshes.Trim,
                         ToonPalette.Solid(purpose == ZonePurpose.Nature
                             ? ToonPalette.Water : ToonPalette.TrunkBrown));
+
+            // El cristal, en su propio material. Con el de la madera, el escaparate de
+            // la tienda era un rectángulo marrón oscuro que se leía como un boquete.
+            if (meshes.Glass != null)
+                AddMesh(zone, "cristal", meshes.Glass, ToonPalette.Solid(ToonPalette.Glass, 0.35f));
         }
 
         // ── Los adornos que ha puesto el jugador ─────────────────────────────

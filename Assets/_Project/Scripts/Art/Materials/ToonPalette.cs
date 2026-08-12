@@ -30,6 +30,16 @@ namespace Nimbo.Art.Materials
         public static readonly Color WallCream = new Color32(0xF4, 0xE7, 0xD2, 255);
         public static readonly Color RoofRed = new Color32(0xD9, 0x72, 0x62, 255);
 
+        /// <summary>
+        /// El cristal de un escaparate: azul pálido, opaco y algo más brillante.
+        /// </summary>
+        /// <remarks>
+        /// Opaco a propósito. Un cristal transparente enseñaría el interior vacío de la
+        /// caja que es el edificio; lo que hace falta es que se lea «ventana» de un
+        /// vistazo, y para eso basta el tono del cielo reflejado.
+        /// </remarks>
+        public static readonly Color Glass = new Color32(0xC7, 0xE4, 0xF2, 255);
+
         private static Shader Lit
         {
             get

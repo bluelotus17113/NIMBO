@@ -10,11 +10,12 @@ namespace Nimbo.Art.World
     {
         public readonly Mesh Walls;
         public readonly Mesh Roof;
-        public readonly Mesh Trim;   // puertas, ventanas y detalles
+        public readonly Mesh Trim;   // puertas, postes y madera
+        public readonly Mesh Glass;  // escaparates y ventanas
 
-        public BuildingMeshes(Mesh walls, Mesh roof, Mesh trim)
+        public BuildingMeshes(Mesh walls, Mesh roof, Mesh trim, Mesh glass)
         {
-            Walls = walls; Roof = roof; Trim = trim;
+            Walls = walls; Roof = roof; Trim = trim; Glass = glass;
         }
     }
 
@@ -22,27 +23,42 @@ namespace Nimbo.Art.World
     /// Construye los edificios de la isla a partir de para qué sirve cada zona.
     /// </summary>
     /// <remarks>
-    /// Las formas son deliberadamente sencillas — cajas, conos y cilindros — porque a
-    /// la distancia de la cámara lo que distingue una tienda de una casa es la
-    /// silueta y el color del tejado, no el detalle. Un edificio con moldura tallada
-    /// se ve exactamente igual que una caja desde ochenta metros.
+    /// Las formas son sencillas —cajas, conos y cilindros— porque desde la cámara de
+    /// la isla lo que distingue una tienda de una casa es la silueta y el color del
+    /// tejado. Pero «sencillas» no es «sin medidas»: los números están escritos en
+    /// metros de verdad, contra el muñeco.
+    ///
+    /// Y ese fue el error que estuvo aquí desde el principio. Todo esto se dibujó
+    /// cuando el juego era un mirador y no se andaba por la isla: la casa medía
+    /// dieciséis metros de ancho y su puerta cuatro de alto, con vecinos de metro
+    /// veinte. La aldea entera estaba hecha para gigantes y no se veía, porque desde
+    /// ochenta metros y en cenital no hay con qué comparar. Se vio a la primera foto
+    /// con un vecino plantado delante: le llegaba a media puerta.
+    ///
+    /// Referencia: un vecino mide entre 0,95 y 1,35 m. Una puerta, 1,72 m — vez y
+    /// media el vecino, que es la proporción de Animal Crossing. Con dos metros la
+    /// puerta ya le doblaba y la casa volvía a parecer de otra escala.
     /// </remarks>
     public static class BuildingMeshBuilder
     {
+        /// <summary>Alto de una puerta, en metros. Todo lo demás se mide contra esto.</summary>
+        private const float DoorHeight = 1.72f;
+
         public static BuildingMeshes Build(ZonePurpose purpose, float scale = 1f)
         {
             var walls = new List<(Mesh, Matrix4x4)>();
             var roof = new List<(Mesh, Matrix4x4)>();
             var trim = new List<(Mesh, Matrix4x4)>();
+            var glass = new List<(Mesh, Matrix4x4)>();
 
             switch (purpose)
             {
                 case ZonePurpose.Home:
-                    BuildApartments(walls, roof, trim, scale);
+                    BuildApartments(walls, roof, trim, glass, scale);
                     break;
                 case ZonePurpose.Food:
                 case ZonePurpose.Shopping:
-                    BuildShop(walls, roof, trim, scale);
+                    BuildShop(walls, roof, trim, glass, scale);
                     break;
                 case ZonePurpose.Leisure:
                     BuildStage(walls, roof, trim, scale);
@@ -61,62 +77,142 @@ namespace Nimbo.Art.World
             return new BuildingMeshes(
                 Combine(walls, "edificio_muros"),
                 Combine(roof, "edificio_tejado"),
-                Combine(trim, "edificio_detalle"));
+                Combine(trim, "edificio_detalle"),
+                Combine(glass, "edificio_cristal"));
         }
 
-        /// <summary>Un bloque de cuatro apartamentos: dos plantas con tejado a dos aguas.</summary>
+        /// <summary>
+        /// Un bloque de cuatro viviendas: dos plantas, tejado a cuatro aguas y una
+        /// puerta por vecino.
+        /// </summary>
         private static void BuildApartments(List<(Mesh, Matrix4x4)> walls,
                                             List<(Mesh, Matrix4x4)> roof,
-                                            List<(Mesh, Matrix4x4)> trim, float s)
+                                            List<(Mesh, Matrix4x4)> trim,
+                                            List<(Mesh, Matrix4x4)> glass, float s)
         {
-            var body = MeshShapes.Box(new Vector3(16f, 11f, 11f) * s);
-            walls.Add((body, Matrix4x4.Translate(new Vector3(0f, 5.5f * s, 0f))));
+            const float Width = 7f, Depth = 4.5f, Storey = 2.15f;
+            const float Height = Storey * 2f;
+            float front = Depth * 0.5f;
+
+            walls.Add((MeshShapes.Box(new Vector3(Width, Height, Depth) * s),
+                Matrix4x4.Translate(new Vector3(0f, Height * 0.5f, 0f) * s)));
+
+            // Zócalo de madera. Un edificio que arranca directamente del césped parece
+            // pegado encima; con un escalón alrededor, se apoya.
+            //
+            // De madera y no en color de pared: la cara de arriba del zócalo mira al
+            // sol de lleno, y en crema se quemaba a blanco puro. El edificio quedaba
+            // con una falda deslumbrante que se veía antes que la fachada.
+            trim.Add((MeshShapes.Box(new Vector3(Width + 0.45f, 0.36f, Depth + 0.45f) * s),
+                Matrix4x4.Translate(new Vector3(0f, 0.18f, 0f) * s)));
+
+            // El alero: una losa fina que sobresale bajo el tejado, y del color del
+            // tejado. En color de pared se quemaba a blanco puro bajo el sol y dejaba
+            // una franja deslumbrante entre la fachada y las tejas; siendo teja, es el
+            // canto del tejado y hace la sombra que separa una cosa de la otra.
+            roof.Add((MeshShapes.Box(new Vector3(Width + 0.95f, 0.2f, Depth + 0.95f) * s),
+                Matrix4x4.Translate(new Vector3(0f, Height + 0.1f, 0f) * s)));
 
             // El tejado es un cono de cuatro lados: a esta distancia se lee igual que
             // uno a dos aguas y cuesta la mitad de vértices.
-            var cap = MeshShapes.Cylinder(4, 0.02f, 0.5f, 1f);
-            roof.Add((cap, Matrix4x4.TRS(
-                new Vector3(0f, 14f * s, 0f), Quaternion.Euler(0f, 45f, 0f),
-                new Vector3(22f, 6f, 22f) * s)));
+            roof.Add((MeshShapes.Cylinder(4, 0.02f, 0.5f, 1f), Matrix4x4.TRS(
+                new Vector3(0f, Height + 1.35f, 0f) * s, Quaternion.Euler(0f, 45f, 0f),
+                new Vector3(Width + 2f, 2.5f, Depth + 2f) * s)));
 
-            // Cuatro puertas, una por vivienda.
-            var door = MeshShapes.Box(new Vector3(2.2f, 4f, 0.4f) * s);
+            // La chimenea, descentrada. Es el detalle que hace que el bloque no parezca
+            // un cuartel: rompe la simetría sin costar nada.
+            walls.Add((MeshShapes.Box(new Vector3(0.55f, 1.4f, 0.55f) * s),
+                Matrix4x4.Translate(new Vector3(-Width * 0.28f, Height + 1.25f, -0.95f) * s)));
+
             for (int i = 0; i < 4; i++)
             {
-                float x = (i - 1.5f) * 3.8f * s;
-                trim.Add((door, Matrix4x4.Translate(new Vector3(x, 2f * s, 5.6f * s))));
-            }
+                float x = (i - 1.5f) * 1.7f;
 
-            var window = MeshShapes.Box(new Vector3(2f, 2f, 0.3f) * s);
-            for (int i = 0; i < 4; i++)
-            {
-                float x = (i - 1.5f) * 3.8f * s;
-                trim.Add((window, Matrix4x4.Translate(new Vector3(x, 8.5f * s, 5.6f * s))));
+                // Marco en color de pared alrededor de la puerta: sin él, la puerta era
+                // un rectángulo oscuro pegado a la fachada y se leía como un agujero.
+                walls.Add((MeshShapes.Box(new Vector3(1.14f, DoorHeight + 0.26f, 0.13f) * s),
+                    Matrix4x4.Translate(new Vector3(x, (DoorHeight + 0.26f) * 0.5f, front + 0.05f) * s)));
+
+                trim.Add((MeshShapes.Box(new Vector3(0.88f, DoorHeight, 0.15f) * s),
+                    Matrix4x4.Translate(new Vector3(x, DoorHeight * 0.5f, front + 0.12f) * s)));
+
+                // El escalón de entrada. Dice por dónde se entra mejor que la puerta.
+                trim.Add((MeshShapes.Box(new Vector3(1.26f, 0.16f, 0.55f) * s),
+                    Matrix4x4.Translate(new Vector3(x, 0.26f, front + 0.45f) * s)));
+
+                // Ventana de la planta alta, con alféizar.
+                glass.Add((MeshShapes.Box(new Vector3(0.86f, 0.8f, 0.11f) * s),
+                    Matrix4x4.Translate(new Vector3(x, Storey + 1.05f, front + 0.08f) * s)));
+
+                walls.Add((MeshShapes.Box(new Vector3(1.06f, 0.13f, 0.26f) * s),
+                    Matrix4x4.Translate(new Vector3(x, Storey + 0.58f, front + 0.11f) * s)));
             }
         }
 
-        /// <summary>Una tienda: local ancho, toldo y escaparate.</summary>
+        /// <summary>Una tienda: escaparate, toldo y cartel.</summary>
         private static void BuildShop(List<(Mesh, Matrix4x4)> walls,
                                       List<(Mesh, Matrix4x4)> roof,
-                                      List<(Mesh, Matrix4x4)> trim, float s)
+                                      List<(Mesh, Matrix4x4)> trim,
+                                      List<(Mesh, Matrix4x4)> glass, float s)
         {
-            var body = MeshShapes.Box(new Vector3(13f, 8f, 10f) * s);
-            walls.Add((body, Matrix4x4.Translate(new Vector3(0f, 4f * s, 0f))));
+            const float Width = 5.8f, Depth = 4.2f, Height = 3.3f;
+            float front = Depth * 0.5f;
 
-            var flatRoof = MeshShapes.Box(new Vector3(14.5f, 1.2f, 11.5f) * s);
-            roof.Add((flatRoof, Matrix4x4.Translate(new Vector3(0f, 8.6f * s, 0f))));
+            walls.Add((MeshShapes.Box(new Vector3(Width, Height, Depth) * s),
+                Matrix4x4.Translate(new Vector3(0f, Height * 0.5f, 0f) * s)));
 
-            // El toldo inclinado es lo que dice «esto es una tienda» de un vistazo.
-            var awning = MeshShapes.Box(new Vector3(13f, 0.5f, 4.5f) * s);
-            roof.Add((awning, Matrix4x4.TRS(
-                new Vector3(0f, 6.2f * s, 6.5f * s), Quaternion.Euler(-18f, 0f, 0f),
-                Vector3.one)));
+            trim.Add((MeshShapes.Box(new Vector3(Width + 0.4f, 0.4f, Depth + 0.4f) * s),
+                Matrix4x4.Translate(new Vector3(0f, 0.2f, 0f) * s)));
 
-            var glass = MeshShapes.Box(new Vector3(9f, 3.6f, 0.3f) * s);
-            trim.Add((glass, Matrix4x4.Translate(new Vector3(0f, 3.4f * s, 5.1f * s))));
+            // Una sola cornisa y una banda de tejado encima. Antes había cornisa,
+            // azotea, toldo y cartel a alturas parecidas, y de frente se leían como un
+            // montón de tablas apiladas donde no se distinguía qué era cada cosa.
+            walls.Add((MeshShapes.Box(new Vector3(Width + 0.6f, 0.24f, Depth + 0.6f) * s),
+                Matrix4x4.Translate(new Vector3(0f, Height + 0.12f, 0f) * s)));
 
-            var door = MeshShapes.Box(new Vector3(2.4f, 4.4f, 0.4f) * s);
-            trim.Add((door, Matrix4x4.Translate(new Vector3(4.8f * s, 2.2f * s, 5.2f * s))));
+            roof.Add((MeshShapes.Box(new Vector3(Width + 0.2f, 0.34f, Depth + 0.2f) * s),
+                Matrix4x4.Translate(new Vector3(0f, Height + 0.41f, 0f) * s)));
+
+            // El escaparate, a la izquierda, con su marco. Antes ocupaba nueve metros
+            // de pared y tres y medio de alto: no era un escaparate, era un muro negro.
+            walls.Add((MeshShapes.Box(new Vector3(3.9f, 1.9f, 0.1f) * s),
+                Matrix4x4.Translate(new Vector3(-0.75f, 1.72f, front + 0.04f) * s)));
+
+            glass.Add((MeshShapes.Box(new Vector3(3.5f, 1.5f, 0.12f) * s),
+                Matrix4x4.Translate(new Vector3(-0.75f, 1.72f, front + 0.11f) * s)));
+
+            // El travesaño parte el cristal en dos hojas: un vidrio de tres metros y
+            // medio sin nada que lo cruce se lee como un hueco, no como una ventana.
+            trim.Add((MeshShapes.Box(new Vector3(3.7f, 0.11f, 0.16f) * s),
+                Matrix4x4.Translate(new Vector3(-0.75f, 1.72f, front + 0.12f) * s)));
+
+            // Puerta a la derecha, con marco y escalón.
+            walls.Add((MeshShapes.Box(new Vector3(1.24f, DoorHeight + 0.24f, 0.12f) * s),
+                Matrix4x4.Translate(new Vector3(1.95f, (DoorHeight + 0.24f) * 0.5f, front + 0.04f) * s)));
+
+            trim.Add((MeshShapes.Box(new Vector3(0.96f, DoorHeight, 0.15f) * s),
+                Matrix4x4.Translate(new Vector3(1.95f, DoorHeight * 0.5f, front + 0.12f) * s)));
+
+            trim.Add((MeshShapes.Box(new Vector3(1.4f, 0.16f, 0.6f) * s),
+                Matrix4x4.Translate(new Vector3(1.95f, 0.25f, front + 0.46f) * s)));
+
+            // El toldo va SOLO sobre el escaparate, no sobre la fachada entera: tapando
+            // también la puerta, el edificio quedaba con una visera de lado a lado y no
+            // se veía por dónde se entraba.
+            var slope = Quaternion.Euler(-20f, 0f, 0f);
+            var awningAt = new Vector3(-0.75f, 2.62f, front + 0.62f) * s;
+
+            roof.Add((MeshShapes.Box(new Vector3(4.2f, 0.12f, 1.25f) * s),
+                Matrix4x4.TRS(awningAt, slope, Vector3.one)));
+
+            // El faldón cuelga del canto bajo del toldo, girado con él. Suelto y en
+            // horizontal quedaba una tabla flotando delante de la tienda.
+            roof.Add((MeshShapes.Box(new Vector3(4.2f, 0.3f, 0.1f) * s), Matrix4x4.TRS(
+                awningAt + slope * (new Vector3(0f, -0.15f, 0.62f) * s), slope, Vector3.one)));
+
+            // El cartel, sobre la puerta y pegado a la pared.
+            roof.Add((MeshShapes.Box(new Vector3(1.5f, 0.6f, 0.14f) * s),
+                Matrix4x4.Translate(new Vector3(1.95f, 2.66f, front + 0.06f) * s)));
         }
 
         /// <summary>El escenario: tarima con fondo y dos focos.</summary>
@@ -124,26 +220,24 @@ namespace Nimbo.Art.World
                                        List<(Mesh, Matrix4x4)> roof,
                                        List<(Mesh, Matrix4x4)> trim, float s)
         {
-            var deck = MeshShapes.Box(new Vector3(18f, 1.8f, 12f) * s);
-            walls.Add((deck, Matrix4x4.Translate(new Vector3(0f, 0.9f * s, 0f))));
+            walls.Add((MeshShapes.Box(new Vector3(9f, 0.85f, 6f) * s),
+                Matrix4x4.Translate(new Vector3(0f, 0.43f, 0f) * s)));
 
-            var back = MeshShapes.Box(new Vector3(18f, 9f, 1f) * s);
-            walls.Add((back, Matrix4x4.Translate(new Vector3(0f, 5.4f * s, -5.5f * s))));
+            walls.Add((MeshShapes.Box(new Vector3(9f, 4.4f, 0.5f) * s),
+                Matrix4x4.Translate(new Vector3(0f, 2.6f, -2.75f) * s)));
 
-            var canopy = MeshShapes.Box(new Vector3(19f, 0.8f, 13f) * s);
-            roof.Add((canopy, Matrix4x4.Translate(new Vector3(0f, 10f * s, -0.5f * s))));
+            roof.Add((MeshShapes.Box(new Vector3(9.6f, 0.4f, 6.6f) * s),
+                Matrix4x4.Translate(new Vector3(0f, 5f, -0.25f) * s)));
 
             for (int side = -1; side <= 1; side += 2)
             {
-                var post = MeshShapes.Cylinder(8, 0.5f, 0.5f, 1f);
-                walls.Add((post, Matrix4x4.TRS(
-                    new Vector3(side * 8.5f * s, 5f * s, 5.5f * s), Quaternion.identity,
-                    new Vector3(0.9f, 10f, 0.9f) * s)));
+                walls.Add((MeshShapes.Cylinder(8, 0.5f, 0.5f, 1f), Matrix4x4.TRS(
+                    new Vector3(side * 4.25f, 2.5f, 2.75f) * s, Quaternion.identity,
+                    new Vector3(0.45f, 5f, 0.45f) * s)));
 
-                var lamp = MeshShapes.Sphere(10, 8);
-                trim.Add((lamp, Matrix4x4.TRS(
-                    new Vector3(side * 8.5f * s, 9.4f * s, 5.5f * s), Quaternion.identity,
-                    Vector3.one * 1.8f * s)));
+                trim.Add((MeshShapes.Sphere(10, 8), Matrix4x4.TRS(
+                    new Vector3(side * 4.25f, 4.7f, 2.75f) * s, Quaternion.identity,
+                    Vector3.one * 0.9f * s)));
             }
         }
 
@@ -152,24 +246,27 @@ namespace Nimbo.Art.World
                                       List<(Mesh, Matrix4x4)> roof,
                                       List<(Mesh, Matrix4x4)> trim, float s)
         {
-            var pond = MeshShapes.Cylinder(20, 0.5f, 0.48f, 1f);
-            trim.Add((pond, Matrix4x4.TRS(
-                new Vector3(0f, 0.2f * s, 0f), Quaternion.identity,
-                new Vector3(13f, 0.5f, 9f) * s)));
+            trim.Add((MeshShapes.Cylinder(20, 0.5f, 0.48f, 1f), Matrix4x4.TRS(
+                new Vector3(0f, 0.1f, 0f) * s, Quaternion.identity,
+                new Vector3(6.5f, 0.25f, 4.5f) * s)));
 
-            var seat = MeshShapes.Box(new Vector3(6f, 0.5f, 1.8f) * s);
-            walls.Add((seat, Matrix4x4.Translate(new Vector3(9f * s, 1.6f * s, 4f * s))));
+            walls.Add((MeshShapes.Box(new Vector3(3f, 0.22f, 0.9f) * s),
+                Matrix4x4.Translate(new Vector3(4.5f, 0.72f, 2f) * s)));
 
-            var backrest = MeshShapes.Box(new Vector3(6f, 2f, 0.4f) * s);
-            walls.Add((backrest, Matrix4x4.Translate(new Vector3(9f * s, 2.6f * s, 3.2f * s))));
+            walls.Add((MeshShapes.Box(new Vector3(3f, 0.85f, 0.18f) * s),
+                Matrix4x4.Translate(new Vector3(4.5f, 1.2f, 1.6f) * s)));
+
+            for (int side = -1; side <= 1; side += 2)
+                walls.Add((MeshShapes.Box(new Vector3(0.16f, 0.62f, 0.7f) * s),
+                    Matrix4x4.Translate(new Vector3(4.5f + side * 1.3f, 0.31f, 2f) * s)));
 
             var bush = MeshShapes.Sphere(12, 9, new Vector3(1f, 0.8f, 1f));
             for (int i = 0; i < 5; i++)
             {
                 float angle = i / 5f * Mathf.PI * 2f;
                 roof.Add((bush, Matrix4x4.TRS(
-                    new Vector3(Mathf.Cos(angle) * 12f * s, 1.6f * s, Mathf.Sin(angle) * 10f * s),
-                    Quaternion.identity, Vector3.one * 3.6f * s)));
+                    new Vector3(Mathf.Cos(angle) * 6f, 0.7f, Mathf.Sin(angle) * 5f) * s,
+                    Quaternion.identity, Vector3.one * 1.7f * s)));
             }
         }
 
@@ -178,21 +275,19 @@ namespace Nimbo.Art.World
                                       List<(Mesh, Matrix4x4)> roof,
                                       List<(Mesh, Matrix4x4)> trim, float s)
         {
-            var walkway = MeshShapes.Box(new Vector3(4.5f, 0.6f, 20f) * s);
-            walls.Add((walkway, Matrix4x4.Translate(new Vector3(0f, 0.4f * s, 8f * s))));
+            walls.Add((MeshShapes.Box(new Vector3(2.3f, 0.3f, 10f) * s),
+                Matrix4x4.Translate(new Vector3(0f, 0.2f, 4f) * s)));
 
             for (int side = -1; side <= 1; side += 2)
             for (int i = 0; i < 4; i++)
             {
-                var post = MeshShapes.Cylinder(6, 0.5f, 0.5f, 1f);
-                walls.Add((post, Matrix4x4.TRS(
-                    new Vector3(side * 2f * s, 1.6f * s, (2f + i * 5f) * s),
-                    Quaternion.identity, new Vector3(0.6f, 3f, 0.6f) * s)));
+                walls.Add((MeshShapes.Cylinder(6, 0.5f, 0.5f, 1f), Matrix4x4.TRS(
+                    new Vector3(side * 1f, 0.8f, 1f + i * 2.5f) * s, Quaternion.identity,
+                    new Vector3(0.3f, 1.5f, 0.3f) * s)));
             }
 
-            var lantern = MeshShapes.Sphere(10, 8);
-            trim.Add((lantern, Matrix4x4.TRS(
-                new Vector3(0f, 4.2f * s, 17f * s), Quaternion.identity, Vector3.one * 2f * s)));
+            trim.Add((MeshShapes.Sphere(10, 8), Matrix4x4.TRS(
+                new Vector3(0f, 2.1f, 8.5f) * s, Quaternion.identity, Vector3.one * 1f * s)));
         }
 
         /// <summary>La plaza: un suelo empedrado, un banco y el tablón de noticias.</summary>
@@ -200,24 +295,22 @@ namespace Nimbo.Art.World
                                        List<(Mesh, Matrix4x4)> roof,
                                        List<(Mesh, Matrix4x4)> trim, float s)
         {
-            var floor = MeshShapes.Cylinder(24, 0.5f, 0.5f, 1f);
-            trim.Add((floor, Matrix4x4.TRS(
-                new Vector3(0f, 0.15f * s, 0f), Quaternion.identity,
-                new Vector3(24f, 0.4f, 24f) * s)));
+            trim.Add((MeshShapes.Cylinder(24, 0.5f, 0.5f, 1f), Matrix4x4.TRS(
+                new Vector3(0f, 0.08f, 0f) * s, Quaternion.identity,
+                new Vector3(14f, 0.2f, 14f) * s)));
 
-            var board = MeshShapes.Box(new Vector3(5f, 3.5f, 0.5f) * s);
-            walls.Add((board, Matrix4x4.Translate(new Vector3(9f * s, 3.6f * s, 4f * s))));
+            walls.Add((MeshShapes.Box(new Vector3(2.5f, 1.75f, 0.25f) * s),
+                Matrix4x4.Translate(new Vector3(4.5f, 1.8f, 2f) * s)));
 
             for (int side = -1; side <= 1; side += 2)
             {
-                var post = MeshShapes.Cylinder(6, 0.5f, 0.5f, 1f);
-                walls.Add((post, Matrix4x4.TRS(
-                    new Vector3((9f + side * 1.8f) * s, 1.2f * s, 4f * s), Quaternion.identity,
-                    new Vector3(0.5f, 2.4f, 0.5f) * s)));
+                walls.Add((MeshShapes.Cylinder(6, 0.5f, 0.5f, 1f), Matrix4x4.TRS(
+                    new Vector3(4.5f + side * 0.9f, 0.6f, 2f) * s, Quaternion.identity,
+                    new Vector3(0.25f, 1.2f, 0.25f) * s)));
             }
 
-            var seat = MeshShapes.Box(new Vector3(7f, 0.5f, 2f) * s);
-            walls.Add((seat, Matrix4x4.Translate(new Vector3(-9f * s, 1.5f * s, 0f))));
+            walls.Add((MeshShapes.Box(new Vector3(3.5f, 0.22f, 1f) * s),
+                Matrix4x4.Translate(new Vector3(-4.5f, 0.72f, 0f) * s)));
         }
 
         /// <summary>El color de tejado de cada tipo de zona: es lo que las distingue de lejos.</summary>

@@ -124,9 +124,9 @@ namespace Nimbo.PlayTests
             go.transform.rotation = Quaternion.Euler(48f, -35f, 0f);
 
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(0.66f, 0.80f, 0.92f);
-            RenderSettings.ambientEquatorColor = new Color(0.58f, 0.66f, 0.72f);
-            RenderSettings.ambientGroundColor = new Color(0.36f, 0.40f, 0.42f);
+            RenderSettings.ambientSkyColor = new Color(0.68f, 0.81f, 0.93f);
+            RenderSettings.ambientEquatorColor = new Color(0.74f, 0.72f, 0.66f);
+            RenderSettings.ambientGroundColor = new Color(0.52f, 0.50f, 0.42f);
         }
 
         private static Camera Camara(Vector3 at, Quaternion looking)

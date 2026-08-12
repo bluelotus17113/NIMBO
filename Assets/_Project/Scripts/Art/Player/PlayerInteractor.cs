@@ -178,7 +178,12 @@ namespace Nimbo.Art.PlayerView
             {
                 if (!_island.IsUnlocked(zoneId)) continue;
                 if (!_island.TryGetSpawnPoint(zoneId, out var centre)) continue;
-                if (!Near(position, centre, 3.4f)) continue;
+
+                // Se mide contra el centro del edificio, y el edificio tiene paredes:
+                // hay que llegar desde fuera. Con la casa a cinco metros de fondo, la
+                // fachada ya está a dos y medio del centro, así que un radio corto
+                // pedía estar dentro de la pared para que apareciera el cartel.
+                if (!Near(position, centre, 4.6f)) continue;
 
                 // Solo se entra en lo que tiene dentro: una plaza o un parque no.
                 var purpose = _island.PurposeOf(zoneId);
