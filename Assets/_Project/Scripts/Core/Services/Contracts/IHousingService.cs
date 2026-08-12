@@ -27,6 +27,18 @@ namespace Nimbo.Core.Services.Contracts
         /// <summary>La casa de ese habitante, o null si aún no tiene.</summary>
         RoomLayout GetHomeOf(string islanderId);
 
+        /// <summary>
+        /// ¿Es un mueble que se puede colocar en una habitación?
+        /// </summary>
+        /// <remarks>
+        /// Hace falta para no ofrecer lo que el clic va a rechazar. El menú viejo
+        /// listaba también papeles pintados y suelos —están en el inventario y son de
+        /// una categoría «colocable»—, pero eso no son objetos: son acabados, no
+        /// aparecen en el catálogo de muebles, y elegirlos solo servía para leer «ese
+        /// mueble no existe» después de haber apuntado a una casilla.
+        /// </remarks>
+        bool IsPlaceable(string catalogId);
+
         /// <summary>Comprueba sin colocar. La interfaz la llama en cada movimiento del ratón.</summary>
         PlacementError CanPlace(RoomLayout room, string catalogId, GridCoord origin, Facing facing);
 

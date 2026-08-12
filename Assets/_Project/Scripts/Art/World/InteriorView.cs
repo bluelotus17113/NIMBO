@@ -30,9 +30,10 @@ namespace Nimbo.Art.World
         public static readonly Vector3 Anchor = new(0f, -500f, 0f);
 
         /// <summary>Tamaño de casilla de la rejilla de vivienda, en metros.</summary>
-        private const float Tile = 1.5f;
+        public const float Tile = 1.5f;
 
         private Transform _room;
+        private Transform _furniture;
         private IHousingService _housing;
 
         private static Mesh _slab;
@@ -40,6 +41,19 @@ namespace Nimbo.Art.World
 
         /// <summary>Cierto mientras el jugador está dentro de una casa.</summary>
         public bool Inside { get; private set; }
+
+        /// <summary>
+        /// La habitación en la que está metido, o null si está en la calle.
+        /// </summary>
+        /// <remarks>
+        /// La expone para que el modo amueblar coloque en la misma que se está
+        /// dibujando. Volver a pedirla por la clave sería resolverla dos veces y
+        /// dejar la puerta abierta a amueblar una casa distinta de la que se ve.
+        /// </remarks>
+        public RoomLayout CurrentRoom { get; private set; }
+
+        /// <summary>Dónde cae la esquina (0,0) de la habitación en el mundo.</summary>
+        public Vector3 RoomOrigin => _room != null ? _room.position : Anchor;
 
         /// <summary>Dónde estaba fuera, para devolverlo al salir por la puerta.</summary>
         private Vector3 _outsideSpot;
@@ -95,6 +109,8 @@ namespace Nimbo.Art.World
 
             if (_room != null) Destroy(_room.gameObject);
             _room = null;
+            _furniture = null;
+            CurrentRoom = null;
             Inside = false;
         }
 
@@ -112,12 +128,21 @@ namespace Nimbo.Art.World
                 return home;
             }
 
-            return _housing.GetHomeOf(homeKey);
+            // La clave puede ser un habitante o un edificio de la aldea, y hasta ahora
+            // solo se probaba lo primero: al llamar a la puerta de una tienda se
+            // preguntaba por el habitante «zona_tienda_comida», no existía ninguno, y
+            // el cartel decía «Entrar» y no pasaba absolutamente nada.
+            var islanderHome = _housing.GetHomeOf(homeKey);
+            if (islanderHome != null) return islanderHome;
+
+            return _housing.GetLayout(homeKey, 0);
         }
 
         private void Rebuild(RoomLayout layout)
         {
             if (_room != null) Destroy(_room.gameObject);
+
+            CurrentRoom = layout;
 
             _room = new GameObject("Interior").transform;
             _room.SetParent(transform, worldPositionStays: false);
@@ -125,7 +150,35 @@ namespace Nimbo.Art.World
 
             BuildFloor(layout);
             BuildWalls(layout);
+
+            // El cuarto no hace sombra sobre sí mismo.
+            //
+            // El sol de la isla entra de lado, así que las paredes proyectaban una
+            // cuña oscura que cortaba el suelo en diagonal y partía la habitación en
+            // dos mitades de distinto color. Sin ellas la luz queda plana y la única
+            // sombra que se ve es la de los muebles, que es la que dice dónde están
+            // apoyados.
+            foreach (var renderer in _room.GetComponentsInChildren<MeshRenderer>())
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            // Los muebles cuelgan de un hijo suyo y no del cuarto: amueblar cambia un
+            // mueble cada pocos segundos, y rehacer la habitación entera cada vez
+            // tiraría también el suelo y las paredes, que no se han movido.
+            _furniture = new GameObject("Muebles").transform;
+            _furniture.SetParent(_room, worldPositionStays: false);
             BuildFurniture(layout);
+        }
+
+        /// <summary>Vuelve a dibujar solo los muebles. La llama el modo amueblar.</summary>
+        public void RefreshFurniture()
+        {
+            if (_room == null || CurrentRoom == null) return;
+
+            if (_furniture != null) Destroy(_furniture.gameObject);
+            _furniture = new GameObject("Muebles").transform;
+            _furniture.SetParent(_room, worldPositionStays: false);
+
+            BuildFurniture(CurrentRoom);
         }
 
         private void BuildFloor(RoomLayout layout)
@@ -167,6 +220,13 @@ namespace Nimbo.Art.World
             AddMesh(_room, "salida", MeshShapes.Box(new Vector3(1.2f, 2.1f, 0.2f)),
                     ToonPalette.Solid(ToonPalette.TrunkBrown),
                     new Vector3(w * 0.5f, 1.05f, 0.12f));
+
+            // Y el felpudo delante. La cámara mira el cuarto desde arriba y desde el
+            // sur, así que de la puerta se ve el canto y poco más: puesta en el suelo,
+            // la salida se lee de un vistazo desde donde de verdad se mira.
+            AddMesh(_room, "felpudo", MeshShapes.Box(new Vector3(1.8f, 0.06f, 1.1f)),
+                    ToonPalette.Solid(new Color32(0xA8, 0x7B, 0x50, 255)),
+                    new Vector3(w * 0.5f, 0.03f, 0.85f));
         }
 
         private void BuildFurniture(RoomLayout layout)
@@ -176,27 +236,78 @@ namespace Nimbo.Art.World
             {
                 var placed = objects[i];
 
-                int footX = 1, footY = 1;
-                if (ServiceRegistry.TryGet<IEconomyService>(out var economy))
-                {
-                    var item = economy.GetItem(placed.CatalogId);
-                    if (item != null) { footX = item.FootprintX; footY = item.FootprintY; }
-                }
-
-                // Girado el mueble, su huella gira con él: un sofá de tres por uno
-                // puesto de lado ocupa uno por tres, y sin esto atravesaría la pared.
-                bool turned = placed.Facing == Facing.East || placed.Facing == Facing.West;
-                float sizeX = (turned ? footY : footX) * Tile * 0.9f;
-                float sizeZ = (turned ? footX : footY) * Tile * 0.9f;
+                Footprint(placed.CatalogId, placed.Facing, out int cellsX, out int cellsY);
+                float sizeX = cellsX * Tile * 0.9f;
+                float sizeZ = cellsY * Tile * 0.9f;
 
                 float height = HeightOf(placed.CatalogId);
 
-                AddMesh(_room, placed.CatalogId, MeshShapes.Box(new Vector3(sizeX, height, sizeZ)),
+                // Los de encima de la mesa se levantan hasta la altura de lo que
+                // tienen debajo. Sin esto, un candelabro puesto sobre una mesa se
+                // dibuja dentro de ella y desde arriba parece que no se colocó nada.
+                float floor = placed.Layer == PlacementLayer.Surface ? SurfaceHeightAt(layout, placed) : 0f;
+
+                AddMesh(_furniture, placed.CatalogId,
+                        MeshShapes.Box(new Vector3(sizeX, height, sizeZ)),
                         ToonPalette.Solid(ColourOf(placed.CatalogId)),
-                        new Vector3((placed.Origin.X + sizeX / Tile * 0.5f) * Tile,
-                                    height * 0.5f,
-                                    (placed.Origin.Y + sizeZ / Tile * 0.5f) * Tile));
+                        CentreOf(placed.Origin.X, placed.Origin.Y, cellsX, cellsY)
+                            + Vector3.up * (floor + height * 0.5f));
             }
+        }
+
+        /// <summary>
+        /// Cuántas casillas ocupa mirando hacia ahí.
+        /// </summary>
+        /// <remarks>
+        /// Girado el mueble, su huella gira con él: un sofá de tres por uno puesto de
+        /// lado ocupa uno por tres, y sin esto atravesaría la pared.
+        /// </remarks>
+        public static void Footprint(string catalogId, Facing facing, out int cellsX, out int cellsY)
+        {
+            cellsX = cellsY = 1;
+            if (ServiceRegistry.TryGet<IEconomyService>(out var economy))
+            {
+                var item = economy.GetItem(catalogId);
+                if (item != null) { cellsX = item.FootprintX; cellsY = item.FootprintY; }
+            }
+
+            if (facing != Facing.East && facing != Facing.West) return;
+            (cellsX, cellsY) = (cellsY, cellsX);
+        }
+
+        /// <summary>
+        /// El centro de una huella, en coordenadas de la habitación.
+        /// </summary>
+        /// <remarks>
+        /// Lo usan tanto quien dibuja el mueble como el fantasma del modo amueblar. Es
+        /// la razón de que sea público: con dos cuentas distintas, el fantasma se
+        /// pinta medio metro al lado de donde acaba cayendo la silla.
+        /// </remarks>
+        public static Vector3 CentreOf(int cellX, int cellY, int cellsX = 1, int cellsY = 1) =>
+            new((cellX + cellsX * 0.5f) * Tile, 0f, (cellY + cellsY * 0.5f) * Tile);
+
+        /// <summary>Sobre qué casilla cae ese punto de la habitación.</summary>
+        public static void CellAt(Vector3 local, out int cellX, out int cellY)
+        {
+            cellX = Mathf.FloorToInt(local.x / Tile);
+            cellY = Mathf.FloorToInt(local.z / Tile);
+        }
+
+        /// <summary>Lo alto que queda la mesa sobre la que se apoya algo.</summary>
+        private static float SurfaceHeightAt(RoomLayout layout, PlacedObject placed)
+        {
+            float best = 0f;
+            foreach (var other in layout.Objects)
+            {
+                if (other.Layer != PlacementLayer.Furniture) continue;
+
+                Footprint(other.CatalogId, other.Facing, out int ox, out int oy);
+                if (placed.Origin.X < other.Origin.X || placed.Origin.X >= other.Origin.X + ox) continue;
+                if (placed.Origin.Y < other.Origin.Y || placed.Origin.Y >= other.Origin.Y + oy) continue;
+
+                best = Mathf.Max(best, HeightOf(other.CatalogId));
+            }
+            return best;
         }
 
         /// <summary>
@@ -208,7 +319,7 @@ namespace Nimbo.Art.World
         /// distintos y el mismo se ve igual en todas las partidas, que es lo que hace
         /// falta para reconocer tu propia casa.
         /// </remarks>
-        private static float HeightOf(string catalogId)
+        public static float HeightOf(string catalogId)
         {
             uint hash = Hash(catalogId);
             return 0.45f + (hash % 100) / 100f * 1.4f;

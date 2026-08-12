@@ -425,6 +425,31 @@ namespace Nimbo.Tests
         }
 
         [Test]
+        public void DentroDeUnaCasaElSueloBajaConLaHabitacion()
+        {
+            // Los interiores se montan quinientos metros por debajo de las islas, y el
+            // suelo de la cámara estaba clavado en el prado: entrar en casa la dejaba
+            // arriba mirando un punto medio kilómetro más abajo. La habitación se
+            // construía entera, con sus paredes y su suelo, y no se veía nada.
+            var rig = NewRig();
+            rig.GroundLevel = -500f;
+
+            rig.Target = new CameraPose
+            {
+                Pivot = new Vector3(6f, -498.8f, 6f),
+                Distance = 23f,
+                Pitch = 62f,
+                Yaw = 0f,
+            };
+            rig.SnapToTarget();
+
+            Assert.Less(rig.Position.y, -470f,
+                $"la cámara se quedó sobre el prado con el jugador dentro de casa (y={rig.Position.y:0.00})");
+            Assert.GreaterOrEqual(rig.Position.y, -500f + CameraRig.MinHeight - 0.001f,
+                "y aun así no puede hundirse en el suelo de la habitación");
+        }
+
+        [Test]
         public void SubirLaCamaraNoLeCambiaLoQueMira()
         {
             // El suelo levanta la cámara pero no mueve el pivote, así que tiene que

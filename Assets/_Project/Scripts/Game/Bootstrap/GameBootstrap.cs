@@ -361,6 +361,21 @@ namespace Nimbo.Game.Bootstrap
 
             var crops = _farming.Crops;
             if (crops.Count > 0) _inventory.TryStore(crops[0].SeedId, 8, out _);
+
+            // Cuatro muebles para estrenar la casa.
+            //
+            // Van al inventario grande y no a la mochila: los muebles se colocan desde
+            // dentro de casa, no se llevan encima. Sin esto se entra a un cuarto vacío
+            // con un menú de amueblar que dice «no tienes muebles», y la primera vez
+            // que uno entra en su casa es justo cuando quiere tocar algo.
+            //
+            // La vela va aparte a propósito: es de las que se apoyan encima de un
+            // mueble, así que obliga a poner antes la mesita y enseña la regla sola.
+            foreach (var piece in new[] { "furn_silla_de_madera_sencilla",
+                                          "furn_mesita_de_noche",
+                                          "furn_maceta_de_girasol_radiante",
+                                          "furn_vela_infinita_nimba" })
+                _economy.Inventory.Add(piece, 1);
         }
 
         /// <summary>

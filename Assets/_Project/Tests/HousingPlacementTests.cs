@@ -277,6 +277,18 @@ namespace Nimbo.Tests
         }
 
         [Test]
+        public void SoloEsColocableLoQueEstaEnElCatalogoDeMuebles()
+        {
+            // El menú de amueblar pregunta esto para no ofrecer lo que el clic va a
+            // rechazar. El editor viejo listaba también papeles pintados: están en el
+            // inventario y son «colocables» para la economía, pero no son objetos.
+            Assert.IsTrue(_service.IsPlaceable("test_silla"));
+            Assert.IsFalse(_service.IsPlaceable("wall_liso_crema"),
+                           "un acabado de pared no es un mueble que se coloque en una casilla");
+            Assert.IsFalse(_service.IsPlaceable("no_existe"));
+        }
+
+        [Test]
         public void FootprintOf_2x1_FacingEast_SwapsDimensions()
         {
             var coords = _service.FootprintOf("test_sofa_2x1", new GridCoord(0, 0), Facing.East).ToList();

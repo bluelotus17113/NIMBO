@@ -4,7 +4,6 @@ using Nimbo.Core.Services.Contracts;
 using Nimbo.Core.Time;
 using Nimbo.Data.Islanders;
 using Nimbo.UI.Creator;
-using Nimbo.UI.HousingEditor;
 using Nimbo.UI.Hud;
 using Nimbo.UI.Islander;
 using Nimbo.UI.Shop;
@@ -42,8 +41,8 @@ namespace Nimbo.UI
         private Player.ShippingPanel _shipping;
         private Player.MapPanel _map;
         private Player.BuildPanel _build;
+        private Player.FurnishPanel _furnish;
         private Player.DoorFade _fade;
-        private HousingEditorPanel _housing;
         private CreatorPanel _creator;
         private VisualElement _islanderStrip;
         private VisualElement _actions;
@@ -63,12 +62,15 @@ namespace Nimbo.UI
             EventBus.Unsubscribe<IslanderLeft>(OnRosterChanged);
             EventBus.Unsubscribe<StationUsed>(OnStationUsed);
             EventBus.Unsubscribe<BuildModeChanged>(OnBuildModeChanged);
+            EventBus.Unsubscribe<FurnishModeChanged>(OnFurnishModeChanged);
+            EventBus.Unsubscribe<InteriorEntered>(OnInteriorEntered);
+            EventBus.Unsubscribe<InteriorExited>(OnInteriorExited);
             _toast?.Unsubscribe();
+            _furnish?.Unsubscribe();
             _hotbar?.Unsubscribe();
             _fade?.Unsubscribe();
             _hud?.Dispose();
             _shop?.Dispose();
-            _housing?.Dispose();
         }
 
         private void OnGameLoaded(GameLoaded _)
@@ -104,9 +106,6 @@ namespace Nimbo.UI
             _panel = new IslanderPanel();
             body.Add(_panel.Root);
 
-            _housing = new HousingEditorPanel();
-            body.Add(_housing.Root);
-
             _creator = new CreatorPanel();
             _creator.OnFinished += OnIslanderCreated;
             body.Add(_creator.Root);
@@ -140,6 +139,10 @@ namespace Nimbo.UI
 
             _build = new Player.BuildPanel();
             body.Add(_build.Root);
+
+            _furnish = new Player.FurnishPanel();
+            _furnish.Subscribe();
+            body.Add(_furnish.Root);
 
             root.Add(body);
             root.Add(BuildActionBar());
@@ -178,6 +181,9 @@ namespace Nimbo.UI
             EventBus.Subscribe<IslanderLeft>(OnRosterChanged);
             EventBus.Subscribe<StationUsed>(OnStationUsed);
             EventBus.Subscribe<BuildModeChanged>(OnBuildModeChanged);
+            EventBus.Subscribe<FurnishModeChanged>(OnFurnishModeChanged);
+            EventBus.Subscribe<InteriorEntered>(OnInteriorEntered);
+            EventBus.Subscribe<InteriorExited>(OnInteriorExited);
 
             RebuildStrip();
             _mounted = true;
@@ -205,7 +211,14 @@ namespace Nimbo.UI
             {
                 if (_decor.IsShowing) _decor.Hide(); else _decor.Show();
             });
-            Add("Construir", () => EventBus.Publish(new BuildModeChanged(!_buildMode)));
+            _buildButton = Add("Construir", () => EventBus.Publish(new BuildModeChanged(!_buildMode)));
+
+            // Dentro de casa se amuebla; fuera se construye. Es el mismo sitio de la
+            // fila porque es el mismo gesto, y así no hay nunca dos botones de colocar
+            // cosas encendidos a la vez diciendo cada uno una cosa distinta.
+            _furnishButton = Add("Amueblar", () => EventBus.Publish(new FurnishModeChanged(!_furnishMode)));
+            _furnishButton.style.display = DisplayStyle.None;
+
             Add("Mapa", () =>
             {
                 if (_map.IsShowing) _map.Hide(); else _map.Show();
@@ -225,11 +238,12 @@ namespace Nimbo.UI
             Add("Nuevo habitante", () => _creator.Show());
             return _actions;
 
-            void Add(string text, System.Action onClick)
+            Button Add(string text, System.Action onClick)
             {
                 var button = UiTheme.Action(text, onClick);
                 button.style.marginRight = 8;
                 _actions.Add(button);
+                return button;
             }
         }
 
@@ -272,6 +286,57 @@ namespace Nimbo.UI
         }
 
         private bool _buildMode;
+        private bool _furnishMode;
+        private bool _indoors;
+        private Button _buildButton;
+        private Button _furnishButton;
+
+        /// <summary>
+        /// Ha entrado en una casa: la fila de acciones cambia de oficio.
+        /// </summary>
+        /// <remarks>
+        /// Construir de puertas adentro movía la cámara a la aldea con el jugador
+        /// medio kilómetro por debajo, así que ese botón se va mientras estás dentro.
+        /// </remarks>
+        private void OnInteriorEntered(InteriorEntered _) => SetIndoors(true);
+
+        private void OnInteriorExited(InteriorExited _) => SetIndoors(false);
+
+        private void SetIndoors(bool indoors)
+        {
+            _indoors = indoors;
+            if (_buildButton == null || _furnishButton == null) return;
+
+            _buildButton.style.display = indoors ? DisplayStyle.None : DisplayStyle.Flex;
+            _furnishButton.style.display = indoors ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        /// <summary>Amueblando, como construyendo: fuera todo lo de andar por la isla.</summary>
+        private void OnFurnishModeChanged(FurnishModeChanged evt)
+        {
+            // Amueblar solo existe dentro de una casa. El aviso puede llegar de una
+            // tecla pulsada en la calle, y encender el menú allí sería ofrecer un modo
+            // que quien coloca va a rechazar sin decir nada.
+            if (evt.Furnishing && !_indoors) return;
+
+            _furnishMode = evt.Furnishing;
+
+            var play = evt.Furnishing ? DisplayStyle.None : DisplayStyle.Flex;
+            _hotbar.Root.style.display = play;
+            _islanderStrip.style.display = play;
+            _actions.style.display = play;
+
+            if (evt.Furnishing)
+            {
+                _bag.Hide();
+                _craft.Hide();
+                _shipping.Hide();
+                _map.Hide();
+                _panel.Hide();
+                _furnish.Show();
+            }
+            else _furnish.Hide();
+        }
 
         /// <summary>
         /// Al construir, la interfaz de andar por la isla sobra: se apaga entera y
@@ -431,6 +496,11 @@ namespace Nimbo.UI
                 if (_map.IsShowing) _map.Hide(); else _map.Show();
             }
 
+            // B de amueblar, y solo dentro de casa: fuera esa tecla no hace nada en vez
+            // de abrir un menú que no se puede usar.
+            if (Input.GetKeyDown(KeyCode.B) && (_indoors || _furnishMode))
+                EventBus.Publish(new FurnishModeChanged(!_furnishMode));
+
             // Las listas y las barras a ritmo lento: nadie nota que una barra de
             // hambre se mueva dos veces por segundo en vez de sesenta, y reconstruir
             // listas cada fotograma es lo que calienta el portátil.
@@ -448,6 +518,10 @@ namespace Nimbo.UI
             // El mapa abierto se refresca: los vecinos andan, y uno que enseñe dónde
             // estaban al abrirlo miente a los diez segundos.
             if (_map.IsShowing) _map.Refresh();
+
+            // Y el menú de muebles, que va restando de lo que te queda a cada silla
+            // que pones y sumando a cada una que recoges.
+            if (_furnish.IsShowing) _furnish.Rebuild();
 
             // Lo elegido en el menú viaja hasta quien dibuja el fantasma. Se busca por
             // reflexión igual que el interactor: el que pinta vive en Nimbo.Art, que

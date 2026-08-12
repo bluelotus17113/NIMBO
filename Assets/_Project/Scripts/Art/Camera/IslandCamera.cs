@@ -24,6 +24,9 @@ namespace Nimbo.Art.CameraWork
         // pasó a ser lo que se ve mientras no hay protagonista.
         private Transform _player;
 
+        // La casa en la que esté metido, si lo está. Dentro manda otra cámara.
+        private InteriorView _interior;
+
         [Header("Seguimiento del protagonista")]
         // A 26 metros el muñeco era un punto en mitad del prado: valía para mirar la
         // isla, que es para lo que estaba hecha esta cámara, pero no para jugar. A 15
@@ -62,13 +65,28 @@ namespace Nimbo.Art.CameraWork
 
         // ── ciclo de vida de Unity ─────────────────────────────────────────
 
+        /// <summary>
+        /// El fondo de dentro de una casa.
+        /// </summary>
+        /// <remarks>
+        /// Fuera, lo que hay detrás de la isla es cielo. Dentro no hay nada detrás
+        /// —la habitación flota sola medio kilómetro bajo el mundo—, y con el azul del
+        /// cielo el cuarto parecía una maqueta a la intemperie en vez de un sitio
+        /// cerrado. Un tono cálido y oscuro lo cierra sin necesidad de techo.
+        /// </remarks>
+        private static readonly Color IndoorBackdrop = new(0.24f, 0.20f, 0.25f);
+
+        private Color _outdoorBackdrop;
+
         private void Awake()
         {
             _cam = GetComponent<Camera>();
+            _outdoorBackdrop = _cam.backgroundColor;
         }
 
         private void Start()
         {
+            _interior = FindFirstObjectByType<InteriorView>();
             _world = FindFirstObjectByType<WorldView>();
             if (_world == null)
             {
@@ -192,10 +210,70 @@ namespace Nimbo.Art.CameraWork
         {
             if (_rig == null) return;
 
+            // Cruzar una puerta son quinientos metros de golpe. Sin pegar la cámara a
+            // su sitio, entrar en casa sería un picado de dos segundos desde el prado
+            // hasta el sótano del mundo, y salir, el mismo viaje al revés.
+            bool indoors = Indoors();
+            bool crossedADoor = indoors != _wasIndoors;
+            _wasIndoors = indoors;
+
+            if (crossedADoor) _cam.backgroundColor = indoors ? IndoorBackdrop : _outdoorBackdrop;
+
+            if (indoors)
+            {
+                // El suelo de la cámara se baja al de la habitación: si no, se queda
+                // clavada tres metros sobre el prado mirando a medio kilómetro de
+                // profundidad, que es cómo se entraba en casa y no se veía nada.
+                _rig.GroundLevel = InteriorView.Anchor.y;
+                _rig.Target = RoomPose(_rig.Target.Yaw);
+
+                if (crossedADoor) _rig.SnapToTarget();
+                _rig.Advance(Time.unscaledDeltaTime);
+
+                // Sin apartar la cámara de lo que tenga detrás: dentro, lo que hay
+                // detrás es la pared de la propia habitación, y esquivarla sería
+                // meter la cámara en el cuarto.
+                _cam.transform.SetPositionAndRotation(_rig.Position, _rig.Rotation);
+                return;
+            }
+
+            _rig.GroundLevel = 0f;
+
             UpdateFocusTracking();
             UpdatePlayerTracking();
+
+            if (crossedADoor) _rig.SnapToTarget();
             _rig.Advance(Time.unscaledDeltaTime);
             ApplyPose();
+        }
+
+        private bool _wasIndoors;
+
+        private bool Indoors() => _interior != null && _interior.Inside && _interior.CurrentRoom != null;
+
+        /// <summary>
+        /// El plano de dentro de una casa: la habitación entera desde arriba.
+        /// </summary>
+        /// <remarks>
+        /// Aquí no se sigue al protagonista. Un cuarto mide doce metros y la cámara de
+        /// fuera va a quince, así que seguirle dejaría la cámara al otro lado de la
+        /// pared todo el rato, pegando tirones cada vez que esquivara una. Se encuadra
+        /// la habitación y ya está, como en Animal Crossing: dentro no hay nada que
+        /// buscar, se ve todo de un vistazo.
+        /// </remarks>
+        private CameraPose RoomPose(float yaw)
+        {
+            var room = _interior.CurrentRoom;
+            float width = room.Width * InteriorView.Tile;
+            float depth = room.Height * InteriorView.Tile;
+
+            return new CameraPose
+            {
+                Pivot = _interior.RoomOrigin + new Vector3(width * 0.5f, 1.2f, depth * 0.5f),
+                Distance = Mathf.Max(width, depth) * 1.6f + 4f,
+                Pitch = 62f,
+                Yaw = yaw,
+            };
         }
 
         // ── entrada del jugador (solo UnityEngine.Input) ────────────────────

@@ -69,6 +69,8 @@ namespace Nimbo.Housing
                 : null;
         }
 
+        public bool IsPlaceable(string catalogId) => _catalog.TryGetFurniture(catalogId, out _);
+
         public PlacementError CanPlace(RoomLayout room, string catalogId, GridCoord origin, Facing facing)
         {
             if (room == null) return PlacementError.OutOfBounds;

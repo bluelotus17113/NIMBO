@@ -313,6 +313,31 @@ namespace Nimbo.Core.Events
     /// <summary>Ha salido a la calle.</summary>
     public readonly struct InteriorExited { }
 
+    /// <summary>
+    /// Se ha entrado o salido del modo amueblar, que solo existe dentro de una casa.
+    /// </summary>
+    public readonly struct FurnishModeChanged
+    {
+        public readonly bool Furnishing;
+        public FurnishModeChanged(bool furnishing) => Furnishing = furnishing;
+    }
+
+    /// <summary>
+    /// Qué mueble se está colocando. Vacío para no colocar nada.
+    /// </summary>
+    /// <remarks>
+    /// Va por aviso y no por reflexión como el menú de construir. Aquello se hizo así
+    /// para que la interfaz no tuviera que ver el ensamblado del arte, pero busca «la
+    /// primera pieza con una propiedad que se llame Selected» y ahora hay dos que
+    /// colocan cosas: la primera que apareciera en la lista se quedaría con lo que
+    /// elige el jugador en la otra.
+    /// </remarks>
+    public readonly struct FurnishSelectionChanged
+    {
+        public readonly string CatalogId;
+        public FurnishSelectionChanged(string catalogId) => CatalogId = catalogId;
+    }
+
     /// <summary>Un edificio de la aldea se ha puesto o se ha movido de sitio.</summary>
     public readonly struct BuildingMoved
     {

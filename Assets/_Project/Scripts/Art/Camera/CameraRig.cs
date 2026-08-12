@@ -35,6 +35,19 @@ namespace Nimbo.Art.CameraWork
         /// </remarks>
         public const float MinHeight = 3f;
 
+        /// <summary>
+        /// A qué altura está el suelo de lo que se está mirando. Cero es el prado.
+        /// </summary>
+        /// <remarks>
+        /// El suelo mínimo se mide desde aquí y no desde el pivote —eso ya lo prueba
+        /// <c>ElSueloSeMideDesdeElMundoYNoDesdeElPivote</c>—, pero «el mundo» dejó de
+        /// ser un solo plano el día que los interiores se montaron quinientos metros
+        /// por debajo de las islas. Con el suelo clavado en cero, entrar en casa subía
+        /// la cámara a tres metros sobre el prado mientras el jugador estaba medio
+        /// kilómetro más abajo: la habitación se construía entera y no se veía nada.
+        /// </remarks>
+        public float GroundLevel { get; set; }
+
         private readonly float _pivotRadiusMax;
 
         // La segunda isla, si la hay. Se añade después de construir el aparato porque
@@ -173,7 +186,8 @@ namespace Nimbo.Art.CameraWork
                 // queda a metro y medio sobre el pivote, que es más bajo que una
                 // casa. Se sube lo justo, sin tocar el pivote: la cámara sigue
                 // mirando lo mismo, solo que desde un poco más arriba.
-                if (position.y < MinHeight) position.y = MinHeight;
+                float floor = GroundLevel + MinHeight;
+                if (position.y < floor) position.y = floor;
 
                 return position;
             }

@@ -707,6 +707,156 @@ namespace Nimbo.PlayTests
         }
 
         [UnityTest]
+        public IEnumerator DentroDeCasaLaCamaraMiraLaHabitacion()
+        {
+            // Esto es lo que hacía que la casa no existiera de verdad: se entraba, la
+            // habitación se montaba con su suelo y sus cuatro paredes, y la cámara se
+            // quedaba tres metros sobre el prado mirando a medio kilómetro de
+            // profundidad. Se veía el césped. La prueba de entrar y salir pasaba.
+            yield return CargarYEmpezar();
+            yield return null;
+
+            EventBus.Publish(new InteriorEntered("", "Tu casa"));
+            yield return null;
+            yield return null;
+
+            var interior = Object.FindFirstObjectByType<Art.World.InteriorView>();
+            Assert.IsNotNull(interior.CurrentRoom, "no hay habitación montada");
+
+            var room = interior.CurrentRoom;
+            var centre = interior.RoomOrigin + new Vector3(
+                room.Width * Art.World.InteriorView.Tile * 0.5f, 1f,
+                room.Height * Art.World.InteriorView.Tile * 0.5f);
+
+            var camera = Camera.main;
+            Assert.Less(camera.transform.position.y, -400f,
+                        "la cámara se quedó sobre el prado con el jugador dentro de casa");
+
+            var toRoom = (centre - camera.transform.position).normalized;
+            Assert.Greater(Vector3.Dot(camera.transform.forward, toRoom), 0.9f,
+                           "la cámara está dentro de la casa pero mirando a otro lado");
+
+            // Y al salir vuelve arriba en el mismo fotograma, sin el picado de dos
+            // segundos que se vería si tuviera que recorrer los quinientos metros.
+            EventBus.Publish(new InteriorExited());
+            yield return null;
+
+            Assert.Greater(camera.transform.position.y, -50f,
+                           "salió a la calle y la cámara se quedó en el sótano del mundo");
+        }
+
+        [UnityTest]
+        public IEnumerator SePuedeAmueblarLaCasaDesdeDentro()
+        {
+            // La costura entera: entrar, entrar en modo amueblar, colocar una silla
+            // con el inventario y volver a recogerla. Cada pieza tenía su prueba y
+            // ninguna cubría lo que las une, que es donde se rompe siempre.
+            yield return CargarYEmpezar();
+            yield return null;
+
+            var economy = ServiceRegistry.Get<IEconomyService>();
+            const string Silla = "furn_silla_de_madera_sencilla";
+            Assert.Greater(economy.Inventory.CountOf(Silla), 0,
+                           "el kit de estreno no trae muebles: la casa nace vacía y sin nada que poner");
+
+            EventBus.Publish(new InteriorEntered("", "Tu casa"));
+            yield return null;
+
+            EventBus.Publish(new FurnishModeChanged(true));
+            yield return null;
+
+            var furnish = Object.FindFirstObjectByType<Art.World.FurnishModeView>();
+            Assert.IsNotNull(furnish, "la escena no tiene el modo amueblar montado");
+            Assert.IsTrue(furnish.Active, "no se entró en modo amueblar estando dentro de casa");
+
+            EventBus.Publish(new FurnishSelectionChanged(Silla));
+            yield return null;
+
+            int antes = economy.Inventory.CountOf(Silla);
+            Assert.AreEqual(PlacementError.None, furnish.TryPlaceAt(2, 2), "no dejó poner la silla");
+            yield return null;
+
+            var room = Object.FindFirstObjectByType<Art.World.InteriorView>().CurrentRoom;
+            Assert.AreEqual(1, room.Objects.Count, "la silla no llegó a la habitación");
+            Assert.AreEqual(antes - 1, economy.Inventory.CountOf(Silla),
+                            "la silla se colocó y encima sigues teniéndola en el inventario");
+
+            // Y se ve: sin esto la habitación tendría la silla guardada y el jugador
+            // seguiría mirando un cuarto vacío.
+            var muebles = GameObject.Find("Muebles");
+            Assert.IsNotNull(muebles, "no se dibujó nada dentro de la casa");
+            Assert.AreEqual(1, muebles.transform.childCount, "la silla está puesta pero no dibujada");
+
+            Assert.IsTrue(furnish.TryPickUpAt(2, 2), "no se pudo recoger la silla");
+            yield return null;
+
+            Assert.AreEqual(0, room.Objects.Count, "la silla se quedó puesta al recogerla");
+            Assert.AreEqual(antes, economy.Inventory.CountOf(Silla),
+                            "recogiste la silla y no volvió al inventario");
+        }
+
+        [UnityTest]
+        public IEnumerator LlamarALaPuertaDeUnEdificioTambienAbre()
+        {
+            // El cartel de la puerta de una tienda decía «Entrar» y pulsar no hacía
+            // nada: la clave que llega es la de la zona, y dentro se preguntaba por
+            // el habitante que se llamara así. No existe ninguno, claro.
+            yield return CargarYEmpezar();
+            yield return null;
+
+            EventBus.Publish(new InteriorEntered("zona_tienda_comida", "Entrar"));
+            yield return null;
+
+            var interior = Object.FindFirstObjectByType<Art.World.InteriorView>();
+            Assert.IsTrue(interior.Inside, "se llamó a la puerta de la tienda y no se entró");
+            Assert.IsNotNull(interior.CurrentRoom, "se entró a una casa sin habitación");
+        }
+
+        [UnityTest]
+        public IEnumerator AmueblarNoSePuedeDesdeLaCalle()
+        {
+            // La tecla existe fuera de casa igual que dentro, y el modo se apoya en
+            // una habitación que ahí no hay: sin este cerrojo, pulsarla en el prado
+            // manda la cámara a mirar el vacío de debajo del mundo.
+            yield return CargarYEmpezar();
+            yield return null;
+
+            EventBus.Publish(new FurnishModeChanged(true));
+            yield return null;
+
+            var furnish = Object.FindFirstObjectByType<Art.World.FurnishModeView>();
+            Assert.IsFalse(furnish.Active, "se entró a amueblar sin estar dentro de ninguna casa");
+        }
+
+        [UnityTest]
+        public IEnumerator SalirDeCasaAmueblandoCierraElModo()
+        {
+            yield return CargarYEmpezar();
+            yield return null;
+
+            EventBus.Publish(new InteriorEntered("", "Tu casa"));
+            yield return null;
+            EventBus.Publish(new FurnishModeChanged(true));
+            yield return null;
+
+            var furnish = Object.FindFirstObjectByType<Art.World.FurnishModeView>();
+            Assert.IsTrue(furnish.Active);
+
+            EventBus.Publish(new InteriorExited());
+            yield return null;
+
+            Assert.IsFalse(furnish.Active,
+                           "salió a la calle y se quedó colocando muebles en una casa que ya no existe");
+
+            // Y el mando vuelve: quedarse congelado en mitad de la isla sería peor que
+            // no haber podido amueblar.
+            var body = GameObject.Find("Protagonista");
+            var camera = Camera.main.GetComponent<Art.CameraWork.IslandCamera>();
+            Assert.IsTrue(camera.enabled, "la cámara de juego se quedó apagada al salir");
+            Assert.IsNotNull(body);
+        }
+
+        [UnityTest]
         public IEnumerator LaIslaTieneSuelo()
         {
             yield return CargarYEmpezar();
