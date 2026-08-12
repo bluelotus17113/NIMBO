@@ -113,6 +113,70 @@ namespace Nimbo.Art.Chibi
             return Build("casquete", vertices, normals, uv, triangles);
         }
 
+        /// <summary>
+        /// Cápsula: un cilindro rematado en media esfera por arriba y por abajo.
+        /// </summary>
+        /// <param name="height">Alto total, puntas incluidas.</param>
+        /// <remarks>
+        /// Es lo que van a ser los brazos y las piernas. Un cilindro acaba en una tapa
+        /// plana, y a esta escala esa tapa se lee como la boca de un tubo hueco: los
+        /// brazos parecían mangas de papel con una bola de mano metida dentro.
+        ///
+        /// El ecuador se genera dos veces a propósito, una por cada media esfera. Con
+        /// un solo anillo compartido, la pared del cilindro hereda la normal inclinada
+        /// del casquete y se sombrea como si siguiera curvándose.
+        /// </remarks>
+        public static Mesh Capsule(int segments = 12, int rings = 6, float height = 1f,
+                                   float radius = 0.25f)
+        {
+            radius = Mathf.Min(radius, height * 0.5f);
+            float half = Mathf.Max(0f, height * 0.5f - radius);
+
+            var vertices = new List<Vector3>();
+            var normals = new List<Vector3>();
+            var uv = new List<Vector2>();
+            var triangles = new List<int>();
+
+            for (int hemi = 0; hemi < 2; hemi++)
+            {
+                float offset = hemi == 0 ? half : -half;
+
+                for (int ring = 0; ring <= rings; ring++)
+                {
+                    // La de arriba va de 0° a 90°; la de abajo, de 90° a 180°.
+                    float phi = (hemi + (float)ring / rings) * Mathf.PI * 0.5f;
+                    float y = Mathf.Cos(phi);
+                    float r = Mathf.Sin(phi);
+
+                    for (int seg = 0; seg <= segments; seg++)
+                    {
+                        float u = (float)seg / segments;
+                        float theta = u * Mathf.PI * 2f;
+                        var unit = new Vector3(Mathf.Cos(theta) * r, y, Mathf.Sin(theta) * r);
+
+                        vertices.Add(unit * radius + new Vector3(0f, offset, 0f));
+                        normals.Add(unit);
+                        uv.Add(new Vector2(u, (hemi + (float)ring / rings) * 0.5f));
+                    }
+                }
+            }
+
+            int stride = segments + 1;
+            int rows = 2 * (rings + 1);
+
+            for (int row = 0; row < rows - 1; row++)
+            for (int seg = 0; seg < segments; seg++)
+            {
+                int a = row * stride + seg;
+                int b = a + stride;
+
+                triangles.Add(a); triangles.Add(b); triangles.Add(a + 1);
+                triangles.Add(a + 1); triangles.Add(b); triangles.Add(b + 1);
+            }
+
+            return Build("capsula", vertices, normals, uv, triangles);
+        }
+
         /// <summary>Cilindro con tapas, con el eje en Y y centrado en el origen.</summary>
         public static Mesh Cylinder(int segments = 14, float topRadius = 0.5f,
                                     float bottomRadius = 0.5f, float height = 1f)

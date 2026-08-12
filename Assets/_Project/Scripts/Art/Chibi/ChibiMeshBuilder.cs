@@ -48,9 +48,9 @@ namespace Nimbo.Art.Chibi
             float legHeight = height * 0.24f;
             float bodyWidth = height * 0.30f * girth;
 
-            float legTop = legHeight;
+            float torsoTop = legHeight + bodyHeight;
             float bodyCentre = legHeight + bodyHeight * 0.5f;
-            float headCentre = legHeight + bodyHeight + headHeight * 0.44f;
+            float headCentre = torsoTop + headHeight * 0.44f;
 
             var skin = new List<(Mesh, Matrix4x4)>();
             var clothes = new List<(Mesh, Matrix4x4)>();
@@ -61,37 +61,78 @@ namespace Nimbo.Art.Chibi
                 new Vector3(0f, headCentre, 0f), Quaternion.identity,
                 new Vector3(headWidth, headHeight, headWidth * 0.94f))));
 
+            // --- cuello ---
+            // La cabeza es una esfera y el torso acaba en un círculo más estrecho, así
+            // que entre los dos quedaba una muesca de aire: la cabeza no se apoyaba en
+            // nada, flotaba encima. El cuello se mete dentro de las dos piezas y la
+            // rellena. Se ve poquísimo y se nota muchísimo.
+            skin.Add((MeshShapes.Capsule(14, 4, headHeight * 0.26f, headWidth * 0.125f),
+                Matrix4x4.TRS(new Vector3(0f, torsoTop, -headWidth * 0.03f),
+                              Quaternion.identity, Vector3.one)));
+
             // --- cuerpo, con la ropa por fuera ---
-            var torso = MeshShapes.Cylinder(20, 0.44f, 0.5f, 1f);
+            var torso = MeshShapes.Cylinder(20, 0.46f, 0.5f, 1f);
             clothes.Add((torso, Matrix4x4.TRS(
                 new Vector3(0f, bodyCentre, 0f), Quaternion.identity,
                 new Vector3(bodyWidth, bodyHeight, bodyWidth * 0.82f))));
 
+            // --- hombros ---
+            // Un tronco de cono acaba en una tapa plana, y el brazo pegado al costado
+            // parecía una manga cosida a una caja. Con la bola, el hombro es redondo y
+            // el brazo nace de él en vez de estar apoyado al lado.
+            //
+            // La bola tiene que quedar POR DEBAJO de la barbilla. Puesta más arriba se
+            // tragaba media cara: la boca quedaba a la altura del hombro y el muñeco
+            // parecía hundido en su propia camiseta.
+            // El borde de arriba se mete un diez por ciento dentro de la cabeza: así el
+            // cuello queda escondido bajo la barbilla en vez de quedar a la vista como
+            // un pedestal, y la boca —que está bastante más arriba— sigue libre.
+            // Y redonda, no aplastada: achatada dejaba una meseta plana arriba con un
+            // agujero para el cuello, y de perfil parecía que el muñeco llevara un
+            // plato al cuello en vez de hombros.
+            float shoulderHalf = bodyHeight * 0.33f;
+            float shoulder = headCentre - headHeight * 0.44f - shoulderHalf;
+
+            clothes.Add((MeshShapes.Sphere(20, 12), Matrix4x4.TRS(
+                new Vector3(0f, shoulder, 0f), Quaternion.identity,
+                new Vector3(bodyWidth * 0.99f, shoulderHalf * 2f, bodyWidth * 0.92f))));
+
             // --- brazos: cuelgan un poco abiertos, que es la pose de reposo ---
             float armLength = height * 0.24f;
             float armThick = height * 0.085f * girth;
-            float shoulder = legHeight + bodyHeight * 0.88f;
 
             // Justo en el borde del torso: más afuera parecían alas, y más adentro
             // desaparecían dentro del cuerpo.
-            float armX = bodyWidth * 0.5f + armThick * 0.1f;
+            float armX = bodyWidth * 0.5f + armThick * 0.14f;
 
             for (int side = -1; side <= 1; side += 2)
             {
-                // 12 gajos y no 8: a este grosor, ocho caras planas se ven planas.
-                var arm = MeshShapes.Cylinder(12, 0.5f, 0.44f, 1f);
+                // La cápsula se construye ya con su tamaño y la matriz solo la mueve:
+                // escalarla aplastaría las puntas redondas y volverían las bocas.
+                var arm = MeshShapes.Capsule(12, 5, armLength, armThick * 0.5f);
+
                 // Inclinados hacia dentro por abajo: un brazo en reposo cae hacia el
                 // cuerpo, no se abre. Con el ángulo al revés parecían alas extendidas.
-                clothes.Add((arm, Matrix4x4.TRS(
-                    new Vector3(side * armX, shoulder - armLength * 0.45f, 0f),
-                    Quaternion.Euler(0f, 0f, side * 5f),
-                    new Vector3(armThick, armLength, armThick))));
+                var tilt = Quaternion.Euler(0f, 0f, side * 6f);
+                var armCentre = new Vector3(side * armX, shoulder - armLength * 0.42f, 0f);
+                clothes.Add((arm, Matrix4x4.TRS(armCentre, tilt, Vector3.one)));
 
-                var hand = MeshShapes.Sphere(12, 10);
+                // La mano va en la punta del brazo, girada con él. Antes se colocaba
+                // en vertical mientras el brazo iba inclinado, así que asomaba por un
+                // lado de la manga.
+                var hand = MeshShapes.Sphere(12, 10, new Vector3(1f, 0.92f, 1f));
                 skin.Add((hand, Matrix4x4.TRS(
-                    new Vector3(side * (armX - armLength * 0.04f), shoulder - armLength * 0.92f, 0f),
-                    Quaternion.identity, Vector3.one * armThick * 1.15f)));
+                    armCentre + tilt * new Vector3(0f, -armLength * 0.5f + armThick * 0.22f, 0f),
+                    tilt, Vector3.one * armThick * 1.18f)));
             }
+
+            // --- caderas ---
+            // Un pantalón corto sobre el arranque de las piernas. Sin él salían dos
+            // tubos de piel directamente del borde del torso, y el muñeco parecía ir
+            // en camiseta y nada más.
+            clothes.Add((MeshShapes.Cylinder(20, 0.5f, 0.54f, 1f), Matrix4x4.TRS(
+                new Vector3(0f, legHeight * 0.82f, 0f), Quaternion.identity,
+                new Vector3(bodyWidth * 0.88f, legHeight * 0.40f, bodyWidth * 0.78f))));
 
             // --- piernas ---
             float legThick = height * 0.085f * girth;
@@ -99,15 +140,18 @@ namespace Nimbo.Art.Chibi
 
             for (int side = -1; side <= 1; side += 2)
             {
-                var leg = MeshShapes.Cylinder(12, 0.5f, 0.5f, 1f);
+                var leg = MeshShapes.Capsule(12, 5, legHeight, legThick * 0.5f);
                 skin.Add((leg, Matrix4x4.TRS(
-                    new Vector3(side * legX, legTop * 0.5f, 0f), Quaternion.identity,
-                    new Vector3(legThick, legHeight, legThick))));
+                    new Vector3(side * legX, legHeight * 0.5f, 0f),
+                    Quaternion.identity, Vector3.one)));
 
-                var foot = MeshShapes.Sphere(10, 8, new Vector3(1f, 0.62f, 1.5f));
+                // El zapato mira hacia delante: la esfera se estira en z y se adelanta
+                // media suela, que es lo que da la puntera. Antes era una bolita
+                // centrada y de perfil no se veía que hubiera pie.
+                var foot = MeshShapes.Sphere(12, 8, new Vector3(1f, 0.7f, 1.62f));
                 clothes.Add((foot, Matrix4x4.TRS(
-                    new Vector3(side * legX, legThick * 0.34f, legThick * 0.22f),
-                    Quaternion.identity, Vector3.one * legThick * 1.5f)));
+                    new Vector3(side * legX, legThick * 0.36f, legThick * 0.34f),
+                    Quaternion.identity, Vector3.one * legThick * 1.6f)));
             }
 
             var hair = BuildHair(appearance, headCentre, headWidth, headHeight);
@@ -199,7 +243,7 @@ namespace Nimbo.Art.Chibi
 
             var mesh = MeshShapes.Sphere(14, 12, new Vector3(0.86f, length, 0.5f));
             parts.Add((mesh, Matrix4x4.TRS(
-                new Vector3(0f, headCentre - headHeight * drop, -headWidth * 0.40f),
+                new Vector3(0f, headCentre - headHeight * drop, -headWidth * 0.33f),
                 Quaternion.identity, Vector3.one * headWidth * 0.82f)));
         }
 
@@ -215,8 +259,8 @@ namespace Nimbo.Art.Chibi
                     case HairSides.Tails:
                         parts.Add((MeshShapes.Sphere(12, 10, new Vector3(0.7f, 1.5f, 0.7f)),
                             Matrix4x4.TRS(
-                                new Vector3(side * headWidth * 0.52f,
-                                            headCentre - headHeight * 0.05f, -headWidth * 0.12f),
+                                new Vector3(side * headWidth * 0.46f,
+                                            headCentre - headHeight * 0.02f, -headWidth * 0.10f),
                                 Quaternion.Euler(0f, 0f, side * 16f),
                                 Vector3.one * headWidth * 0.42f)));
                         break;
@@ -229,7 +273,7 @@ namespace Nimbo.Art.Chibi
                             float t = link / 2f;
                             parts.Add((MeshShapes.Sphere(10, 8),
                                 Matrix4x4.TRS(
-                                    new Vector3(side * headWidth * (0.48f + t * 0.06f),
+                                    new Vector3(side * headWidth * (0.43f + t * 0.05f),
                                                 headCentre - headHeight * (0.05f + t * 0.42f),
                                                 -headWidth * 0.10f),
                                     Quaternion.identity,
@@ -243,7 +287,7 @@ namespace Nimbo.Art.Chibi
                             float t = curl / 2f;
                             parts.Add((MeshShapes.Sphere(10, 8),
                                 Matrix4x4.TRS(
-                                    new Vector3(side * headWidth * 0.50f,
+                                    new Vector3(side * headWidth * 0.44f,
                                                 headCentre + headHeight * (0.18f - t * 0.34f),
                                                 -headWidth * (0.06f + t * 0.10f)),
                                     Quaternion.identity,
@@ -261,16 +305,16 @@ namespace Nimbo.Art.Chibi
             {
                 case HairCrown.Bun:
                     parts.Add((MeshShapes.Sphere(12, 10), Matrix4x4.TRS(
-                        new Vector3(0f, headCentre + headHeight * 0.52f, -headWidth * 0.16f),
-                        Quaternion.identity, Vector3.one * headWidth * 0.42f)));
+                        new Vector3(0f, headCentre + headHeight * 0.44f, -headWidth * 0.10f),
+                        Quaternion.identity, Vector3.one * headWidth * 0.46f)));
                     break;
 
                 case HairCrown.DoubleBun:
                     for (int side = -1; side <= 1; side += 2)
                         parts.Add((MeshShapes.Sphere(12, 10), Matrix4x4.TRS(
                             new Vector3(side * headWidth * 0.36f,
-                                        headCentre + headHeight * 0.46f, -headWidth * 0.10f),
-                            Quaternion.identity, Vector3.one * headWidth * 0.34f)));
+                                        headCentre + headHeight * 0.40f, -headWidth * 0.08f),
+                            Quaternion.identity, Vector3.one * headWidth * 0.36f)));
                     break;
 
                 case HairCrown.Spike:

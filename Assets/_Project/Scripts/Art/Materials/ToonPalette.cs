@@ -53,8 +53,17 @@ namespace Nimbo.Art.Materials
             }
         }
 
-        /// <summary>Un material opaco de ese color, reutilizado si ya se pidió antes.</summary>
-        public static Material Solid(Color color, float smoothness = 0.12f)
+        /// <summary>
+        /// Un material opaco de ese color, reutilizado si ya se pidió antes.
+        /// </summary>
+        /// <remarks>
+        /// Mate del todo por defecto. Con el brillo que traía, cualquier superficie
+        /// ancha y poco curvada —el hombro, la tapa de una mesa, el tejado— cogía una
+        /// franja blanca de reflejo que se leía como una pieza aparte: en la primera
+        /// captura de los muñecos parecía que llevaran un plato al cuello. Un juego de
+        /// colores planos no quiere reflejos especulares en ningún sitio.
+        /// </remarks>
+        public static Material Solid(Color color, float smoothness = 0f)
         {
             int key = ((Color32)color).GetHashCode() * 397 ^ Mathf.RoundToInt(smoothness * 100f);
             if (Cache.TryGetValue(key, out var cached) && cached != null) return cached;
