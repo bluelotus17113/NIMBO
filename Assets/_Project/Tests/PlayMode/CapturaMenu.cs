@@ -63,7 +63,7 @@ namespace Nimbo.PlayTests
                             "El menú no se ha abierto al pulsar su botón");
 
             // Y el menú, sección por sección.
-            foreach (var seccion in new[] { "Mochila", "Hacer", "Vecinos", "Mapa", "Decorar", "Logros" })
+            foreach (var seccion in new[] { "Mochila", "Hacer", "Vecinos", "Mapa", "Logros" })
             {
                 var pestana = root.Q($"pestana-{seccion}");
                 if (pestana == null)
@@ -76,6 +76,20 @@ namespace Nimbo.PlayTests
                 yield return Reposa();
                 yield return Foto(document, $"ui_menu_{seccion.ToLowerInvariant()}.png");
             }
+
+            // Y un modo, que no es una sección: se entra desde el pie de la columna,
+            // cierra el menú y se queda con la pantalla.
+            //
+            // Se comprueba que el botón está y luego se publica su mismo aviso, en vez
+            // de fingirle un clic: un <c>Button</c> de verdad no reacciona a un
+            // <c>ClickEvent</c> a mano —su <c>Clickable</c> escucha el puntero— y la
+            // foto salía con el menú tal cual, sin entrar en el modo.
+            var modo = root.Q("modo-Decorar");
+            Assert.NotNull(modo, "No está el modo Decorar en el pie de la columna");
+
+            EventBus.Publish(new DecorModeChanged(true));
+            yield return Reposa();
+            yield return Foto(document, "ui_modo_decorar.png");
 
             Assert.Pass();
         }

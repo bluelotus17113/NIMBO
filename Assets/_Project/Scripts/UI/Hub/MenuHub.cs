@@ -56,8 +56,10 @@ namespace Nimbo.UI.Hub
         private readonly VisualElement _body;
         private readonly List<Section> _sections = new List<Section>();
 
+        private readonly VisualElement _modeSlot;
+        private readonly Label _modeTitle;
+
         private Section _current;
-        private Button _modeButton;
         private System.Action _onClosed;
 
         public MenuHub()
@@ -121,6 +123,15 @@ namespace Nimbo.UI.Hub
             _railFooter = new VisualElement();
             _railFooter.style.marginRight = UiTheme.SpaceM;
             _rail.Add(_railFooter);
+
+            _modeTitle = UiTheme.Body("Aquí puedes", soft: true);
+            _modeTitle.style.marginLeft = UiTheme.SpaceM;
+            _modeTitle.style.marginBottom = UiTheme.SpaceS;
+            _modeTitle.style.display = DisplayStyle.None;
+            _railFooter.Add(_modeTitle);
+
+            _modeSlot = new VisualElement();
+            _railFooter.Add(_modeSlot);
 
             var hint = UiTheme.Caption("Esc para cerrar");
             hint.style.marginLeft = UiTheme.SpaceM;
@@ -189,31 +200,39 @@ namespace Nimbo.UI.Hub
         }
 
         /// <summary>
-        /// El botón del pie: el modo que se puede usar aquí y ahora —construir en la
-        /// calle, amueblar dentro de casa—. Es uno y cambia de nombre, en vez de dos
-        /// encendidos a la vez diciendo cada uno una cosa.
+        /// Vacía el pie de la columna. Se llama antes de volver a poner los modos que
+        /// tocan, que cambian según estés en la calle o dentro de casa.
         /// </summary>
-        public void SetMode(string label, System.Action onPressed)
+        public void ClearModes()
         {
-            if (_modeButton == null)
-            {
-                _modeButton = UiTheme.Secondary(label, () => { });
-                _modeButton.style.marginBottom = UiTheme.SpaceS;
-                _railFooter.Insert(0, _modeButton);
-            }
+            _modeSlot.Clear();
+            _modeTitle.style.display = DisplayStyle.None;
+        }
 
-            _modeButton.text = label;
-            _modeButton.clickable = new Clickable(() =>
+        /// <summary>
+        /// Añade un modo al pie de la columna.
+        /// </summary>
+        /// <remarks>
+        /// Los modos no son secciones: se comen la pantalla entera y dejan solo su
+        /// menú, así que no pintan en la lista de arriba. Van aquí abajo y solo los
+        /// que se puedan usar donde estás — en la calle, construir y decorar; dentro
+        /// de casa, amueblar y nada más.
+        ///
+        /// Pulsar uno cierra el menú antes de entrar: el modo manda sobre la pantalla
+        /// y dejar la ventana abierta encima sería tener dos cosas mandando.
+        /// </remarks>
+        public void AddMode(string label, System.Action onPressed)
+        {
+            var button = UiTheme.Secondary(label, () =>
             {
                 Close();
                 onPressed();
             });
-            _modeButton.style.display = DisplayStyle.Flex;
-        }
 
-        public void HideMode()
-        {
-            if (_modeButton != null) _modeButton.style.display = DisplayStyle.None;
+            button.name = $"modo-{label}";
+            button.style.marginBottom = UiTheme.SpaceS;
+            _modeSlot.Add(button);
+            _modeTitle.style.display = DisplayStyle.Flex;
         }
 
         /// <summary>

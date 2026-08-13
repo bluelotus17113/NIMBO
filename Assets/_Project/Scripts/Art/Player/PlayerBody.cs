@@ -57,20 +57,34 @@ namespace Nimbo.Art.PlayerView
         public void Freeze(bool frozen) => _frozen = frozen;
 
         /// <summary>
-        /// El menú abierto también le quita el mando, pero por su cuenta.
+        /// Cierto mientras manda la interfaz: el menú abierto, o el modo decorar.
         /// </summary>
         /// <remarks>
         /// Es una bandera aparte de <c>_frozen</c> y no la misma: amueblar congela por
-        /// un lado y el menú por otro, y con una sola el que se soltara primero
+        /// un lado y la interfaz por otro, y con una sola el que se soltara primero
         /// devolvería el mando estando el otro todavía puesto.
+        ///
+        /// Los dos avisos escriben aquí y no se pisan porque entrar en decorar cierra
+        /// el menú primero —el aviso de cierre llega antes que el del modo—, y salir
+        /// del modo no abre nada.
         /// </remarks>
-        private bool _menuOpen;
+        private bool _uiInControl;
 
-        private void OnEnable() => EventBus.Subscribe<MenuOpened>(OnMenuOpened);
+        private void OnEnable()
+        {
+            EventBus.Subscribe<MenuOpened>(OnMenuOpened);
+            EventBus.Subscribe<DecorModeChanged>(OnDecorMode);
+        }
 
-        private void OnDisable() => EventBus.Unsubscribe<MenuOpened>(OnMenuOpened);
+        private void OnDisable()
+        {
+            EventBus.Unsubscribe<MenuOpened>(OnMenuOpened);
+            EventBus.Unsubscribe<DecorModeChanged>(OnDecorMode);
+        }
 
-        private void OnMenuOpened(MenuOpened evt) => _menuOpen = evt.Open;
+        private void OnMenuOpened(MenuOpened evt) => _uiInControl = evt.Open;
+
+        private void OnDecorMode(DecorModeChanged evt) => _uiInControl = evt.Decorating;
 
         public static PlayerBody Create(in AppearanceData appearance, Vector3 position,
                                         float yaw, Transform parent = null)
@@ -146,7 +160,7 @@ namespace Nimbo.Art.PlayerView
         {
             if (_controller == null) return;
 
-            var move = _frozen || _menuOpen ? Vector3.zero : ReadMove();
+            var move = _frozen || _uiInControl ? Vector3.zero : ReadMove();
             IsMoving = move.sqrMagnitude > 0.0001f;
 
             float speed = Input.GetKey(KeyCode.LeftShift) ? _runSpeed : _walkSpeed;

@@ -63,6 +63,7 @@ namespace Nimbo.UI
             EventBus.Unsubscribe<StationUsed>(OnStationUsed);
             EventBus.Unsubscribe<BuildModeChanged>(OnBuildModeChanged);
             EventBus.Unsubscribe<FurnishModeChanged>(OnFurnishModeChanged);
+            EventBus.Unsubscribe<DecorModeChanged>(OnDecorModeChanged);
             EventBus.Unsubscribe<InteriorEntered>(OnInteriorEntered);
             EventBus.Unsubscribe<InteriorExited>(OnInteriorExited);
             EventBus.Unsubscribe<MenuOpened>(OnMenuOpened);
@@ -109,6 +110,11 @@ namespace Nimbo.UI
             body.style.marginLeft = body.style.marginRight = UiTheme.SpaceL;
             body.style.marginTop = UiTheme.SpaceL;
 
+            // Cada panel con su alto y no estirado hasta abajo: por omisión flexbox los
+            // estira al alto de la fila, y el de decorar —que es de tamaño fijo por
+            // dentro— quedaba con medio metro de crema vacía debajo del contenido.
+            body.style.alignItems = Align.FlexStart;
+
             _creator = new CreatorPanel();
             _creator.OnFinished += OnIslanderCreated;
             body.Add(_creator.Root);
@@ -121,6 +127,19 @@ namespace Nimbo.UI
 
             _shop = new ShopPanel();
             body.Add(_shop.Root);
+
+            // Decorar va aquí y no dentro del menú: es un modo, como construir y como
+            // amueblar. Se entra desde el pie de la columna y ocupa la pantalla él solo.
+            _decor = new Decor.DecorPanel();
+            body.Add(_decor.Root);
+
+            // Su cruz tiene que salir del modo, no solo esconder la tarjeta: escondiendo
+            // solo el panel, el reloj y la barra se quedan apagados y el jugador se
+            // queda mirando la isla sin nada con lo que jugar y sin saber por qué.
+            var closeDecor = _decor.Root.Q<Button>("cerrar");
+            if (closeDecor != null)
+                closeDecor.clickable =
+                    new Clickable(() => EventBus.Publish(new DecorModeChanged(false)));
 
             _shipping = new Player.ShippingPanel();
             body.Add(_shipping.Root);
@@ -139,14 +158,12 @@ namespace Nimbo.UI
             _bag = new Player.BagPanel();
             _craft = new Player.CraftPanel();
             _map = new Player.MapPanel();
-            _decor = new Decor.DecorPanel();
             _achievements = new Achievements.AchievementsPanel();
 
             _hub.Add("Mochila", UiTheme.Peach, _bag.Root, _bag.Show, _bag.Hide);
             _hub.Add("Hacer", UiTheme.Butter, _craft.Root, _craft.Show, _craft.Hide);
             _hub.Add("Vecinos", UiTheme.Mint, BuildNeighbours(), RebuildStrip, HideNeighbour);
             _hub.Add("Mapa", UiTheme.Sky, _map.Root, _map.Show, _map.Hide);
-            _hub.Add("Decorar", UiTheme.Lavender, _decor.Root, _decor.Show, _decor.Hide);
             _hub.Add("Logros", UiTheme.Rose, _achievements.Root,
                      _achievements.Show, _achievements.Hide);
 
@@ -184,6 +201,7 @@ namespace Nimbo.UI
             EventBus.Subscribe<StationUsed>(OnStationUsed);
             EventBus.Subscribe<BuildModeChanged>(OnBuildModeChanged);
             EventBus.Subscribe<FurnishModeChanged>(OnFurnishModeChanged);
+            EventBus.Subscribe<DecorModeChanged>(OnDecorModeChanged);
             EventBus.Subscribe<InteriorEntered>(OnInteriorEntered);
             EventBus.Subscribe<InteriorExited>(OnInteriorExited);
 
@@ -280,6 +298,7 @@ namespace Nimbo.UI
 
         private bool _buildMode;
         private bool _furnishMode;
+        private bool _decorMode;
         private bool _indoors;
 
         /// <summary>
@@ -331,19 +350,32 @@ namespace Nimbo.UI
             return rest.StartsWith("tienda_") ? rest : null;
         }
 
+        /// <summary>
+        /// Los modos que se pueden usar donde estás, y solo esos.
+        /// </summary>
+        /// <remarks>
+        /// De puertas adentro se amuebla la habitación; en la calle se construye y se
+        /// decora. Ofrecer los tres siempre sería enseñar dos botones que van a
+        /// rechazar la pulsación sin decir por qué.
+        /// </remarks>
         private void SetIndoors(bool indoors)
         {
             _indoors = indoors;
             if (_hub == null) return;
 
-            // Un solo botón que cambia de oficio según dónde estés, en vez de dos
-            // encendidos a la vez diciendo cada uno una cosa distinta.
+            _hub.ClearModes();
+
             if (indoors)
-                _hub.SetMode("Amueblar",
+            {
+                _hub.AddMode("Amueblar",
                              () => EventBus.Publish(new FurnishModeChanged(!_furnishMode)));
-            else
-                _hub.SetMode("Construir",
-                             () => EventBus.Publish(new BuildModeChanged(!_buildMode)));
+                return;
+            }
+
+            _hub.AddMode("Construir",
+                         () => EventBus.Publish(new BuildModeChanged(!_buildMode)));
+            _hub.AddMode("Decorar",
+                         () => EventBus.Publish(new DecorModeChanged(!_decorMode)));
         }
 
         /// <summary>Amueblando, como construyendo: fuera todo lo de andar por la isla.</summary>
@@ -393,6 +425,37 @@ namespace Nimbo.UI
                 _build.Show();
             }
             else _build.Hide();
+        }
+
+        /// <summary>
+        /// Decorando: fuera el reloj y la barra, y el plano de la zona en medio.
+        /// </summary>
+        /// <remarks>
+        /// Este no mueve la cámara —se decora sobre un plano cenital dibujado en la
+        /// interfaz, no pinchando en el mundo—, así que la isla se queda como estaba
+        /// detrás. Lo que sí hace, como los otros dos modos, es apagar todo lo demás:
+        /// mientras colocas bancos no hay nada que hacer con la mochila.
+        /// </remarks>
+        private void OnDecorModeChanged(DecorModeChanged evt)
+        {
+            // Decorar es de la calle. El aviso puede llegar con el jugador ya dentro
+            // de una casa, y allí el plano no vale para nada.
+            if (evt.Decorating && _indoors) return;
+
+            _decorMode = evt.Decorating;
+
+            var play = evt.Decorating ? DisplayStyle.None : DisplayStyle.Flex;
+            _hotbar.Root.style.display = play;
+            _hud.Root.style.display = play;
+
+            if (evt.Decorating)
+            {
+                _hub.Close();
+                _shop.Hide();
+                _shipping.Hide();
+                _decor.Show();
+            }
+            else _decor.Hide();
         }
 
         private void OnRosterChanged<T>(T _) => RebuildStrip();
@@ -517,15 +580,22 @@ namespace Nimbo.UI
         /// </remarks>
         private void ReadMenuKeys()
         {
-            if (_buildMode || _furnishMode)
+            if (_buildMode || _furnishMode || _decorMode)
             {
-                if (!Input.GetKeyDown(KeyCode.Escape) && !Input.GetKeyDown(KeyCode.B)) return;
+                // La B entra y sale de construir y de amueblar, pero no de decorar:
+                // ese modo se abre desde el menú y se sale con Esc, como cualquier
+                // pantalla. Darle una tecla propia sin que nadie la pida sería
+                // inventarse un atajo que no está escrito en ningún sitio.
+                bool salir = Input.GetKeyDown(KeyCode.Escape) ||
+                             (Input.GetKeyDown(KeyCode.B) && !_decorMode);
+                if (!salir) return;
 
                 // Cada aviso por su lado y no con un operador entre medias: el bus
                 // reparte por el tipo de lo que le des, y una expresión que devuelva lo
                 // uno o lo otro lo convierte en <c>object</c> y no lo recibe nadie.
                 if (_furnishMode) EventBus.Publish(new FurnishModeChanged(false));
-                else EventBus.Publish(new BuildModeChanged(false));
+                else if (_buildMode) EventBus.Publish(new BuildModeChanged(false));
+                else EventBus.Publish(new DecorModeChanged(false));
                 return;
             }
 

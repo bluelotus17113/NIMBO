@@ -161,8 +161,8 @@ La barra de desplazamiento de fábrica es gris de editor y desentona con todo. T
 ## 8. El menú
 
 Hay **un** menú y se abre con `Tab`, con `M` por el mapa o con el único botón que
-queda en pantalla. Dentro van, en esta columna: Mochila, Hacer, Vecinos, Mapa,
-Decorar y Logros. Se cierra con `Esc`, con la cruz o pinchando fuera.
+queda en pantalla. Dentro van, en esta columna: Mochila, Hacer, Vecinos, Mapa y
+Logros. Se cierra con `Esc`, con la cruz o pinchando fuera.
 
 Reglas:
 
@@ -172,8 +172,12 @@ Reglas:
 - **Lo que se abre solo no lleva botón.** La tienda se abre al entrar en la tienda,
   el cajón al usar el cajón, la mesa al ponerse en la mesa. Un botón que abre una
   tienda desde el otro lado de la isla sobra.
-- **Los modos no son pantallas.** Construir y amueblar se comen la pantalla entera y
-  mandan sobre la cámara, así que no son pestañas: son el botón del pie de la
-  columna, que dice lo único que se puede hacer donde estás.
+- **Los modos no son pantallas.** Construir, amueblar y decorar se comen la pantalla
+  entera y apagan el resto de la interfaz, así que no son pestañas: van al pie de la
+  columna, bajo «Aquí puedes», y solo aparecen los que se puedan usar donde estás —en
+  la calle, construir y decorar; dentro de casa, amueblar y nada más—.
+  Decorar no mueve la cámara y los otros dos sí, pero eso no lo hace una pantalla:
+  lo que decide es que se entra y se sale de él, y que mientras dura no hay otra cosa
+  que hacer. Se sale con `Esc`.
 - Con el menú abierto, el protagonista no anda ni interactúa. El reloj sí corre: esto
   no es una pausa.
