@@ -121,6 +121,59 @@ levanta la voz nunca.
 - Negro puro (`#000`) o blanco puro (`#FFF`) en texto o fondo.
 - Emoji en la interfaz.
 - Barras de progreso rojas salvo para una necesidad en estado crítico.
-- Ventanas modales que tapen la isla entera: los paneles ocupan un lado y dejan ver
-  a los habitantes.
 - Cualquier animación que dure más de 250 ms.
+- **Más de un sitio para lo mismo.** Si una pantalla ya vive en el menú, no se abre
+  además una copia suelta desde otro botón.
+
+> **Regla derogada.** Hasta ahora aquí ponía «nada de ventanas modales que tapen la
+> isla: los paneles ocupan un lado y dejan ver a los habitantes». Se cumplió, y el
+> resultado fue once botones encendidos a la vez por los bordes de la pantalla, cada
+> uno abriendo su tarjeta en un sitio distinto. Sale más caro que lo que evitaba: la
+> isla se veía por los huecos que dejaban los paneles. Desde el menú único (§8) hay
+> **una** ventana centrada, con velo translúcido —la isla se sigue viendo detrás— y
+> nada más encendido mientras está abierta.
+
+---
+
+## 7. Movimiento y estados
+
+Nada aparece de golpe y nada se mueve más de lo que dura un parpadeo.
+
+| Cosa | Duración | Curva |
+|---|---|---|
+| Color de un botón al pasar por encima | 120 ms | `EaseOutCubic` |
+| Abrir o cerrar el menú | 180 ms | `EaseOutCubic` |
+| Cambiar de sección dentro del menú | 160 ms | `EaseOutCubic` |
+
+Todo lo pulsable tiene **tres estados** y no se negocia: reposo, ratón encima
+(`CreamPress` sobre superficies crema, `PeachDeep` sobre melocotón) y apretado, que
+se hunde al 96 % de su tamaño. Sin lo tercero, un clic no se acusa de ninguna manera
+y parece que se ha perdido.
+
+Se consigue con `UiTheme.Animate`, `UiTheme.Hoverable` y `UiTheme.Pressable`, y ya
+va puesto en `Action`, `Secondary`, `Close` y las pestañas: **no se escribe a mano**.
+
+La barra de desplazamiento de fábrica es gris de editor y desentona con todo. Toda
+`ScrollView` pasa por `UiTheme.StyleScroll`.
+
+---
+
+## 8. El menú
+
+Hay **un** menú y se abre con `Tab`, con `M` por el mapa o con el único botón que
+queda en pantalla. Dentro van, en esta columna: Mochila, Hacer, Vecinos, Mapa,
+Decorar y Logros. Se cierra con `Esc`, con la cruz o pinchando fuera.
+
+Reglas:
+
+- **En pantalla, jugando, solo hay tres cosas**: el reloj arriba a la izquierda, las
+  monedas y el botón del menú arriba a la derecha, y la barra abajo. Nada más. Un
+  contador a cero no se enseña.
+- **Lo que se abre solo no lleva botón.** La tienda se abre al entrar en la tienda,
+  el cajón al usar el cajón, la mesa al ponerse en la mesa. Un botón que abre una
+  tienda desde el otro lado de la isla sobra.
+- **Los modos no son pantallas.** Construir y amueblar se comen la pantalla entera y
+  mandan sobre la cámara, así que no son pestañas: son el botón del pie de la
+  columna, que dice lo único que se puede hacer donde estás.
+- Con el menú abierto, el protagonista no anda ni interactúa. El reloj sí corre: esto
+  no es una pausa.

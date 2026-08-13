@@ -69,8 +69,20 @@ namespace Nimbo.Art.PlayerView
             _interior = FindFirstObjectByType<World.InteriorView>();
         }
 
+        private bool _menuOpen;
+
+        private void OnEnable() => EventBus.Subscribe<MenuOpened>(OnMenuOpened);
+
+        private void OnDisable() => EventBus.Unsubscribe<MenuOpened>(OnMenuOpened);
+
+        private void OnMenuOpened(MenuOpened evt) => _menuOpen = evt.Open;
+
         private void Update()
         {
+            // Con el menú delante no se busca nada ni se actúa: el espacio es para
+            // pulsar lo que tengas señalado, y regar el huerto sin verlo, no.
+            if (_menuOpen) return;
+
             _sinceRefresh += Time.deltaTime;
             if (_sinceRefresh >= _refreshInterval)
             {

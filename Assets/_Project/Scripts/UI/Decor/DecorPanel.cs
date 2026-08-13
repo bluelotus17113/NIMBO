@@ -53,15 +53,7 @@ namespace Nimbo.UI.Decor
             Root.style.width = 720;
             Root.style.maxHeight = Length.Percent(92);
 
-            var head = new VisualElement();
-            head.style.flexDirection = FlexDirection.Row;
-            head.style.justifyContent = Justify.SpaceBetween;
-            head.style.alignItems = Align.Center;
-            head.Add(UiTheme.Title("Decorar la isla"));
-
-            var close = UiTheme.Secondary("Cerrar", Hide);
-            head.Add(close);
-            Root.Add(head);
+            Root.Add(UiTheme.Header("Decorar la isla", Hide));
 
             _zoneRow = new VisualElement();
             _zoneRow.style.flexDirection = FlexDirection.Row;
@@ -78,7 +70,9 @@ namespace Nimbo.UI.Decor
 
             left.Add(BuildFilters());
 
-            _catalogList = new ScrollView { style = { height = MapSize } };
+            var catalogScroll = new ScrollView { style = { height = MapSize } };
+            UiTheme.StyleScroll(catalogScroll);
+            _catalogList = catalogScroll;
             left.Add(_catalogList);
             body.Add(left);
 

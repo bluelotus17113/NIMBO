@@ -41,6 +41,7 @@ namespace Nimbo.UI.Player
                                   "Botón derecho lo recoge, R lo gira.", soft: true));
 
             _list = new ScrollView();
+            UiTheme.StyleScroll(_list);
             _list.style.flexGrow = 1;
             _list.style.marginTop = 8;
             Root.Add(_list);

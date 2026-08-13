@@ -39,13 +39,7 @@ namespace Nimbo.UI.Player
             Root.style.width = 600;
             Root.style.maxHeight = Length.Percent(92);
 
-            var head = new VisualElement();
-            head.style.flexDirection = FlexDirection.Row;
-            head.style.justifyContent = Justify.SpaceBetween;
-            head.style.alignItems = Align.Center;
-            head.Add(UiTheme.Title("Hacer cosas"));
-            head.Add(UiTheme.Secondary("Cerrar", Hide));
-            Root.Add(head);
+            Root.Add(UiTheme.Header("Hacer cosas", Hide));
 
             _stationRow = new VisualElement();
             _stationRow.style.flexDirection = FlexDirection.Row;
@@ -53,6 +47,7 @@ namespace Nimbo.UI.Player
             Root.Add(_stationRow);
 
             _list = new ScrollView();
+            UiTheme.StyleScroll(_list);
             _list.style.flexGrow = 1;
             Root.Add(_list);
 

@@ -56,6 +56,22 @@ namespace Nimbo.Art.PlayerView
         /// <summary>Lo pone quien tenga que quitarle el mando: un diálogo, un menú.</summary>
         public void Freeze(bool frozen) => _frozen = frozen;
 
+        /// <summary>
+        /// El menú abierto también le quita el mando, pero por su cuenta.
+        /// </summary>
+        /// <remarks>
+        /// Es una bandera aparte de <c>_frozen</c> y no la misma: amueblar congela por
+        /// un lado y el menú por otro, y con una sola el que se soltara primero
+        /// devolvería el mando estando el otro todavía puesto.
+        /// </remarks>
+        private bool _menuOpen;
+
+        private void OnEnable() => EventBus.Subscribe<MenuOpened>(OnMenuOpened);
+
+        private void OnDisable() => EventBus.Unsubscribe<MenuOpened>(OnMenuOpened);
+
+        private void OnMenuOpened(MenuOpened evt) => _menuOpen = evt.Open;
+
         public static PlayerBody Create(in AppearanceData appearance, Vector3 position,
                                         float yaw, Transform parent = null)
         {
@@ -130,7 +146,7 @@ namespace Nimbo.Art.PlayerView
         {
             if (_controller == null) return;
 
-            var move = _frozen ? Vector3.zero : ReadMove();
+            var move = _frozen || _menuOpen ? Vector3.zero : ReadMove();
             IsMoving = move.sqrMagnitude > 0.0001f;
 
             float speed = Input.GetKey(KeyCode.LeftShift) ? _runSpeed : _walkSpeed;

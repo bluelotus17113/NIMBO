@@ -495,6 +495,17 @@ namespace Nimbo.Core.Events
         public GamePaused(bool paused) => Paused = paused;
     }
 
+    /// <summary>
+    /// El menú se ha abierto o cerrado. No es una pausa: el reloj sigue y los vecinos
+    /// siguen a lo suyo. Lo que se para es el protagonista, para que mirar la mochila
+    /// no sea andar a ciegas con media isla tapada.
+    /// </summary>
+    public readonly struct MenuOpened
+    {
+        public readonly bool Open;
+        public MenuOpened(bool open) => Open = open;
+    }
+
     public enum AudioChannel { Music = 0, Sfx = 1, Voice = 2 }
 
     public readonly struct VolumeChanged

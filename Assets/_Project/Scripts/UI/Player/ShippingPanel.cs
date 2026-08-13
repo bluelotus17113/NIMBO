@@ -38,19 +38,14 @@ namespace Nimbo.UI.Player
             Root.style.width = 520;
             Root.style.maxHeight = Length.Percent(90);
 
-            var head = new VisualElement();
-            head.style.flexDirection = FlexDirection.Row;
-            head.style.justifyContent = Justify.SpaceBetween;
-            head.style.alignItems = Align.Center;
-            head.Add(UiTheme.Title("Cajón de envíos"));
-            head.Add(UiTheme.Secondary("Cerrar", Hide));
-            Root.Add(head);
+            Root.Add(UiTheme.Header("Cajón de envíos", Hide));
 
             _total = UiTheme.Body("", soft: true);
             _total.style.marginBottom = 8;
             Root.Add(_total);
 
             _list = new ScrollView();
+            UiTheme.StyleScroll(_list);
             _list.style.flexGrow = 1;
             Root.Add(_list);
 

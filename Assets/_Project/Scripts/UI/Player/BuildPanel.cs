@@ -40,6 +40,7 @@ namespace Nimbo.UI.Player
                                   "Botón derecho arrastrando mueve la vista.", soft: true));
 
             _list = new ScrollView();
+            UiTheme.StyleScroll(_list);
             _list.style.flexGrow = 1;
             _list.style.marginTop = 8;
             Root.Add(_list);

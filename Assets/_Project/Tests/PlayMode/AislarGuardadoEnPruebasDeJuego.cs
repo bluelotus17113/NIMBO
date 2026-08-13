@@ -36,6 +36,16 @@ public sealed class AislarGuardadoEnPruebasDeJuego
     [OneTimeTearDown]
     public void Restaurar()
     {
+        // El arranque se va antes de devolver la carpeta buena. Su OnApplicationQuit
+        // guarda al cerrar, y eso ocurre DESPUÉS de esto: con la carpeta ya restaurada,
+        // lo último que hacía una tanda de pruebas era escribir su isla de mentira
+        // encima de la del jugador. Redirigir el guardado no bastaba, y no se veía
+        // venir porque el fichero no desaparece: aparece con otra partida dentro.
+        foreach (var bootstrap in
+                 UnityEngine.Object.FindObjectsByType<Nimbo.Game.Bootstrap.GameBootstrap>(
+                     FindObjectsSortMode.None))
+            UnityEngine.Object.DestroyImmediate(bootstrap.gameObject);
+
         SaveSystem.UseDefaultDirectory();
 
         try { if (Directory.Exists(_directory)) Directory.Delete(_directory, recursive: true); }
