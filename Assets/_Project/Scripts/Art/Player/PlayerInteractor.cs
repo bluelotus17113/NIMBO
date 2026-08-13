@@ -133,6 +133,11 @@ namespace Nimbo.Art.PlayerView
             // lo que quieres es hablar con la persona.
             if (_registry != null)
             {
+                // Lo que lleves en la mano decide qué te ofrece: con una flor, dársela;
+                // con las manos vacías o con el hacha, hablar. Se mira una vez y no una
+                // por vecino porque la mano es la misma para todos.
+                bool hasGift = GiftInHand(out _, out string giftName);
+
                 foreach (var islander in _registry.All)
                 {
                     if (!TryGetIslanderPosition(islander.Id, out var position)) continue;
@@ -140,7 +145,9 @@ namespace Nimbo.Art.PlayerView
 
                     Kind = TargetKind.Islander;
                     TargetId = islander.Id;
-                    Prompt = $"Hablar con {islander.Identity.ShortName}";
+                    Prompt = hasGift
+                        ? $"Dar {giftName} a {islander.Identity.ShortName}"
+                        : $"Hablar con {islander.Identity.ShortName}";
                 }
             }
 
@@ -505,6 +512,8 @@ namespace Nimbo.Art.PlayerView
             switch (Kind)
             {
                 case TargetKind.Islander:
+                    if (GiveWhatIsInHand()) break;
+
                     // Abrir su ficha es lo que ya hacía clicar su nombre: se reutiliza
                     // el mismo aviso para no tener dos caminos que hagan lo mismo.
                     EventBus.Publish(new IslanderFocused(TargetId));
@@ -538,6 +547,54 @@ namespace Nimbo.Art.PlayerView
                     EventBus.Publish(new InteriorExited());
                     break;
             }
+        }
+
+        /// <summary>
+        /// Lo que llevas en la mano, si es algo que se pueda regalar.
+        /// </summary>
+        /// <remarks>
+        /// Las herramientas no: con el hacha en la mano lo que quieres es hablar, y
+        /// regalar tu única azada por pulsar la tecla de acción al pasar junto a alguien
+        /// sería una trampa. Todo lo demás vale —flores, cultivos, comida, materiales—
+        /// porque cada vecino tiene sus gustos y acertar es cosa suya, no del catálogo.
+        /// </remarks>
+        private bool GiftInHand(out string catalogId, out string displayName)
+        {
+            catalogId = "";
+            displayName = "";
+
+            if (_inventory == null || _economy == null) return false;
+
+            var stack = _inventory.InHand;
+            if (stack.Quantity <= 0 || string.IsNullOrEmpty(stack.CatalogId)) return false;
+
+            var item = _economy.GetItem(stack.CatalogId);
+            if (item == null || item.Category == ItemCategory.Tool) return false;
+
+            catalogId = stack.CatalogId;
+            displayName = item.DisplayName;
+            return true;
+        }
+
+        /// <summary>
+        /// Le da lo que lleva en la mano. Cierto si se lo ha dado.
+        /// </summary>
+        /// <remarks>
+        /// El regalo ya lo sabía hacer la economía entera —gustos, ánimo, la cara que
+        /// pone cada personalidad—; lo que faltaba era la mano que lo entrega.
+        /// </remarks>
+        private bool GiveWhatIsInHand()
+        {
+            if (_economy == null) return false;
+            if (!GiftInHand(out string catalogId, out _)) return false;
+            if (!_economy.GiveTo(TargetId, catalogId)) return false;
+
+            _body.SetEmotion(Data.Islanders.Emotion.Happy);
+
+            // La mano puede haberse quedado vacía: sin refrescar, el cartel sigue
+            // ofreciendo dar una flor que ya no llevas.
+            FindTarget();
+            return true;
         }
 
         private void GatherTarget()

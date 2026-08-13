@@ -4,6 +4,7 @@ using Nimbo.Core.Events;
 using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
 using Nimbo.Core.Time;
+using Nimbo.Data.Islanders;
 using Nimbo.Data.Save;
 using Nimbo.Economy.Items;
 using Nimbo.Economy.Shops;
@@ -154,15 +155,16 @@ namespace Nimbo.Economy
 
         public bool GiveTo(string islanderId, string catalogId)
         {
-            if (Inventory.CountOf(catalogId) <= 0) return false;
             if (!ServiceRegistry.TryGet<IIslanderRegistry>(out var registry)) return false;
 
             var islander = registry.Get(islanderId);
             if (islander == null) return false;
 
-            int opinion = islander.Tastes.OpinionOf(catalogId);
+            // Se comprueba el vecino antes de tocar el objeto: si no existe, el regalo
+            // no puede salir de ningún sitio y el jugador no pierde nada.
+            if (!TryTakeForGift(catalogId)) return false;
 
-            if (!Inventory.Remove(catalogId, 1)) return false;
+            int opinion = islander.Tastes.OpinionOf(catalogId);
 
             EventBus.Publish(new ItemGifted(catalogId, islanderId, opinion));
 
@@ -173,10 +175,61 @@ namespace Nimbo.Economy
                 _ => NeutralHappiness,
             };
 
-            if (ServiceRegistry.TryGet<ISimulationService>(out var sim))
-                sim.ApplyHappiness(islanderId, delta);
+            if (!ServiceRegistry.TryGet<ISimulationService>(out var sim)) return true;
+
+            sim.ApplyHappiness(islanderId, delta);
+
+            // Y la cara. El ánimo se mueve por dentro y no se ve; lo que convierte esto
+            // en un gesto es que el otro reaccione ahí mismo, y cada personalidad
+            // reacciona a lo suyo: al Artista un acierto le extasía y un fallo le hiere,
+            // al Genio le sorprende que alguien acertara. Estaba escrito en los
+            // dieciséis tipos desde el principio y no lo pintaba nadie.
+            sim.ShowEmotion(islanderId, ReactionTo(islander, opinion));
 
             return true;
+        }
+
+        /// <summary>De dónde sale el regalo: de la mano primero, del baúl si no.</summary>
+        /// <remarks>
+        /// Hay dos inventarios y no son el mismo. <see cref="Inventory"/> es el de
+        /// siempre —muebles, ropa, lo que da el Árbol Nimbo—, y la mochila de veinticuatro
+        /// huecos de <c>PlayerState.Bag</c> es la de la aldea: materiales, cultivos,
+        /// herramientas. Regalar tiene que funcionar desde las dos, porque el jugador no
+        /// sabe que existe la costura: para él es «lo que llevo encima».
+        ///
+        /// Del hueco seleccionado cuando es lo que lleva en la mano, y no de una pila
+        /// cualquiera con ese identificador, porque si no regalas la flor que sostienes
+        /// y se vacía otro hueco de la barra.
+        /// </remarks>
+        bool TryTakeForGift(string catalogId)
+        {
+            if (string.IsNullOrEmpty(catalogId)) return false;
+
+            if (ServiceRegistry.TryGet<IInventoryService>(out var bag) && bag.CountOf(catalogId) > 0)
+            {
+                return bag.InHand.CatalogId == catalogId
+                    ? bag.TryConsumeSelected(1)
+                    : bag.TryTake(catalogId, 1);
+            }
+
+            return Inventory.Remove(catalogId, 1);
+        }
+
+        /// <summary>La cara que pone al recibirlo, según su personalidad.</summary>
+        static Emotion ReactionTo(IslanderData islander, int opinion)
+        {
+            var reaction = opinion switch
+            {
+                1 => PersonalityReaction.GiftLoved,
+                -1 => PersonalityReaction.GiftDisliked,
+                _ => PersonalityReaction.GiftNeutral,
+            };
+
+            if (!ServiceRegistry.TryGet<IPersonalityService>(out var personalities))
+                return Emotion.Happy;
+
+            var behaviour = personalities.ByIndex(islander.PersonalityTypeIndex);
+            return behaviour == null ? Emotion.Happy : behaviour.ReactTo(reaction);
         }
     }
 }
