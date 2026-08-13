@@ -25,9 +25,9 @@ namespace Nimbo.UI.Hub
     {
         private const int RailWidth = 214;
 
-        // Lo pide la pantalla más ancha que entra aquí: el plano de decorar mide 360 de
-        // lista y 300 de mapa. Con menos, esa se aplasta; con más, las demás quedan
-        // perdidas en medio de un campo de crema.
+        // Lo pide la más ancha que entra aquí, que es la mochila: ocho huecos de 84 con
+        // sus márgenes. Con más, las cortas quedan perdidas en medio de un campo de
+        // crema; con menos, la rejilla se parte en una fila más.
         private const int BodyWidth = 740;
 
         private sealed class Section
@@ -58,8 +58,10 @@ namespace Nimbo.UI.Hub
 
         private readonly VisualElement _modeSlot;
         private readonly Label _modeTitle;
+        private readonly Label _hint;
 
         private Section _current;
+        private Button _systemButton;
         private System.Action _onClosed;
 
         public MenuHub()
@@ -133,10 +135,10 @@ namespace Nimbo.UI.Hub
             _modeSlot = new VisualElement();
             _railFooter.Add(_modeSlot);
 
-            var hint = UiTheme.Caption("Esc para cerrar");
-            hint.style.marginLeft = UiTheme.SpaceM;
-            hint.style.marginTop = UiTheme.SpaceM;
-            _railFooter.Add(hint);
+            _hint = UiTheme.Caption("Esc para cerrar");
+            _hint.style.marginLeft = UiTheme.SpaceM;
+            _hint.style.marginTop = UiTheme.SpaceM;
+            _railFooter.Add(_hint);
 
             _window.Add(_rail);
 
@@ -263,6 +265,34 @@ namespace Nimbo.UI.Hub
             UiTheme.StyleScroll(scroll);
             scroll.Add(content);
             return scroll;
+        }
+
+        /// <summary>
+        /// El botón de abajo del todo, el que no depende de dónde estés: la pausa y
+        /// los ajustes, que viven en la capa de encima.
+        /// </summary>
+        /// <remarks>
+        /// Existe por lo mismo que el botón del menú en el reloj: la pausa solo se
+        /// abría con Escape, y una tecla que no está escrita en ninguna parte es una
+        /// tecla que la mitad de la gente no encuentra. No es un sitio nuevo para nada
+        /// —es la misma pantalla—, es una puerta más a la misma.
+        /// </remarks>
+        public void SetSystemButton(string label, System.Action onPressed)
+        {
+            if (_systemButton == null)
+            {
+                _systemButton = UiTheme.Secondary(label, () => { });
+                _systemButton.name = "boton-sistema";
+                _systemButton.style.marginTop = UiTheme.SpaceS;
+                _railFooter.Insert(_railFooter.IndexOf(_hint), _systemButton);
+            }
+
+            _systemButton.text = label;
+            _systemButton.clickable = new Clickable(() =>
+            {
+                Close();
+                onPressed();
+            });
         }
 
         /// <summary>

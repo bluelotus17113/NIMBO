@@ -204,10 +204,16 @@ namespace Nimbo.UI.Menu
             // Escape es el único mando del menú. El proyecto va con el sistema de
             // entrada antiguo (activeInputHandler: 0), así que Keyboard.current no
             // existe aquí y tiene que ser Input.GetKeyDown.
-            if (_gameRunning && Input.GetKeyDown(KeyCode.Escape))
+            //
+            // Solo se atiende con una pantalla de esta capa delante. Abrir la pausa ya
+            // no es cosa de aquí: lo hace la interfaz del juego cuando Escape no tiene
+            // nada más que cerrar, porque es ella la que sabe si hay un menú abierto o
+            // un modo puesto. Antes lo miraban las dos y, con el menú abierto, una
+            // tecla cerraba el menú y la otra pausaba la partida.
+            if (_gameRunning && _screen != Screen.Hidden &&
+                Input.GetKeyDown(KeyCode.Escape) && EscapeGuard.Take())
             {
-                if (_screen == Screen.Hidden) EventBus.Publish(new GamePaused(true));
-                else if (_screen == Screen.Options) Show(_optionsCameFrom);
+                if (_screen == Screen.Options) Show(_optionsCameFrom);
                 else if (_screen == Screen.Creator) Show(Screen.Title);
                 else EventBus.Publish(new GamePaused(false));
             }

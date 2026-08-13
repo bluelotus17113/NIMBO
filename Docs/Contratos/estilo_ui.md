@@ -181,3 +181,11 @@ Reglas:
   que hacer. Se sale con `Esc`.
 - Con el menú abierto, el protagonista no anda ni interactúa. El reloj sí corre: esto
   no es una pausa.
+- **`Esc` cierra una capa cada vez**, de fuera adentro: primero el modo, luego el
+  menú, y solo cuando no queda nada abierto pausa la partida. La pausa y los ajustes
+  están una capa por encima (`MainMenuView`, su propio `UIDocument`) y ahí sí para el
+  reloj. Esa tecla tiene **un solo dueño por capa**: si dos la escuchan a la vez,
+  una cierra el menú mientras la otra pausa, y se ven las dos cosas de golpe.
+- La pausa también se abre desde el pie de la columna. No es un sitio nuevo para lo
+  mismo: es la misma pantalla con otra puerta, porque un atajo que no está escrito en
+  ninguna parte no lo encuentra media gente.

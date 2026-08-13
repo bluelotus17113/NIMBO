@@ -91,6 +91,18 @@ namespace Nimbo.PlayTests
             yield return Reposa();
             yield return Foto(document, "ui_modo_decorar.png");
 
+            EventBus.Publish(new DecorModeChanged(false));
+            yield return Reposa();
+
+            // Y la pausa, que vive en el otro UIDocument de la escena. Sale en la
+            // misma foto porque los dos comparten los ajustes de panel, y es donde se
+            // ve que Escape ya no cierra el menú y pausa a la vez.
+            EventBus.Publish(new GamePaused(true));
+            yield return Reposa();
+            yield return Foto(document, "ui_pausa.png");
+
+            EventBus.Publish(new GamePaused(false));
+
             Assert.Pass();
         }
 

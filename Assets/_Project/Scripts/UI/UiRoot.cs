@@ -67,6 +67,7 @@ namespace Nimbo.UI
             EventBus.Unsubscribe<InteriorEntered>(OnInteriorEntered);
             EventBus.Unsubscribe<InteriorExited>(OnInteriorExited);
             EventBus.Unsubscribe<MenuOpened>(OnMenuOpened);
+            EventBus.Unsubscribe<GamePaused>(OnGamePaused);
             _toast?.Unsubscribe();
             _furnish?.Unsubscribe();
             _hotbar?.Unsubscribe();
@@ -169,6 +170,11 @@ namespace Nimbo.UI
 
             SetIndoors(false);
 
+            // La pausa y los ajustes viven en la capa de encima y hasta ahora solo se
+            // llegaba a ellos con Escape. Desde aquí también.
+            _hub.SetSystemButton("Pausa y ajustes",
+                                 () => EventBus.Publish(new GamePaused(true)));
+
             // El cartel de logro va suelto sobre todo lo demás, así que se cuelga de
             // la raíz y no del cuerpo: dentro del cuerpo lo colocaría el flexbox y
             // acabaría empujando a los paneles en vez de flotar sobre ellos.
@@ -189,6 +195,7 @@ namespace Nimbo.UI
             UiTheme.Animate(_hud.Root, 160);
             UiTheme.Animate(_hotbar.Root, 160);
             EventBus.Subscribe<MenuOpened>(OnMenuOpened);
+            EventBus.Subscribe<GamePaused>(OnGamePaused);
 
             // El fundido va el último de todos: tiene que taparlo todo, incluido el
             // cartel de logro y la barra.
@@ -254,12 +261,31 @@ namespace Nimbo.UI
         /// El reloj y la barra se apartan mientras el menú está abierto. Dejarlos
         /// debajo del velo los deja legibles a medias, que es peor que no verlos.
         /// </summary>
-        private void OnMenuOpened(MenuOpened evt)
+        /// <summary>
+        /// Con la partida en pausa, esta capa se calla: la pantalla es de la de
+        /// arriba y el reloj está parado.
+        /// </summary>
+        private bool _paused;
+
+        private void OnGamePaused(GamePaused evt)
         {
-            float opacity = evt.Open ? 0f : 1f;
+            _paused = evt.Paused;
+
+            // El reloj y la barra se apartan también con la pausa, no solo con el menú.
+            // El velo del cartel es azul y translúcido, así que sin esto se quedaban
+            // detrás medio legibles: ni se leen ni dejan de verse.
+            SetPlayChrome(!evt.Paused);
+        }
+
+        /// <summary>Enciende o apaga lo que solo sirve jugando: el reloj y la barra.</summary>
+        private void SetPlayChrome(bool visible)
+        {
+            float opacity = visible ? 1f : 0f;
             _hud.Root.style.opacity = opacity;
             _hotbar.Root.style.opacity = opacity;
         }
+
+        private void OnMenuOpened(MenuOpened evt) => SetPlayChrome(!evt.Open);
 
         /// <summary>
         /// El creador terminó. Aquí es donde el habitante entra de verdad en la isla:
@@ -570,24 +596,33 @@ namespace Nimbo.UI
         }
 
         /// <summary>
-        /// Las teclas del menú. Tab lo abre por la mochila, M por el mapa, Esc lo
-        /// cierra y las flechas pasan de una sección a otra sin soltar el teclado.
+        /// Las teclas del menú. Tab lo abre por la mochila, M por el mapa, Esc cierra
+        /// lo que haya —y si no hay nada, pausa— y las flechas pasan de una sección a
+        /// otra sin soltar el teclado.
         /// </summary>
         /// <remarks>
-        /// Construyendo o amueblando no se atiende ninguna: ahí la pantalla es del modo
-        /// entero y abrir el menú encima dejaría dos cosas mandando sobre la misma
-        /// cámara.
+        /// Construyendo o amueblando no se atiende ninguna salvo la de salir: ahí la
+        /// pantalla es del modo entero y abrir el menú encima dejaría dos cosas
+        /// mandando sobre la misma cámara.
+        ///
+        /// Escape se va cerrando capas de fuera adentro: primero el modo, luego el
+        /// menú, y solo cuando no queda nada abierto pausa la partida. Esa última es
+        /// la puerta a la pausa y a los ajustes, que viven en la capa de encima.
         /// </remarks>
         private void ReadMenuKeys()
         {
+            // En pausa manda la capa de arriba: ni Tab abre el menú por detrás del
+            // cartel, ni Escape hace nada aquí.
+            if (_paused) return;
+
             if (_buildMode || _furnishMode || _decorMode)
             {
                 // La B entra y sale de construir y de amueblar, pero no de decorar:
                 // ese modo se abre desde el menú y se sale con Esc, como cualquier
                 // pantalla. Darle una tecla propia sin que nadie la pida sería
                 // inventarse un atajo que no está escrito en ningún sitio.
-                bool salir = Input.GetKeyDown(KeyCode.Escape) ||
-                             (Input.GetKeyDown(KeyCode.B) && !_decorMode);
+                bool conEscape = Input.GetKeyDown(KeyCode.Escape) && EscapeGuard.Take();
+                bool salir = conEscape || (Input.GetKeyDown(KeyCode.B) && !_decorMode);
                 if (!salir) return;
 
                 // Cada aviso por su lado y no con un operador entre medias: el bus
@@ -607,7 +642,11 @@ namespace Nimbo.UI
             // una pregunta de verdad y merece su tecla.
             if (Input.GetKeyDown(KeyCode.M)) _hub.Toggle("Mapa");
 
-            if (Input.GetKeyDown(KeyCode.Escape) && _hub.IsOpen) _hub.Close();
+            if (Input.GetKeyDown(KeyCode.Escape) && EscapeGuard.Take())
+            {
+                if (_hub.IsOpen) _hub.Close();
+                else EventBus.Publish(new GamePaused(true));
+            }
 
             if (_hub.IsOpen)
             {

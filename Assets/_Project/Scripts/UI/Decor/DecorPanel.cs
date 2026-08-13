@@ -26,7 +26,21 @@ namespace Nimbo.UI.Decor
     {
         /// <summary>Debe coincidir con <c>DecorService.ZoneRadius</c>.</summary>
         private const float ZoneRadius = 12f;
-        private const float MapSize = 300f;
+
+        /// <summary>Por debajo de esto el plano no se puede usar: las fichas se tocan.</summary>
+        private const float MinMapSize = 240f;
+
+        /// <summary>
+        /// El lado del plano, en píxeles. Ya no es una constante.
+        /// </summary>
+        /// <remarks>
+        /// Era 300 fijos, y con el panel ocupando media pantalla dejaba el plano del
+        /// tamaño de un posavasos en una esquina. Ahora lo pone el hueco que quede:
+        /// el cuadrado más grande que entre. Toda la conversión entre metros de la
+        /// zona y píxeles pasa por aquí, así que el plano puede medir lo que sea
+        /// mientras las fichas se coloquen con este mismo número.
+        /// </remarks>
+        private float _mapSize = 300f;
 
         public VisualElement Root { get; }
         public bool IsShowing => Root.style.display == DisplayStyle.Flex;
@@ -34,6 +48,7 @@ namespace Nimbo.UI.Decor
         private readonly VisualElement _catalogList;
         private readonly VisualElement _zoneRow;
         private readonly VisualElement _map;
+        private readonly VisualElement _mapHolder;
         private readonly Label _hint;
         private readonly Label _charm;
 
@@ -50,8 +65,11 @@ namespace Nimbo.UI.Decor
         {
             Root = UiTheme.Card("adornos");
             Root.style.display = DisplayStyle.None;
-            Root.style.width = 720;
-            Root.style.maxHeight = Length.Percent(92);
+
+            // Un modo se merece la pantalla. El resto se deja a propósito: decorando
+            // se sigue viendo la isla por la izquierda, que es lo que estás decorando.
+            Root.style.width = Length.Percent(62);
+            Root.style.height = Length.Percent(90);
 
             Root.Add(UiTheme.Header("Decorar la isla", Hide));
 
@@ -63,25 +81,44 @@ namespace Nimbo.UI.Decor
 
             var body = new VisualElement();
             body.style.flexDirection = FlexDirection.Row;
+            body.style.flexGrow = 1;
+            body.style.minHeight = 0;
 
             var left = new VisualElement();
-            left.style.width = 360;
-            left.style.marginRight = UiTheme.Gap;
+            left.style.width = Length.Percent(46);
+            left.style.minWidth = 320;
+            left.style.marginRight = UiTheme.SpaceL;
 
             left.Add(BuildFilters());
 
-            var catalogScroll = new ScrollView { style = { height = MapSize } };
+            var catalogScroll = new ScrollView();
+            catalogScroll.style.flexGrow = 1;
             UiTheme.StyleScroll(catalogScroll);
             _catalogList = catalogScroll;
             left.Add(_catalogList);
             body.Add(left);
 
             var right = new VisualElement();
+            right.style.flexGrow = 1;
+            right.style.minWidth = 0;
+
+            _mapHolder = new VisualElement();
+            _mapHolder.style.flexGrow = 1;
+            _mapHolder.style.alignItems = Align.Center;
+            _mapHolder.style.justifyContent = Justify.Center;
+
             _map = BuildMap();
-            right.Add(_map);
+            _mapHolder.Add(_map);
+            right.Add(_mapHolder);
+
+            // El plano es redondo, así que tiene que ser cuadrado: se lleva el lado
+            // mayor que quepa en el hueco, y al cambiar de tamaño se repintan las
+            // fichas, que van en píxeles y no en tantos por ciento.
+            _mapHolder.RegisterCallback<GeometryChangedEvent>(OnMapResized);
 
             _charm = UiTheme.Body("", soft: true);
-            _charm.style.marginTop = 8;
+            _charm.style.marginTop = UiTheme.SpaceS;
+            _charm.style.unityTextAlign = TextAnchor.MiddleCenter;
             right.Add(_charm);
             body.Add(right);
 
@@ -284,13 +321,35 @@ namespace Nimbo.UI.Decor
         private VisualElement BuildMap()
         {
             var map = new VisualElement();
-            map.style.width = map.style.height = MapSize;
+            map.style.width = map.style.height = _mapSize;
             map.style.backgroundColor = UiTheme.Sage;
-            UiTheme.SetRadius(map, MapSize / 2f);
+            map.style.flexShrink = 0;
+            UiTheme.SetRadius(map, _mapSize / 2f);
             map.style.overflow = Overflow.Hidden;
 
             map.RegisterCallback<ClickEvent>(OnMapClicked);
             return map;
+        }
+
+        /// <summary>
+        /// El hueco del plano ha cambiado de tamaño: se recalcula el lado y se
+        /// vuelven a colocar las fichas.
+        /// </summary>
+        /// <remarks>
+        /// Repintar dentro de un aviso de geometría puede provocar otro aviso, así que
+        /// se sale sin hacer nada si el lado no ha cambiado de verdad. Sin esa salida,
+        /// el plano se repinta a sí mismo hasta que el editor se cae.
+        /// </remarks>
+        private void OnMapResized(GeometryChangedEvent evt)
+        {
+            float side = Mathf.Floor(Mathf.Min(evt.newRect.width, evt.newRect.height));
+            if (side < MinMapSize) side = MinMapSize;
+            if (Mathf.Abs(side - _mapSize) < 1f) return;
+
+            _mapSize = side;
+            _map.style.width = _map.style.height = side;
+            UiTheme.SetRadius(_map, side / 2f);
+            RebuildMap();
         }
 
         private void RebuildMap()
@@ -317,14 +376,14 @@ namespace Nimbo.UI.Decor
             // El radio de la pieza se dibuja a escala real: si dos fichas se tocan
             // en el plano, el servicio va a rechazar la segunda. Ver el motivo es
             // mejor que leer un «ahí no cabe».
-            float scale = MapSize / (ZoneRadius * 2f);
+            float scale = _mapSize / (ZoneRadius * 2f);
             float diameter = Mathf.Max(10f, definition.Footprint * 2f * scale);
 
             var token = new VisualElement();
             token.style.position = Position.Absolute;
             token.style.width = token.style.height = diameter;
-            token.style.left = MapSize / 2f + x * scale - diameter / 2f;
-            token.style.top = MapSize / 2f + z * scale - diameter / 2f;
+            token.style.left = _mapSize / 2f + x * scale - diameter / 2f;
+            token.style.top = _mapSize / 2f + z * scale - diameter / 2f;
             token.style.backgroundColor = TokenColour(definition.Kind);
             UiTheme.SetRadius(token, UiTheme.RadiusPill);
 
@@ -369,9 +428,9 @@ namespace Nimbo.UI.Decor
             if (_decor == null || string.IsNullOrEmpty(_zoneId)) return;
 
             var local = evt.localPosition;
-            float scale = MapSize / (ZoneRadius * 2f);
-            float x = ((float)local.x - MapSize / 2f) / scale;
-            float z = ((float)local.y - MapSize / 2f) / scale;
+            float scale = _mapSize / (ZoneRadius * 2f);
+            float x = ((float)local.x - _mapSize / 2f) / scale;
+            float z = ((float)local.y - _mapSize / 2f) / scale;
             var point = new Vector3(x, 0f, z);
 
             // Con una ficha seleccionada, el clic la mueve. Sin ella, coloca una
