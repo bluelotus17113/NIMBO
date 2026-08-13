@@ -44,6 +44,19 @@ está, se pide y se añade a este documento y a `UiTheme.cs` a la vez.
 | `Rose` | `#F5C0CB` | lo que va mal, sin llegar a alarma |
 | `Sage` | `#CBDDB4` | naturaleza, plantas, el parque |
 
+### Superficies que reaccionan y el velo
+
+| Nombre | Hex | Para qué |
+|---|---|---|
+| `CreamPress` | `#EADFD1` | crema con el ratón encima o apretada |
+| `Scrim` | `rgba(59, 46, 41, .55)` | el velo que se echa sobre la isla |
+
+**Hay un solo velo.** Lo usan el menú y la pausa, que son las dos únicas cosas que se
+ponen delante de la isla entera. Es tinta y no negro —apaga el 3D sin ensuciarlo de
+gris— y translúcido de verdad: la isla se tiene que seguir viendo detrás, que es lo
+que hace que sea un alto y no otra pantalla. La pausa llevaba uno azul al 82 % que de
+translúcido no tenía nada; dos velos distintos en el mismo juego eran uno de más.
+
 Regla dura: **ningún color con saturación por encima del 45 %**. Si un color pide
 atención a gritos, no es de este juego.
 
