@@ -99,19 +99,24 @@ namespace Nimbo.Player
         }
 
         /// <summary>
-        /// Lo llama el arranque cada fotograma. Guarda dónde está y repone el vigor al
-        /// pasar de día.
+        /// Lo llama el arranque cada fotograma.
         /// </summary>
+        /// <remarks>
+        /// Ya no repone nada. Reponía al pasar de día —y el comentario que había aquí
+        /// decía justo lo contrario, que el vigor no se recupera con el tiempo «porque
+        /// si se recuperase solo bastaría con esperar y dejaría de ser una decisión».
+        /// Bastaba con esperar: a medianoche volvía a estar lleno, así que la hamaca no
+        /// hacía nada que no hiciera el reloj y el vigor no limitaba absolutamente
+        /// nada. Se puso así cuando no había cama; la hay desde hace tiempo.
+        ///
+        /// Sigue sin castigar, que es el contrato (`Docs/04_ALDEA.md`, §2): a cero no
+        /// usas herramientas y andas más lento. Para volver a tenerlo, dormir en la
+        /// hamaca —que además te lleva a la mañana siguiente— o comer algo.
+        /// </remarks>
         public void Tick()
         {
-            // Dormir es lo que repone. Aquí se hace al pasar el día porque todavía no
-            // hay cama: en cuanto la haya, esto se mueve a la cama y ya está. Se
-            // compara con el día guardado y no se escucha DayPassed para que el
-            // adelanto de varios días de golpe al volver reponga una sola vez.
             if (_clock.Day == _lastDay) return;
-
             _lastDay = _clock.Day;
-            SetVigor(PlayerState.MaxVigor);
         }
     }
 }

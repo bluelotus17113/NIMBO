@@ -167,13 +167,34 @@ namespace Nimbo.Art.PlayerView
             Bob(speed);
 
             // Se le va contando al servicio dónde ha acabado, para que la partida
-            // guarde la posición sin que la lógica tenga que buscar el cuerpo.
-            _service?.SyncTransform(transform.position, transform.eulerAngles.y);
+            // guarde la posición sin que la lógica tenga que buscar el cuerpo. Solo
+            // cuando de verdad se ha movido: quieto son los mismos cuatro números
+            // sesenta veces por segundo, y leer `eulerAngles` no es gratis.
+            var now = transform.position;
+            float yaw = transform.eulerAngles.y;
+            if ((now - _lastSynced).sqrMagnitude > 0.0001f ||
+                !Mathf.Approximately(yaw, _lastSyncedYaw))
+            {
+                _lastSynced = now;
+                _lastSyncedYaw = yaw;
+                _service?.SyncTransform(now, yaw);
+            }
         }
 
-        /// <summary>¿Hay algo sólido debajo de ese punto?</summary>
+        /// <summary>
+        /// ¿Hay algo sólido debajo de ese punto?
+        /// </summary>
+        /// <remarks>
+        /// Bien adentro de una isla no se pregunta. El borde del prado nunca se mete
+        /// más allá del 86 % del radio, así que por dentro del 80 % hay suelo seguro y
+        /// tirar el rayo es lanzarlo contra una malla de miles de triángulos para que
+        /// conteste que sí. Solo se paga donde puede haber vacío: cerca del borde y
+        /// sobre el puente, que es el sitio por el que la gente se caía de verdad.
+        /// </remarks>
         private static bool HasGroundAt(Vector3 position)
         {
+            if (WellInland(position)) return true;
+
             // Se tira desde tres metros por encima y se buscan diez hacia abajo: desde
             // los pies exactos, una cuesta abajo daría «no hay suelo» y el jugador se
             // quedaría clavado al principio de cualquier bajada.
@@ -181,7 +202,21 @@ namespace Nimbo.Art.PlayerView
                                    10f, ~0, QueryTriggerInteraction.Ignore);
         }
 
+        /// <summary>Dentro del disco macizo de una de las dos islas.</summary>
+        private static bool WellInland(Vector3 position)
+        {
+            var side = Nimbo.Data.World.Archipelago.SideOf(position);
+            float radius = Nimbo.Data.World.Archipelago.RadiusOf(side) * 0.8f;
+
+            var centre = Nimbo.Data.World.Archipelago.CentreOf(side);
+            float dx = position.x - centre.x;
+            float dz = position.z - centre.z;
+            return dx * dx + dz * dz < radius * radius;
+        }
+
         private Vector3 _lastSafe;
+        private Vector3 _lastSynced;
+        private float _lastSyncedYaw = float.NaN;
         private bool _indoors;
 
         /// <summary>

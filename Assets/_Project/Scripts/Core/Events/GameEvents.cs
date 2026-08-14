@@ -250,6 +250,30 @@ namespace Nimbo.Core.Events
         public SlotSelected(int slot) => Slot = slot;
     }
 
+    /// <summary>
+    /// Le ha dado a un nodo y aún aguanta. Va aparte de <see cref="NodeGathered"/>,
+    /// que solo se publica cuando cae.
+    /// </summary>
+    /// <remarks>
+    /// Un abedul son seis hachazos. Sin este aviso, los cinco primeros no producen
+    /// nada —ni ruido, ni movimiento, ni un número— y se leen como que la herramienta
+    /// no sirve. Es el aviso que necesita quien dibuja para sacudir el árbol y quien
+    /// pone el sonido para que suene el hacha.
+    /// </remarks>
+    public readonly struct NodeHit
+    {
+        public readonly string InstanceId;
+        public readonly string NodeId;
+
+        /// <summary>Golpes que le quedan después de este. Nunca cero: eso es caer.</summary>
+        public readonly int HitsLeft;
+
+        public NodeHit(string instanceId, string nodeId, int hitsLeft)
+        {
+            InstanceId = instanceId; NodeId = nodeId; HitsLeft = hitsLeft;
+        }
+    }
+
     public readonly struct NodeGathered
     {
         public readonly string InstanceId;

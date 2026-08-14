@@ -81,14 +81,26 @@ namespace Nimbo.Gathering
             return _catalog.TryGetDefinition(nodeId, out definition);
         }
 
+        /// <summary>
+        /// Todo lo sembrado. La envoltura de solo lectura se guarda en vez de crearse
+        /// en cada llamada.
+        /// </summary>
+        /// <remarks>
+        /// <c>AsReadOnly()</c> asigna un objeto nuevo cada vez, y quien pregunta es la
+        /// interacción del jugador seis veces por segundo mientras andas: era basura
+        /// nueva en el montón siete veces por segundo durante toda la partida. La
+        /// envoltura mira a la lista viva, así que sigue viéndose lo que cambia.
+        /// </remarks>
         public IReadOnlyList<ResourceNode> Nodes
         {
             get
             {
                 EnsureSeeded();
-                return _nodes.AsReadOnly();
+                return _readOnlyNodes ??= _nodes.AsReadOnly();
             }
         }
+
+        IReadOnlyList<ResourceNode> _readOnlyNodes;
 
         public bool TryGetNode(string instanceId, out ResourceNode node)
         {
@@ -140,7 +152,11 @@ namespace Nimbo.Gathering
             node.HitsLeft--;
 
             // 5. Si aún le quedan golpes, solo fue un Hit
-            if (node.HitsLeft > 0) return GatherResult.Hit;
+            if (node.HitsLeft > 0)
+            {
+                EventBus.Publish(new NodeHit(node.InstanceId, node.NodeId, node.HitsLeft));
+                return GatherResult.Hit;
+            }
 
             // 6. Sortear la cantidad y meterla en la mochila.
             //    Usar un Rng con semilla del instanceId para que el resultado

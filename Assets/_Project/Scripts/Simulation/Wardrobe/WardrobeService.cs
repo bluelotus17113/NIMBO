@@ -53,11 +53,9 @@ namespace Nimbo.Simulation.Wardrobe
             }
             if (!economy.Inventory.Remove(catalogId)) return false;
 
-            if (!islander.Wardrobe.Contains(catalogId)) islander.Wardrobe.Add(catalogId);
+            Receive(islanderId, catalogId);
 
             float liking = Liking(islander, catalogId);
-            bool wearsIt = liking >= Liking(islander, islander.EquippedOutfit);
-            if (wearsIt) islander.EquippedOutfit = catalogId;
 
             var behaviour = _personalities.For(islander.Personality);
             var reaction = liking >= 0.65f ? PersonalityReaction.GiftLoved
@@ -70,6 +68,27 @@ namespace Nimbo.Simulation.Wardrobe
             EventBus.Publish(new ItemGifted(catalogId, islanderId,
                                             liking >= 0.65f ? 1 : liking <= 0.35f ? -1 : 0));
             return true;
+        }
+
+        /// <summary>
+        /// La prenda entra en su armario, y se la pone si le gusta más que la que
+        /// lleva. No toca ningún inventario ni le cambia la cara.
+        /// </summary>
+        /// <remarks>
+        /// Separado de <see cref="Give"/> porque hay dos formas de darle ropa y cada
+        /// una la saca de un sitio distinto: la tienda tira de la despensa y regalar
+        /// por la isla tira de la mochila. Lo único que comparten es esto —que acaba
+        /// puesta— y por eso es lo único que está aquí.
+        /// </remarks>
+        public void Receive(string islanderId, string catalogId)
+        {
+            if (!_registry.TryGet(islanderId, out var islander)) return;
+            if (string.IsNullOrEmpty(catalogId)) return;
+
+            if (!islander.Wardrobe.Contains(catalogId)) islander.Wardrobe.Add(catalogId);
+
+            if (Liking(islander, catalogId) >= Liking(islander, islander.EquippedOutfit))
+                islander.EquippedOutfit = catalogId;
         }
 
         /// <summary>Le pone una prenda que ya tiene. False si no está en su armario.</summary>

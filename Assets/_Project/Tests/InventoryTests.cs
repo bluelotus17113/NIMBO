@@ -53,6 +53,7 @@ namespace Nimbo.Tests
             public int UnlockLevel => 0;
             public int FootprintX => 1;
             public int FootprintY => 1;
+            public int HungerRestore => 0;
             public ToolKind Tool { get; }
 
             public FakeItemDef(string catalogId, ItemCategory category,

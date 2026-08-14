@@ -15,6 +15,16 @@ namespace Nimbo.Art.Audio
         Happy = 5,      // el habitante se alegra
         Sad = 6,
         Unlock = 7,     // se abre una zona
+
+        // Los verbos del protagonista. Iban mudos: el sonido escuchaba a la
+        // simulación —monedas, ascensos, peticiones— y no a las manos de quien juega,
+        // así que talar un abedul de seis hachazos no hacía ruido ninguno.
+        Chop = 8,       // el hacha en la madera
+        Mine = 9,       // el pico en la piedra
+        Pick = 10,      // coger algo a mano
+        Harvest = 11,   // el nodo cae, o se recoge del huerto
+        Craft = 12,     // sale algo de la mesa de trabajo
+        Sleep = 13,     // se duerme y amanece
     }
 
     /// <summary>
@@ -75,8 +85,64 @@ namespace Nimbo.Art.Audio
             Sfx.Happy => Blip("contento", new[] { 659f, 880f }, 0.16f, 0.22f),
             Sfx.Sad => Blip("triste", new[] { 440f, 349f }, 0.24f, 0.18f),
             Sfx.Unlock => Blip("abrir", new[] { 523f, 784f, 1046f, 1319f }, 0.5f, 0.24f),
+
+            // Golpear no es cantar: estos van con ruido y no con notas. Un hachazo
+            // hecho de senos suena a xilófono, y lo que tiene que sonar es a madera.
+            // La nota grave debajo es lo que le da el cuerpo y lo distingue del pico.
+            Sfx.Chop => Thud("hacha", 150f, 0.16f, 0.55f, 0.30f),
+            Sfx.Mine => Thud("pico", 260f, 0.13f, 0.30f, 0.26f),
+            Sfx.Pick => Thud("coger", 420f, 0.09f, 0.72f, 0.15f),
+
+            Sfx.Harvest => Blip("recoger", new[] { 784f, 1046f }, 0.14f, 0.22f),
+            Sfx.Craft => Blip("crafteo", new[] { 587f, 784f, 1175f }, 0.28f, 0.24f),
+
+            // Dormir baja y se apaga: es la única señal descendente amable del juego.
+            Sfx.Sleep => Blip("dormir", new[] { 523f, 392f, 262f }, 0.6f, 0.20f),
+
             _ => Blip("click", new[] { 880f }, 0.05f, 0.18f),
         };
+
+        /// <summary>
+        /// Un golpe: ruido filtrado sobre una nota grave, apagándose deprisa.
+        /// </summary>
+        /// <remarks>
+        /// El ruido lleva un filtro paso bajo de un polo, que es la diferencia entre
+        /// «madera» y «estática de radio». <paramref name="brightness"/> es cuánto
+        /// deja pasar: alto para coger una flor, bajo para un hachazo.
+        ///
+        /// La semilla es fija, así que el mismo golpe suena siempre igual. Sortearla
+        /// haría que dos hachazos seguidos sonaran a dos materiales distintos.
+        /// </remarks>
+        private static AudioClip Thud(string name, float tone, float seconds,
+                                      float brightness, float volume)
+        {
+            int total = Mathf.CeilToInt(SampleRate * seconds);
+            var samples = new float[total];
+            var rng = Rng.FromSeed(name);
+
+            float filtered = 0f;
+
+            for (int i = 0; i < total; i++)
+            {
+                float p = (float)i / total;
+                float time = (float)i / SampleRate;
+
+                // Ataque instantáneo y caída rápida: es lo que hace que se lea como
+                // un impacto y no como una ráfaga de viento.
+                float envelope = Mathf.Exp(-p * 9f);
+
+                float noise = rng.Range(-1f, 1f);
+                filtered += (noise - filtered) * brightness;
+
+                float body = Mathf.Sin(time * tone * Mathf.PI * 2f);
+
+                samples[i] = (filtered * 0.6f + body * 0.4f) * envelope * volume;
+            }
+
+            var clip = AudioClip.Create(name, total, 1, SampleRate, false);
+            clip.SetData(samples, 0);
+            return clip;
+        }
 
         /// <summary>
         /// Una secuencia de notas con envolvente suave. El armónico a la octava es lo

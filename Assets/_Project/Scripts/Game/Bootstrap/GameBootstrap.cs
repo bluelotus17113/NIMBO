@@ -24,6 +24,7 @@ using Nimbo.Simulation.Behaviour;
 using Nimbo.Simulation.Jobs;
 using Nimbo.Simulation.Needs;
 using Nimbo.Simulation.Progression;
+using Nimbo.Simulation.Gifts;
 using Nimbo.Simulation.Wardrobe;
 using Nimbo.Simulation.Requests;
 using Nimbo.Social;
@@ -76,6 +77,7 @@ namespace Nimbo.Game.Bootstrap
         private JobService _jobs;
         private NimboTree _tree;
         private WardrobeService _wardrobe;
+        private GiftService _gifts;
         private AchievementService _achievements;
         private PlayerService _player;
         private InventoryService _inventory;
@@ -270,6 +272,7 @@ namespace Nimbo.Game.Bootstrap
             _jobs = new JobService(registry, _simulation, _island, _clock);
             _tree = new NimboTree(_save, _clock, registry);
             _wardrobe = new WardrobeService(registry, _simulation, personalities);
+            _gifts = new GiftService(registry, _simulation, personalities, _inventory, _wardrobe);
 
             // El orden de registro da igual, pero el de construcción no: EconomyService
             // busca ISimulationService por el registro cuando alguien hace un regalo,
@@ -295,6 +298,7 @@ namespace Nimbo.Game.Bootstrap
             ServiceRegistry.Register<IJobService>(_jobs);
             ServiceRegistry.Register<NimboTree>(_tree);
             ServiceRegistry.Register<WardrobeService>(_wardrobe);
+            ServiceRegistry.Register<IGiftService>(_gifts);
 
             if (isNewGame)
             {

@@ -49,6 +49,9 @@ namespace Nimbo.Core.Services.Contracts
         int FootprintX { get; }
         int FootprintY { get; }
 
+        /// <summary>Lo que llena si es comida. 0 para todo lo demás.</summary>
+        int HungerRestore { get; }
+
         /// <summary>
         /// Qué herramienta es, o <c>None</c> si no lo es.
         /// </summary>

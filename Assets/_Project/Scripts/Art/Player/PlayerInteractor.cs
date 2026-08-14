@@ -8,7 +8,7 @@ namespace Nimbo.Art.PlayerView
     /// <summary>Con qué está a punto de interactuar el jugador.</summary>
     public enum TargetKind { None = 0, Islander = 1, Node = 2, FarmTile = 3,
                              Hammock = 4, Bench = 5, ShippingBox = 6,
-                             Door = 7, Exit = 8 }
+                             Door = 7, Exit = 8, Food = 9 }
 
     /// <summary>
     /// Lo que el jugador tiene delante y qué pasa si pulsa.
@@ -41,7 +41,10 @@ namespace Nimbo.Art.PlayerView
         private IFarmingService _farming;
         private IEconomyService _economy;
         private IIslandService _island;
+        private ISocialService _social;
+        private IGiftService _gifts;
         private World.InteriorView _interior;
+        private World.WorldView _world;
 
         private int _tileX, _tileY;
 
@@ -66,7 +69,14 @@ namespace Nimbo.Art.PlayerView
             ServiceRegistry.TryGet(out _farming);
             ServiceRegistry.TryGet(out _economy);
             ServiceRegistry.TryGet(out _island);
+            ServiceRegistry.TryGet(out _social);
+            ServiceRegistry.TryGet(out _gifts);
             _interior = FindFirstObjectByType<World.InteriorView>();
+
+            // Se busca una vez. Estaba dentro del bucle que recorre a los vecinos, así
+            // que con la isla llena eran cincuenta recorridos de jerarquía seis veces
+            // por segundo mientras andas, para acabar siempre en el mismo objeto.
+            _world = GetComponentInParent<World.WorldView>();
         }
 
         private void Update()
@@ -80,6 +90,9 @@ namespace Nimbo.Art.PlayerView
 
             // Sistema de entrada antiguo: nada de Keyboard.current, que aquí revienta.
             if (Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.Space)) Act();
+
+            if (Kind == TargetKind.Islander && Input.GetKeyDown(KeyCode.F))
+                EventBus.Publish(new IslanderFocused(TargetId));
         }
 
         private void FindTarget()
@@ -117,7 +130,7 @@ namespace Nimbo.Art.PlayerView
 
                     Kind = TargetKind.Islander;
                     TargetId = islander.Id;
-                    Prompt = $"Hablar con {islander.Identity.ShortName}";
+                    Prompt = MeetPrompt(islander.Identity.ShortName);
                 }
             }
 
@@ -148,6 +161,97 @@ namespace Nimbo.Art.PlayerView
                 TargetId = node.InstanceId;
                 Prompt = PromptFor(definition);
             }
+
+            if (Kind == TargetKind.None) TryTargetFood();
+        }
+
+        /// <summary>
+        /// Si no hay nada delante y llevas comida, la acción es comértela.
+        /// </summary>
+        /// <remarks>
+        /// Va de último y solo cuando no hay nada más, así que no le quita el sitio a
+        /// ningún otro verbo: delante de un árbol se tala aunque lleves una manzana.
+        /// Así comer no necesita tecla propia y sale anunciado en el mismo cartel que
+        /// todo lo demás.
+        ///
+        /// Es lo que hace que quitar el relleno de vigor de medianoche no sea un
+        /// castigo: sin esto, quedarse sin vigor lejos de casa obligaba a volver
+        /// andando despacio hasta la hamaca. Y le da a la cosecha un destino que no sea
+        /// la caja de ventas.
+        /// </remarks>
+        private void TryTargetFood()
+        {
+            if (_inventory == null || _economy == null) return;
+
+            var held = _inventory.InHand;
+            if (held.Quantity <= 0 || string.IsNullOrEmpty(held.CatalogId)) return;
+
+            var item = _economy.GetItem(held.CatalogId);
+            if (item == null || item.Category != ItemCategory.Food) return;
+            if (item.HungerRestore <= 0) return;
+
+            // Lleno no se come: gastar una manzana para no recuperar nada es la clase
+            // de error que uno comete una vez y no perdona.
+            if (_player != null && _player.Vigor >= Data.Player.PlayerState.MaxVigor)
+            {
+                Kind = TargetKind.Food;
+                TargetId = held.CatalogId;
+                Prompt = $"{item.DisplayName} — no te hace falta todavía";
+                return;
+            }
+
+            Kind = TargetKind.Food;
+            TargetId = held.CatalogId;
+            Prompt = $"Comerte {item.DisplayName}";
+        }
+
+        /// <summary>
+        /// Se come lo que lleva en la mano y le devuelve vigor.
+        /// </summary>
+        /// <remarks>
+        /// Lo que llena de hambre a un vecino es lo que da de vigor al protagonista:
+        /// una sola cifra en el catálogo para las dos cosas. Con dos números separados
+        /// habría que equilibrar la comida dos veces y acabarían diciendo cosas
+        /// distintas del mismo plato.
+        /// </remarks>
+        private void EatHeld()
+        {
+            if (_player == null || _inventory == null || _economy == null) return;
+            if (_player.Vigor >= Data.Player.PlayerState.MaxVigor) return;
+
+            var item = _economy.GetItem(_inventory.InHand.CatalogId);
+            if (item == null || item.HungerRestore <= 0) return;
+
+            if (!_inventory.TryConsumeSelected(1)) return;
+
+            _player.RestoreVigor(item.HungerRestore);
+            _body.SetEmotion(Data.Islanders.Emotion.Happy);
+            FindTarget();
+        }
+
+        /// <summary>
+        /// Qué le vas a hacer al vecino que tienes delante: darle lo que llevas, o
+        /// hablar con él si no llevas nada que se pueda dar.
+        /// </summary>
+        /// <remarks>
+        /// Dice también la tecla de la ficha. Antes la única tecla de acción abría la
+        /// ficha, así que acercarse a un vecino y pulsar era exactamente lo mismo que
+        /// clicar su nombre en la interfaz: convivir era el pilar número uno del diseño
+        /// y en el mundo era un atajo a una pantalla. Ahora pulsar es hablarle, y la
+        /// ficha —que sigue siendo un modo en el que se entra a propósito— tiene la
+        /// suya. El cartel la nombra, como todos los demás de este juego.
+        /// </remarks>
+        private string MeetPrompt(string shortName)
+        {
+            string held = _inventory?.InHand.CatalogId;
+            if (_gifts != null && _gifts.IsGiftable(held))
+            {
+                var item = _economy?.GetItem(held);
+                string what = item != null ? item.DisplayName : "eso";
+                return $"Darle {what} a {shortName} — F para su ficha";
+            }
+
+            return $"Hablar con {shortName} — F para su ficha";
         }
 
         /// <summary>
@@ -468,9 +572,8 @@ namespace Nimbo.Art.PlayerView
         private bool TryGetIslanderPosition(string islanderId, out Vector3 position)
         {
             position = default;
-            var world = GetComponentInParent<World.WorldView>();
-            if (world == null) return false;
-            if (!world.TryGetIslander(islanderId, out var body)) return false;
+            if (_world == null) return false;
+            if (!_world.TryGetIslander(islanderId, out var body)) return false;
 
             position = body.position;
             return true;
@@ -482,9 +585,7 @@ namespace Nimbo.Art.PlayerView
             switch (Kind)
             {
                 case TargetKind.Islander:
-                    // Abrir su ficha es lo que ya hacía clicar su nombre: se reutiliza
-                    // el mismo aviso para no tener dos caminos que hagan lo mismo.
-                    EventBus.Publish(new IslanderFocused(TargetId));
+                    MeetIslander();
                     break;
 
                 case TargetKind.Node:
@@ -514,7 +615,45 @@ namespace Nimbo.Art.PlayerView
                 case TargetKind.Exit:
                     EventBus.Publish(new InteriorExited());
                     break;
+
+                case TargetKind.Food:
+                    EatHeld();
+                    break;
             }
+        }
+
+        /// <summary>
+        /// Hablarle, o darle lo que llevas en la mano si es algo que se pueda dar.
+        /// </summary>
+        /// <remarks>
+        /// La cara que pone el vecino la deciden los servicios, que son los que saben
+        /// de personalidades. Aquí solo se pone la del protagonista, que es lo único
+        /// que este componente tiene delante.
+        /// </remarks>
+        private void MeetIslander()
+        {
+            string held = _inventory?.InHand.CatalogId;
+
+            if (_gifts != null && _gifts.IsGiftable(held))
+            {
+                var result = _gifts.OfferHeld(TargetId, out int opinion);
+
+                _body.SetEmotion(result switch
+                {
+                    GiftResult.Ok when opinion > 0 => Data.Islanders.Emotion.Ecstatic,
+                    GiftResult.Ok when opinion < 0 => Data.Islanders.Emotion.Worried,
+                    GiftResult.Ok => Data.Islanders.Emotion.Happy,
+                    _ => Data.Islanders.Emotion.Neutral,
+                });
+
+                // Con el tope diario gastado no se ha dado nada y la mochila sigue
+                // igual: se cae a la charla para que pulsar haga siempre algo.
+                if (result != GiftResult.AlreadyToday) { FindTarget(); return; }
+            }
+
+            _social?.PlayerInteract(TargetId, SocialInteraction.Chat);
+            _body.SetEmotion(Data.Islanders.Emotion.Happy);
+            FindTarget();
         }
 
         private void GatherTarget()

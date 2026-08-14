@@ -198,7 +198,17 @@ namespace Nimbo.UI.Islander
             {
                 if (record.Friendship == FriendshipStage.Stranger &&
                     record.Conflict == ConflictStage.None) continue;
-                if (!registry.TryGet(record.OtherId, out var other)) continue;
+
+                // El protagonista tiene ficha en su agenda pero no está en el censo, así
+                // que hay que nombrarlo aparte. Sin esto la fila se saltaba en silencio
+                // y lo único que no salía en «con quién anda» era contigo.
+                string who = record.OtherId == SocialIds.Player
+                    ? PlayerName()
+                    : registry.TryGet(record.OtherId, out var other)
+                        ? other.Identity.ShortName
+                        : null;
+
+                if (who == null) continue;
 
                 any = true;
                 var row = new VisualElement();
@@ -206,7 +216,7 @@ namespace Nimbo.UI.Islander
                 row.style.alignItems = Align.Center;
                 row.style.marginBottom = 4;
 
-                var name = UiTheme.Body(other.Identity.ShortName);
+                var name = UiTheme.Body(who);
                 name.style.width = 110;
                 row.Add(name);
                 row.Add(UiTheme.Chip(StatusOf(record), StatusColor(record)));
@@ -214,6 +224,15 @@ namespace Nimbo.UI.Islander
             }
 
             if (!any) _relationships.Add(UiTheme.Body("Todavía no conoce a nadie.", soft: true));
+        }
+
+        /// <summary>Cómo se llama el protagonista en la lista de un vecino.</summary>
+        private static string PlayerName()
+        {
+            if (!ServiceRegistry.TryGet<Nimbo.Player.PlayerService>(out var player)) return "Tú";
+
+            string name = player.State?.DisplayName;
+            return string.IsNullOrEmpty(name) ? "Tú" : $"{name} (tú)";
         }
 
         /// <summary>Una sola etiqueta por relación: manda lo más fuerte que esté pasando.</summary>

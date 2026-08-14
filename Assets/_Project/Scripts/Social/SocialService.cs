@@ -269,13 +269,22 @@ namespace Nimbo.Social
             islander.Relationships.Set(record);
         }
 
+        // Las dos listas de abajo dejan fuera al protagonista a propósito: alimentan lo
+        // que hacen los vecinos entre ellos —los sueños, las peticiones de presentar a
+        // alguien— y eso resuelve nombres y personalidades contra el censo, donde el
+        // protagonista no está. Lo que él tenga con cada uno se pregunta por
+        // PlayerRelationship, que es el camino que sí lo sabe.
+
         public IEnumerable<RelationshipRecord> FriendsOf(string islanderId)
         {
             if (!_registry.TryGet(islanderId, out var islander)) yield break;
 
             var records = islander.Relationships.Records;
             for (int i = 0; i < records.Count; i++)
+            {
+                if (records[i].OtherId == SocialIds.Player) continue;
                 if (records[i].Friendship >= FriendshipStage.Friend) yield return records[i];
+            }
         }
 
         public IEnumerable<RelationshipRecord> ConflictsOf(string islanderId)
@@ -284,7 +293,62 @@ namespace Nimbo.Social
 
             var records = islander.Relationships.Records;
             for (int i = 0; i < records.Count; i++)
+            {
+                if (records[i].OtherId == SocialIds.Player) continue;
                 if (records[i].Conflict != ConflictStage.None) yield return records[i];
+            }
+        }
+
+        // --- El protagonista ------------------------------------------------
+
+        public RelationshipRecord PlayerRelationship(string islanderId)
+        {
+            if (!_registry.TryGet(islanderId, out var islander)) return default;
+            return islander.Relationships.GetOrCreate(SocialIds.Player);
+        }
+
+        /// <summary>
+        /// Mueve lo que un vecino siente por ti. Un solo lado, y sin compatibilidad.
+        /// </summary>
+        /// <remarks>
+        /// El enfriamiento diario de <see cref="CoolDownAndEvaluate"/> alcanza también
+        /// a esta ficha, y es lo que se quiere: dejar de aparecer por la isla enfría lo
+        /// que sienten por ti igual que enfría lo que sienten entre ellos.
+        ///
+        /// Lo que no le alcanza es el romance. <see cref="DevelopCrushes"/> pide el
+        /// otro al censo antes de nada, y el protagonista no está: nadie se enamora de
+        /// ti por acumular charlas, que es exactamente lo que hay que evitar en un
+        /// juego donde puedes hablar con la misma persona todos los días.
+        /// </remarks>
+        public bool PlayerInteract(string islanderId, SocialInteraction interaction)
+        {
+            if (!_registry.TryGet(islanderId, out var islander)) return false;
+
+            var effect = _config.EffectOf(interaction);
+            if (!WithinDailyCap(SocialIds.Player, islanderId, interaction, effect.DailyCap))
+                return false;
+
+            var record = islander.Relationships.GetOrCreate(SocialIds.Player);
+
+            float before = record.Affinity;
+            record.Affinity = Mathf.Clamp(before + effect.Affinity,
+                                          RelationshipRecord.MinAffinity,
+                                          RelationshipRecord.MaxAffinity);
+            record.Interactions++;
+            record.LastInteractionMinute = _clock.ElapsedMinutes;
+
+            record = _stages.Evaluate(islanderId, record);
+            islander.Relationships.Set(record);
+
+            EventBus.Publish(new AffinityChanged(islanderId, SocialIds.Player,
+                                                 record.Affinity - before, record.Affinity));
+
+            ShowReaction(islanderId, ReactionFor(interaction));
+
+            if (interaction is SocialInteraction.Chat or SocialInteraction.Joke)
+                _simulation.ApplyNeed(islanderId, NeedKind.Social, 5f);
+
+            return true;
         }
 
         public string PartnerOf(string islanderId)

@@ -64,6 +64,15 @@ namespace Nimbo.Art.Audio
             EventBus.Subscribe<RequestRaised>(OnRequestRaised);
             EventBus.Subscribe<RequestResolved>(OnRequestResolved);
             EventBus.Subscribe<EmotionShown>(OnEmotion);
+
+            // Los verbos del jugador. Faltaban todos: el sonido escuchaba lo que hacía
+            // la isla y no lo que hacían tus manos, así que talar, cosechar, craftear y
+            // dormir no sonaban.
+            EventBus.Subscribe<NodeHit>(OnNodeHit);
+            EventBus.Subscribe<NodeGathered>(OnNodeGathered);
+            EventBus.Subscribe<CropHarvested>(OnCropHarvested);
+            EventBus.Subscribe<ItemCrafted>(OnItemCrafted);
+            EventBus.Subscribe<Slept>(OnSlept);
         }
 
         private void OnDisable()
@@ -76,6 +85,12 @@ namespace Nimbo.Art.Audio
             EventBus.Unsubscribe<RequestRaised>(OnRequestRaised);
             EventBus.Unsubscribe<RequestResolved>(OnRequestResolved);
             EventBus.Unsubscribe<EmotionShown>(OnEmotion);
+
+            EventBus.Unsubscribe<NodeHit>(OnNodeHit);
+            EventBus.Unsubscribe<NodeGathered>(OnNodeGathered);
+            EventBus.Unsubscribe<CropHarvested>(OnCropHarvested);
+            EventBus.Unsubscribe<ItemCrafted>(OnItemCrafted);
+            EventBus.Unsubscribe<Slept>(OnSlept);
         }
 
         private void OnDestroy()
@@ -140,6 +155,34 @@ namespace Nimbo.Art.Audio
 
         private void OnRequestResolved(RequestResolved evt) =>
             Play(evt.Satisfied ? Sfx.Happy : Sfx.Sad);
+
+        /// <summary>
+        /// El golpe suena a lo que estás golpeando, no a «acción realizada».
+        /// </summary>
+        /// <remarks>
+        /// El material sale del catálogo, que es quien sabe si eso es un árbol o una
+        /// roca. Podría haber ido en el propio aviso, pero entonces el que decide
+        /// tendría que saber a qué suena cada cosa, y eso es asunto del sonido.
+        /// </remarks>
+        private void OnNodeHit(NodeHit evt) => Play(ImpactFor(evt.NodeId));
+
+        private void OnNodeGathered(NodeGathered _) => Play(Sfx.Harvest);
+        private void OnCropHarvested(CropHarvested _) => Play(Sfx.Harvest);
+        private void OnItemCrafted(ItemCrafted _) => Play(Sfx.Craft);
+        private void OnSlept(Slept _) => Play(Sfx.Sleep);
+
+        private static Sfx ImpactFor(string nodeId)
+        {
+            if (!ServiceRegistry.TryGet<IGatheringService>(out var gathering)) return Sfx.Pick;
+            if (!gathering.TryGetDefinition(nodeId, out var definition)) return Sfx.Pick;
+
+            return definition.Kind switch
+            {
+                NodeKind.Tree => Sfx.Chop,
+                NodeKind.Rock => Sfx.Mine,
+                _ => Sfx.Pick,
+            };
+        }
 
         private void OnEmotion(EmotionShown evt)
         {
