@@ -63,6 +63,28 @@ namespace Nimbo.PlayTests
                 yield return Foto(camera, $"aldea_{i}_{zona.name}.png");
             }
 
+            // Y la cabaña por delante, que es la única que se rodea andando y por la
+            // que se pasa cada noche. La vuelta de arriba la retrata por su `forward`,
+            // que en su caso es la espalda: fue justo así como se vio que las otras
+            // tres caras eran paredes lisas de suelo a tejado.
+            var cabana = Object.FindObjectsByType<Transform>(FindObjectsSortMode.None);
+            foreach (var t in cabana)
+            {
+                if (t.name != "cabaña") continue;
+
+                var mira = t.position + Vector3.up * 1.8f;
+                // Desde atrás y de lado: pegada a la puerta, el cajón de ventas tapa
+                // media fachada y no se ve ni el porche ni el faldón.
+                var desde = t.position + new Vector3(5f, 6f, -14f);
+
+                camera.transform.SetPositionAndRotation(
+                    desde, Quaternion.LookRotation((mira - desde).normalized, Vector3.up));
+
+                yield return null;
+                yield return Foto(camera, "aldea_cabana_frente.png");
+                break;
+            }
+
             Assert.Pass();
         }
 

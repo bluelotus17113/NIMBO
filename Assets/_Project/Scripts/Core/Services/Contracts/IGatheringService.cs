@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Nimbo.Data.World;
+using UnityEngine;
 
 namespace Nimbo.Core.Services.Contracts
 {
@@ -93,5 +94,19 @@ namespace Nimbo.Core.Services.Contracts
         /// el juego adelanta varios días de golpe por este mismo camino.
         /// </remarks>
         void AdvanceDay();
+
+        /// <summary>
+        /// Aparta lo que haya en ese círculo. Devuelve cuántos se han movido.
+        /// </summary>
+        /// <remarks>
+        /// Lo llama quien coloca un edificio. Los recursos se siembran esquivando los
+        /// edificios que hay, pero los edificios se mueven después, así que hace falta
+        /// una segunda respuesta para cuando le cae uno encima a un roble.
+        ///
+        /// Apartar y no borrar: la isla tiene un número de nodos y perder uno cada vez
+        /// que se recoloca la aldea la iría dejando pelada sin que nadie se diera
+        /// cuenta hasta que ya no hubiera de qué sacar madera.
+        /// </remarks>
+        int ClearAround(Vector3 centre, float radius);
     }
 }

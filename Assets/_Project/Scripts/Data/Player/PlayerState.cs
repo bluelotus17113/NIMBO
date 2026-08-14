@@ -68,7 +68,11 @@ namespace Nimbo.Data.Player
         public static readonly UnityEngine.Vector3 Cabin = new(12f, 0f, -168f);
         public static readonly UnityEngine.Vector3 Hammock = new(8.4f, 0f, -168f);
         public static readonly UnityEngine.Vector3 Bench = new(15.6f, 0f, -168f);
-        public static readonly UnityEngine.Vector3 ShippingBox = new(12f, 0f, -172f);
+        // A un lado del porche, no delante. Estaba justo enfrente de la puerta, y en
+        // cuanto la cabaña tuvo alero con postes el cajón quedó plantado en medio del
+        // paso: se entraba a casa rodeándolo. Sigue siendo lo primero que ves al llegar
+        // del huerto, que es para lo que está ahí.
+        public static readonly UnityEngine.Vector3 ShippingBox = new(14.6f, 0f, -171.4f);
 
         /// <summary>Donde apareces: al sur, con el huerto y la casa por delante.</summary>
         public static readonly UnityEngine.Vector3 Spawn = new(0f, 3f, -176f);

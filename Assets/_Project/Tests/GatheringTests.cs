@@ -73,6 +73,65 @@ namespace Nimbo.Tests
             return null;
         }
 
+        // ── apartar por un edificio ──────────────────────────────────────
+
+        /// <summary>
+        /// Colocar un edificio encima de una arboleda la aparta, en vez de dejarla
+        /// atravesando el tejado.
+        /// </summary>
+        /// <remarks>
+        /// La siembra esquiva los edificios que ya están, pero el jugador los mueve
+        /// después. Sin esta segunda respuesta, arrastrar la panadería sobre tres
+        /// robles los dejaba dentro de la pared — y ahí no se pueden talar, porque
+        /// para darle a un nodo hay que ponerse delante y delante hay un muro.
+        /// </remarks>
+        [Test]
+        public void ClearAround_ApartaLoQueQuedaDebajoYNoPierdeNiUnNodo()
+        {
+            EnsureSeeded();
+            int total = _service.Nodes.Count;
+            Assert.Greater(total, 0);
+
+            // Un sitio donde seguro que hay algo: encima de un nodo cualquiera.
+            var victima = _state.Nodes[0];
+            var centro = new UnityEngine.Vector3(victima.X, 0f, victima.Z);
+            const float Radio = 6f;
+
+            int movidos = _service.ClearAround(centro, Radio);
+
+            Assert.Greater(movidos, 0, "no ha apartado ni el que estaba justo debajo");
+            Assert.AreEqual(total, _service.Nodes.Count,
+                            "apartar ha perdido nodos por el camino");
+
+            foreach (var nodo in _service.Nodes)
+            {
+                float dx = nodo.X - centro.x;
+                float dz = nodo.Z - centro.z;
+                Assert.GreaterOrEqual(dx * dx + dz * dz, Radio * Radio - 0.01f,
+                                      $"{nodo.InstanceId} sigue debajo del edificio");
+            }
+        }
+
+        [Test]
+        public void ClearAround_NoTocaLoQueEstaLejos()
+        {
+            EnsureSeeded();
+
+            var lejos = new UnityEngine.Vector3(0f, 0f, 0f); // la plaza: ahí no se siembra
+            var antes = new List<(float x, float z)>();
+            foreach (var nodo in _service.Nodes) antes.Add((nodo.X, nodo.Z));
+
+            _service.ClearAround(lejos, 5f);
+
+            int i = 0;
+            foreach (var nodo in _service.Nodes)
+            {
+                Assert.AreEqual(antes[i].x, nodo.X, 0.0001f);
+                Assert.AreEqual(antes[i].z, nodo.Z, 0.0001f);
+                i++;
+            }
+        }
+
         // ── 1. sembrar deja unos 120 nodos y pone Seeded ──────────────────
 
         [Test]

@@ -38,6 +38,18 @@ namespace Nimbo.Gathering
         const int TargetNodeCount = 120;
         const int MaxAttempts = TargetNodeCount * 20;
 
+        /// <summary>
+        /// El sitio de un edificio, donde no se siembra nada.
+        /// </summary>
+        /// <remarks>
+        /// La parcela de un edificio es de dos casillas de cuatro metros —ocho por
+        /// ocho— y el alero del tejado asoma metro y medio por cada lado. Seis metros
+        /// desde el centro cubren la parcela entera con su vuelo. Con menos, salían
+        /// robles atravesando el tejado de la panadería; sin nada, que es como estaba,
+        /// pasaba de vez en cuando por pura suerte.
+        /// </remarks>
+        const float BuildingClearance = 6f;
+
         // ── estado interno ──────────────────────────────────────────────────
 
         readonly NodeCatalog _catalog;
@@ -45,6 +57,22 @@ namespace Nimbo.Gathering
         readonly IInventoryService _inventory;
         readonly GameClock _clock;
         readonly string _seed;
+
+        /// <summary>
+        /// Quién sabe dónde está cada edificio, para no sembrar encima.
+        /// </summary>
+        /// <remarks>
+        /// Es <c>IBuildService</c> y no <c>IIslandService</c>, y la diferencia costó una
+        /// prueba en rojo: <c>IIslandService.TryGetSpawnPoint</c> devuelve un punto **al
+        /// azar** dentro del círculo de la zona —es donde plantar a un vecino que va a
+        /// esa zona, no dónde está el edificio— y las zonas miden de diez a veinte
+        /// metros de radio. Preguntándole a ese, la comprobación daba un sitio distinto
+        /// cada vez y no esquivaba nada.
+        ///
+        /// Opcional: los tests siembran sin aldea, y una isla sin edificios es una isla
+        /// donde se puede sembrar en cualquier parte.
+        /// </remarks>
+        readonly IBuildService _build;
 
         List<ResourceNode> _nodes => _state.Nodes;
 
@@ -54,8 +82,9 @@ namespace Nimbo.Gathering
         /// Constructor de producción: usa la semilla fija.
         /// </summary>
         public GatheringService(NodeCatalog catalog, GatheringState state,
-                                IInventoryService inventory, GameClock clock)
-            : this(catalog, state, inventory, clock, GATHERING_SEED) { }
+                                IInventoryService inventory, GameClock clock,
+                                IBuildService build = null)
+            : this(catalog, state, inventory, clock, GATHERING_SEED, build) { }
 
         /// <summary>
         /// Constructor con semilla explícita. Los tests lo usan para verificar
@@ -63,13 +92,14 @@ namespace Nimbo.Gathering
         /// </summary>
         public GatheringService(NodeCatalog catalog, GatheringState state,
                                 IInventoryService inventory, GameClock clock,
-                                string seed)
+                                string seed, IBuildService build = null)
         {
             _catalog = catalog;
             _state = state;
             _inventory = inventory;
             _clock = clock;
             _seed = seed;
+            _build = build;
         }
 
         // ── IGatheringService ───────────────────────────────────────────────
@@ -296,6 +326,11 @@ namespace Nimbo.Gathering
 
                 if (tooClose) continue;
 
+                // Y que no caiga en el sitio de un edificio. La plaza ya está fuera por
+                // el radio central, pero las diez zonas están repartidas entre los
+                // treinta y los ochenta metros: justo en la corona donde se siembra.
+                if (OnABuilding(x, z)) continue;
+
                 // Generar InstanceId estable
                 if (!counters.TryGetValue(def.NodeId, out int counter))
                     counter = 0;
@@ -330,6 +365,110 @@ namespace Nimbo.Gathering
         {
             for (int i = 0; i < _nodes.Count; i++)
                 if (_nodes[i].InstanceId == instanceId) return true;
+            return false;
+        }
+
+        /// <summary>¿Ese punto cae en la parcela de algún edificio de la aldea?</summary>
+        bool OnABuilding(float x, float z)
+        {
+            if (_build == null) return false;
+
+            // Movable son todas menos la plaza, y la plaza ya queda fuera por el radio
+            // central: entre las dos listas no se escapa ningún edificio.
+            var zones = _build.Movable;
+            for (int i = 0; i < zones.Count; i++)
+            {
+                if (!_build.TryGetWorldCentre(zones[i], out var centre)) continue;
+
+                float dx = x - centre.x;
+                float dz = z - centre.z;
+                if (dx * dx + dz * dz < BuildingClearance * BuildingClearance) return true;
+            }
+            return false;
+        }
+
+        // ── apartar ─────────────────────────────────────────────────────────
+
+        public int ClearAround(Vector3 centre, float radius)
+        {
+            EnsureSeeded();
+
+            float radiusSqr = radius * radius;
+            int moved = 0;
+
+            for (int i = 0; i < _nodes.Count; i++)
+            {
+                var node = _nodes[i];
+
+                float dx = node.X - centre.x;
+                float dz = node.Z - centre.z;
+                if (dx * dx + dz * dz >= radiusSqr) continue;
+
+                if (!TryFindSpotOutside(centre, radius, node, out float x, out float z)) continue;
+
+                node.X = x;
+                node.Z = z;
+                moved++;
+
+                EventBus.Publish(new NodeMoved(node.InstanceId));
+            }
+
+            return moved;
+        }
+
+        /// <summary>
+        /// Un hueco justo fuera del círculo, dando la vuelta hasta encontrarlo.
+        /// </summary>
+        /// <remarks>
+        /// Se sale por donde ya estaba: se empuja en la dirección en la que el nodo se
+        /// encontraba respecto al centro y desde ahí se prueban vueltas de treinta
+        /// grados. Empujar siempre hacia el mismo lado amontonaría toda la arboleda
+        /// desplazada en la misma esquina del edificio, y se vería.
+        ///
+        /// Si no hay hueco —está rodeado de otros nodos, o se sale de la isla— se
+        /// queda donde está. Un árbol bajo un alero se ve raro; un árbol en el vacío,
+        /// más.
+        /// </remarks>
+        bool TryFindSpotOutside(Vector3 centre, float radius, ResourceNode node,
+                                out float x, out float z)
+        {
+            var away = new Vector2(node.X - centre.x, node.Z - centre.z);
+            if (away.sqrMagnitude < 0.01f) away = Vector2.right;
+            away.Normalize();
+
+            float distance = radius + MinSeparation;
+
+            for (int turn = 0; turn < 12; turn++)
+            {
+                var direction = Quaternion.Euler(0f, turn * 30f, 0f) *
+                                new Vector3(away.x, 0f, away.y);
+
+                x = centre.x + direction.x * distance;
+                z = centre.z + direction.z * distance;
+
+                if (x * x + z * z > SpawnRadius * SpawnRadius) continue;
+                if (OnABuilding(x, z)) continue;
+                if (TooCloseToAnother(x, z, node)) continue;
+
+                return true;
+            }
+
+            x = node.X;
+            z = node.Z;
+            return false;
+        }
+
+        bool TooCloseToAnother(float x, float z, ResourceNode self)
+        {
+            for (int i = 0; i < _nodes.Count; i++)
+            {
+                var other = _nodes[i];
+                if (ReferenceEquals(other, self)) continue;
+
+                float dx = x - other.X;
+                float dz = z - other.Z;
+                if (dx * dx + dz * dz < MinSeparationSqr) return true;
+            }
             return false;
         }
     }

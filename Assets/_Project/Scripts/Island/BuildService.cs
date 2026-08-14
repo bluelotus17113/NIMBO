@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Nimbo.Core.Events;
+using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
 using Nimbo.Data.Save;
 using Nimbo.Data.World;
@@ -129,8 +130,32 @@ namespace Nimbo.Island
                 });
             }
 
+            ClearTheGround(cellX, cellY);
+
             EventBus.Publish(new BuildingMoved(zoneId));
             return true;
+        }
+
+        /// <summary>
+        /// Aparta los árboles y las piedras del sitio donde acaba de caer el edificio.
+        /// </summary>
+        /// <remarks>
+        /// La recolección siembra esquivando los edificios, pero los edificios se
+        /// mueven después de sembrar: sin esto, colocar la panadería sobre una arboleda
+        /// dejaba tres robles atravesando el tejado y no había forma de quitarlos —los
+        /// nodos no se pueden talar desde dentro de una pared—.
+        ///
+        /// Se aparta en vez de rechazar la casilla. Con ciento veinte nodos repartidos
+        /// por la corona donde se construye, exigir el suelo limpio habría dejado casi
+        /// ninguna casilla libre y el modo construcción sería un no constante.
+        /// </remarks>
+        private static void ClearTheGround(int cellX, int cellY)
+        {
+            if (!ServiceRegistry.TryGet<IGatheringService>(out var gathering)) return;
+
+            // El mismo radio con el que se siembra esquivando: la parcela de dos
+            // casillas más el vuelo del alero.
+            gathering.ClearAround(BuildGrid.CentreOf(cellX, cellY), 6f);
         }
 
         /// <summary>La casilla que ocupa una zona, esté colocada o en su sitio de fábrica.</summary>

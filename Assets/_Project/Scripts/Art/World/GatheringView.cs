@@ -25,11 +25,15 @@ namespace Nimbo.Art.World
     /// Es el mismo trato que <see cref="FarmView"/> tiene con el huerto: el servicio
     /// decide y avisa, y aquí solo se rehace lo que ha cambiado.
     ///
-    /// **Sin colisionadores, a propósito.** Los nodos se siembran sin saber dónde
-    /// están los edificios —y los edificios además se pueden mover—, así que un tronco
-    /// sólido puede acabar tapando una puerta y dejando una zona inaccesible sin que
-    /// nada avise. Atravesar un árbol se ve; quedarse sin poder entrar en la panadería
-    /// no tiene arreglo desde dentro de la partida.
+    /// **Sin colisionadores, a propósito.** Los vecinos no van por física: rodean una
+    /// lista corta de bultos gordos con <see cref="WalkAround"/>. Hacer sólidos los
+    /// árboles solo para el jugador significaría verle a un vecino cruzar por dentro
+    /// del roble que a ti te frena, y eso se nota más que atravesarlo. Meter los ciento
+    /// veinte en la lista de bultos arreglaría la asimetría y convertiría cada paso de
+    /// cada vecino en un recorrido de ciento veinte comprobaciones.
+    ///
+    /// (El motivo de antes —que podían caer encima de un edificio— ya no vale: la
+    /// siembra esquiva las parcelas y colocar un edificio aparta lo que pille debajo.)
     /// </remarks>
     public sealed class GatheringView : MonoBehaviour
     {
@@ -48,6 +52,7 @@ namespace Nimbo.Art.World
             EventBus.Subscribe<NodeHit>(OnNodeHit);
             EventBus.Subscribe<NodeGathered>(OnNodeGathered);
             EventBus.Subscribe<NodeRespawned>(OnNodeRespawned);
+            EventBus.Subscribe<NodeMoved>(OnNodeMoved);
         }
 
         private void OnDisable()
@@ -56,6 +61,7 @@ namespace Nimbo.Art.World
             EventBus.Unsubscribe<NodeHit>(OnNodeHit);
             EventBus.Unsubscribe<NodeGathered>(OnNodeGathered);
             EventBus.Unsubscribe<NodeRespawned>(OnNodeRespawned);
+            EventBus.Unsubscribe<NodeMoved>(OnNodeMoved);
         }
 
         /// <summary>
@@ -90,6 +96,9 @@ namespace Nimbo.Art.World
 
         private void OnNodeGathered(NodeGathered evt) => RebuildById(evt.InstanceId);
         private void OnNodeRespawned(NodeRespawned evt) => RebuildById(evt.InstanceId);
+
+        /// <summary>Le ha caído un edificio encima y se ha apartado: se redibuja allí.</summary>
+        private void OnNodeMoved(NodeMoved evt) => RebuildById(evt.InstanceId);
 
         /// <summary>
         /// Le ha dado pero aún aguanta: se sacude y sigue en pie.

@@ -51,6 +51,45 @@ namespace Nimbo.PlayTests
         }
 
         /// <summary>
+        /// Y ninguno dentro de un edificio.
+        /// </summary>
+        /// <remarks>
+        /// Los nodos se siembran entre los treinta y los noventa y cinco metros, y las
+        /// diez zonas de la aldea están repartidas justo en esa corona. Sin esquivarlas
+        /// era cuestión de tiempo que un roble creciera atravesando el tejado de la
+        /// panadería — y encima no se podría talar, porque para darle hay que ponerse
+        /// delante y delante hay una pared.
+        /// </remarks>
+        [UnityTest]
+        public IEnumerator NingunRecursoCaeDentroDeUnEdificio()
+        {
+            yield return Aldea.Cargar();
+
+            Assert.That(ServiceRegistry.TryGet<IGatheringService>(out var gathering));
+            // Se le pregunta a quien coloca, no a la isla: TryGetSpawnPoint devuelve
+            // un punto al azar dentro del círculo de la zona, no dónde está el
+            // edificio. Midiendo contra ese punto, esta prueba comprobaba otra cosa.
+            Assert.That(ServiceRegistry.TryGet<IBuildService>(out var build));
+
+            // La misma holgura que usa la siembra: la parcela de dos casillas de cuatro
+            // metros, más el vuelo del alero.
+            const float Parcela = 6f;
+
+            foreach (var zoneId in build.Movable)
+            {
+                if (!build.TryGetWorldCentre(zoneId, out var centro)) continue;
+
+                foreach (var nodo in gathering.Nodes)
+                {
+                    float dx = nodo.X - centro.x;
+                    float dz = nodo.Z - centro.z;
+                    Assert.That(dx * dx + dz * dz, Is.GreaterThanOrEqualTo(Parcela * Parcela),
+                                $"{nodo.InstanceId} ha salido dentro de {zoneId}");
+                }
+            }
+        }
+
+        /// <summary>
         /// Y tienen que estar sobre el prado, no flotando ni enterrados.
         /// </summary>
         /// <remarks>

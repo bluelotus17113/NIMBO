@@ -124,28 +124,108 @@ namespace Nimbo.Art.World
             walls.Add((MeshShapes.Box(new Vector3(0.55f, 1.4f, 0.55f) * s),
                 Matrix4x4.Translate(new Vector3(-Width * 0.28f, Height + 1.25f, -0.95f) * s)));
 
-            for (int i = 0; i < 4; i++)
-            {
-                float x = (i - 1.5f) * 1.7f;
+            // Dos puertas abajo y dos arriba, no cuatro en fila.
+            //
+            // Cuatro puertas en siete metros de fachada dan metro y medio por vivienda:
+            // salían cuatro rectángulos marrones idénticos pegados unos a otros y el
+            // bloque se leía como un motel de carretera. Y no se podía ensanchar el
+            // edificio, porque la parcela de la rejilla son dos casillas de cuatro
+            // metros y la fachada ya ocupa casi las dos enteras.
+            //
+            // Así que las cuatro viviendas se reparten en las dos plantas, con una
+            // pasarela y una escalera exterior para llegar a las de arriba. Las de
+            // abajo quedan a tres metros y pico una de otra, que ya es una casa, y la
+            // escalera le da al bloque la silueta que le faltaba: era una caja lisa con
+            // agujeros y ahora tiene delante y fondo.
+            const float DoorSpread = 1.75f;
+            const float Walkway = Storey + 0.1f;
 
+            for (int i = 0; i < 2; i++)
+            {
+                float x = (i * 2f - 1f) * DoorSpread;
+
+                Doorway(x, 0f);                 // planta baja
+                Doorway(x, Walkway);            // planta alta, sobre la pasarela
+
+                // Ventana al lado de cada puerta, en las dos plantas. Antes solo había
+                // arriba y la planta baja era una tira de puertas sin nada más.
+                Window(x + DoorSpread * 0.62f, 1.1f);
+                Window(x + DoorSpread * 0.62f, Walkway + 1.1f);
+            }
+
+            Balcony();
+            Staircase();
+
+            // Marco, hoja y escalón de una entrada.
+            void Doorway(float x, float y)
+            {
                 // Marco en color de pared alrededor de la puerta: sin él, la puerta era
                 // un rectángulo oscuro pegado a la fachada y se leía como un agujero.
                 walls.Add((MeshShapes.Box(new Vector3(1.14f, DoorHeight + 0.26f, 0.13f) * s),
-                    Matrix4x4.Translate(new Vector3(x, (DoorHeight + 0.26f) * 0.5f, front + 0.05f) * s)));
+                    Matrix4x4.Translate(new Vector3(x, y + (DoorHeight + 0.26f) * 0.5f, front + 0.05f) * s)));
 
                 trim.Add((MeshShapes.Box(new Vector3(0.88f, DoorHeight, 0.15f) * s),
-                    Matrix4x4.Translate(new Vector3(x, DoorHeight * 0.5f, front + 0.12f) * s)));
+                    Matrix4x4.Translate(new Vector3(x, y + DoorHeight * 0.5f, front + 0.12f) * s)));
 
                 // El escalón de entrada. Dice por dónde se entra mejor que la puerta.
                 trim.Add((MeshShapes.Box(new Vector3(1.26f, 0.16f, 0.55f) * s),
-                    Matrix4x4.Translate(new Vector3(x, 0.26f, front + 0.45f) * s)));
+                    Matrix4x4.Translate(new Vector3(x, y + 0.26f, front + 0.45f) * s)));
+            }
 
-                // Ventana de la planta alta, con alféizar.
-                glass.Add((MeshShapes.Box(new Vector3(0.86f, 0.8f, 0.11f) * s),
-                    Matrix4x4.Translate(new Vector3(x, Storey + 1.05f, front + 0.08f) * s)));
+            void Window(float x, float y)
+            {
+                glass.Add((MeshShapes.Box(new Vector3(0.72f, 0.78f, 0.11f) * s),
+                    Matrix4x4.Translate(new Vector3(x, y + 0.4f, front + 0.08f) * s)));
 
-                walls.Add((MeshShapes.Box(new Vector3(1.06f, 0.13f, 0.26f) * s),
-                    Matrix4x4.Translate(new Vector3(x, Storey + 0.58f, front + 0.11f) * s)));
+                // El alféizar: sin él la ventana es un cristal pegado a la pared.
+                walls.Add((MeshShapes.Box(new Vector3(0.9f, 0.13f, 0.26f) * s),
+                    Matrix4x4.Translate(new Vector3(x, y - 0.07f, front + 0.11f) * s)));
+            }
+
+            // La pasarela de la planta alta, con su barandilla.
+            void Balcony()
+            {
+                trim.Add((MeshShapes.Box(new Vector3(Width + 0.3f, 0.16f, 1.15f) * s),
+                    Matrix4x4.Translate(new Vector3(0f, Walkway, front + 0.55f) * s)));
+
+                // Pasamanos y balaustres. Sin barandilla la pasarela es una repisa, y
+                // una repisa a dos metros con puertas encima no se lee como un piso.
+                trim.Add((MeshShapes.Box(new Vector3(Width + 0.3f, 0.1f, 0.1f) * s),
+                    Matrix4x4.Translate(new Vector3(0f, Walkway + 0.85f, front + 1.08f) * s)));
+
+                for (int i = 0; i <= 7; i++)
+                {
+                    float x = (i / 7f - 0.5f) * (Width + 0.2f);
+                    trim.Add((MeshShapes.Box(new Vector3(0.09f, 0.85f, 0.09f) * s),
+                        Matrix4x4.Translate(new Vector3(x, Walkway + 0.45f, front + 1.08f) * s)));
+                }
+            }
+
+            // La escalera exterior, pegada al costado derecho.
+            void Staircase()
+            {
+                const int Steps = 7;
+                const float Tread = 0.45f;
+
+                float sideX = Width * 0.5f + 0.3f;   // pegada al canto de la pasarela
+                float top = front + 1.05f;           // donde entrega, en el borde
+
+                // Cada peldaño es un bloque macizo desde el suelo, no una losa a su
+                // altura. Con losas sueltas, la subida de treinta y dos centímetros y
+                // el grueso de catorce dejaban dieciocho de aire entre una y la
+                // siguiente: se veía una escalera de tablas flotando en el vacío.
+                //
+                // Y sube alejándose de la fachada. Al revés, los peldaños de arriba
+                // caían por detrás del plano de la fachada y quedaban enterrados en el
+                // muro: la escalera empezaba en el suelo y desaparecía dentro de casa.
+                for (int i = 0; i < Steps; i++)
+                {
+                    float height = Walkway * (i + 1f) / Steps;
+
+                    trim.Add((MeshShapes.Box(new Vector3(1.1f, height, Tread) * s),
+                        Matrix4x4.Translate(new Vector3(
+                            sideX, height * 0.5f, top + (Steps - 1 - i) * Tread) * s)));
+                }
             }
         }
 

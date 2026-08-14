@@ -252,8 +252,9 @@ namespace Nimbo.Game.Bootstrap
             // crafteo necesita además la isla para saber de qué nivel va.
             _inventory = new InventoryService(_save.Player, _economy);
             _farming = new FarmingService(new CropCatalog(), _save.Farm, _inventory);
+            // Con la isla delante: es lo que le deja esquivar los edificios al sembrar.
             _gathering = new GatheringService(new NodeCatalog(), _save.Gathering,
-                                              _inventory, _clock);
+                                              _inventory, _clock, _build);
             _crafting = new CraftingService(new RecipeCatalog(), _inventory, _island);
 
             // La paga se engancha aquí y no al encender la partida, y no es un

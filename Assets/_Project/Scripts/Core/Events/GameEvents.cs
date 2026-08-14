@@ -291,6 +291,21 @@ namespace Nimbo.Core.Events
         public NodeRespawned(string instanceId) => InstanceId = instanceId;
     }
 
+    /// <summary>
+    /// Un nodo se ha apartado de donde estaba. Le han puesto un edificio encima.
+    /// </summary>
+    /// <remarks>
+    /// Va aparte de <see cref="NodeRespawned"/> aunque quien dibuja haga lo mismo con
+    /// los dos —rehacerlo—, porque no significan lo mismo: uno es «ha vuelto» y este
+    /// es «se ha movido», y el día que alguien quiera contar cuántos han vuelto no
+    /// tendrá que averiguar cuáles de esos avisos eran mudanzas.
+    /// </remarks>
+    public readonly struct NodeMoved
+    {
+        public readonly string InstanceId;
+        public NodeMoved(string instanceId) => InstanceId = instanceId;
+    }
+
     public readonly struct TileChanged
     {
         public readonly int X;

@@ -41,6 +41,7 @@ namespace Nimbo.Art.PlayerView
         private IFarmingService _farming;
         private IEconomyService _economy;
         private IIslandService _island;
+        private IBuildService _build;
         private ISocialService _social;
         private IGiftService _gifts;
         private World.InteriorView _interior;
@@ -69,6 +70,7 @@ namespace Nimbo.Art.PlayerView
             ServiceRegistry.TryGet(out _farming);
             ServiceRegistry.TryGet(out _economy);
             ServiceRegistry.TryGet(out _island);
+            ServiceRegistry.TryGet(out _build);
             ServiceRegistry.TryGet(out _social);
             ServiceRegistry.TryGet(out _gifts);
             _interior = FindFirstObjectByType<World.InteriorView>();
@@ -276,12 +278,19 @@ namespace Nimbo.Art.PlayerView
                 return true;
             }
 
-            if (_island == null) return false;
+            if (_island == null || _build == null) return false;
 
             foreach (var zoneId in _island.ZoneIds)
             {
                 if (!_island.IsUnlocked(zoneId)) continue;
-                if (!_island.TryGetSpawnPoint(zoneId, out var centre)) continue;
+
+                // El centro se le pide a quien coloca, no a la isla. `TryGetSpawnPoint`
+                // devuelve un punto **al azar** dentro del circulo de la zona —sirve
+                // para plantar ahí a un vecino que va a esa zona— y las zonas miden de
+                // diez a veinte metros de radio. Midiendo contra eso, el cartel de
+                // «Entrar» aparecía y desaparecía por media zona seis veces por segundo
+                // y no había forma de saber dónde estaba la puerta.
+                if (!_build.TryGetWorldCentre(zoneId, out var centre)) continue;
 
                 // Se mide contra el centro del edificio, y el edificio tiene paredes:
                 // hay que llegar desde fuera. Con la casa a cinco metros de fondo, la

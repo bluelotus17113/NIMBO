@@ -59,6 +59,69 @@ namespace Nimbo.Art.World
             // La puerta mira al huerto, al sur: es de donde vienes.
             AddMesh(cabin, "puerta", MeshShapes.Box(new Vector3(1.1f, 2f, 0.16f)),
                     ToonPalette.Solid(ToonPalette.TrunkBrown), new Vector3(0f, 1f, -2.35f));
+
+            BuildCabinFaces(cabin);
+        }
+
+        /// <summary>
+        /// Ventanas, chimenea y porche: que la cabaña tenga cuatro caras y no una.
+        /// </summary>
+        /// <remarks>
+        /// Solo tenía puerta al sur. Las otras tres eran paredes lisas de suelo a
+        /// tejado, y como la cabaña está en tu isla y se rodea andando, se pasa más
+        /// tiempo mirándole la espalda que la cara. Una pared crema de cinco metros
+        /// sin nada encima no parece una casa: parece que falta por terminar.
+        ///
+        /// Las ventanas van a la altura de los ojos de un vecino —un metro y medio, no
+        /// dos— porque son la referencia con la que se lee el tamaño de todo lo demás.
+        /// </remarks>
+        private void BuildCabinFaces(Transform cabin)
+        {
+            var glass = ToonPalette.Solid(ToonPalette.Glass, smoothness: 0.35f);
+            var frame = ToonPalette.Solid(ToonPalette.TrunkBrown);
+            var stone = ToonPalette.Solid(ToonPalette.Rock);
+
+            // Norte: la cara que se ve al volver del puente. Dos ventanas, porque una
+            // sola en el centro de cinco metros deja la pared igual de vacía a los
+            // lados.
+            for (int i = -1; i <= 1; i += 2)
+            {
+                Window(new Vector3(i * 1.25f, 1.5f, 2.35f), new Vector3(1f, 0.9f, 0.14f));
+                Sill(new Vector3(i * 1.25f, 0.99f, 2.4f), new Vector3(1.2f, 0.14f, 0.3f));
+            }
+
+            // Este y oeste: una por lado, y en el costado de la mesa de trabajo se ve
+            // desde donde crafteas.
+            for (int i = -1; i <= 1; i += 2)
+            {
+                Window(new Vector3(i * 2.75f, 1.5f, 0.4f), new Vector3(0.14f, 0.9f, 1.1f));
+                Sill(new Vector3(i * 2.8f, 0.99f, 0.4f), new Vector3(0.3f, 0.14f, 1.3f));
+            }
+
+            // La chimenea de piedra, en el costado oeste y asomando por encima del
+            // tejado. Es lo que dice «aquí vive alguien» desde lejos, y de piedra
+            // porque toda la casa es madera y crema: sin un tercer material, el
+            // volumen se pierde contra la pared.
+            AddMesh(cabin, "chimenea", MeshShapes.Box(new Vector3(0.75f, 4.6f, 0.8f)), stone,
+                    new Vector3(-2.5f, 2.3f, 1.2f));
+            AddMesh(cabin, "chimenea_remate", MeshShapes.Box(new Vector3(0.95f, 0.22f, 1f)),
+                    frame, new Vector3(-2.5f, 4.65f, 1.2f));
+
+            // Un alero sobre la puerta, con sus dos postes. Además de dar sombra a la
+            // entrada, es lo que hace que la fachada sur no sea otra pared con un
+            // rectángulo marrón pegado.
+            AddMesh(cabin, "alero", MeshShapes.Box(new Vector3(2.6f, 0.16f, 1.3f)),
+                    ToonPalette.Solid(ToonPalette.RoofRed), new Vector3(0f, 2.35f, -3f));
+
+            for (int i = -1; i <= 1; i += 2)
+                AddMesh(cabin, "poste", MeshShapes.Cylinder(6, 0.09f, 0.11f, 2.35f), frame,
+                        new Vector3(i * 1.15f, 1.17f, -3.5f));
+
+            void Window(Vector3 at, Vector3 size) =>
+                AddMesh(cabin, "ventana", MeshShapes.Box(size), glass, at);
+
+            void Sill(Vector3 at, Vector3 size) =>
+                AddMesh(cabin, "alfeizar", MeshShapes.Box(size), frame, at);
         }
 
         private void BuildHammock()
