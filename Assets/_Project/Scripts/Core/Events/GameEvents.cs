@@ -528,6 +528,27 @@ namespace Nimbo.Core.Events
 
     public readonly struct QuitRequested { }
 
+    /// <summary>
+    /// Hace falta el puntero: hay algo abierto que se clica.
+    /// </summary>
+    /// <remarks>
+    /// Va por aviso porque quien lo sabe y quien lo necesita no se ven: los paneles
+    /// están en <c>Nimbo.UI</c> y la cámara en <c>Nimbo.Art</c>, y esos dos ensamblados
+    /// no se referencian. Sin esto, la cámara tendría que buscar paneles por la
+    /// jerarquía o habría que enganchar <c>Nimbo.Art</c> a la interfaz entera para
+    /// preguntarle una sola cosa.
+    ///
+    /// Lo pide la mochila, la ficha de un vecino, la tienda, el mapa, el modo
+    /// construcción, el creador de personajes, el panel de pruebas y la pausa. Lo que
+    /// tienen en común es que todos se manejan clicando, y con el ratón capturado para
+    /// girar la cámara no se puede clicar nada.
+    /// </remarks>
+    public readonly struct PointerNeeded
+    {
+        public readonly bool Needed;
+        public PointerNeeded(bool needed) => Needed = needed;
+    }
+
     public readonly struct GamePaused
     {
         public readonly bool Paused;

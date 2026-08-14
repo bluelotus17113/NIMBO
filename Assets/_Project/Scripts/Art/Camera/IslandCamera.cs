@@ -36,6 +36,13 @@ namespace Nimbo.Art.CameraWork
         [SerializeField] private float _followPitch = 48f;
         [SerializeField] private float _followHeight = 1.1f;
 
+        [Header("Mirar con el ratón")]
+        [Tooltip("Grados de giro por unidad de movimiento del ratón.")]
+        [SerializeField] private float _lookSensitivity = 2.2f;
+
+        [Tooltip("Cierto para que el ratón gire la cámara sin apretar ningún botón.")]
+        [SerializeField] private bool _freeLook = true;
+
         /// <summary>
         /// Le dice a quién seguir. Lo llama el arranque en cuanto el cuerpo existe;
         /// con null vuelve al plano general de la isla.
@@ -43,6 +50,11 @@ namespace Nimbo.Art.CameraWork
         public void Follow(Transform player)
         {
             _player = player;
+
+            // Sin protagonista no se captura el ratón: la cámara del plano general se
+            // maneja arrastrando, y ahí el cursor hace falta.
+            ApplyPointerState();
+
             if (_rig == null) return;
 
             if (player != null)
@@ -61,7 +73,6 @@ namespace Nimbo.Art.CameraWork
         };
 
         private bool _paused;
-        private Vector3 _lastMousePosition;
 
         // ── ciclo de vida de Unity ─────────────────────────────────────────
 
@@ -105,6 +116,7 @@ namespace Nimbo.Art.CameraWork
             EventBus.Subscribe<GameLoaded>(OnGameLoaded);
             EventBus.Subscribe<IslanderFocused>(OnIslanderFocused);
             EventBus.Subscribe<GamePaused>(OnGamePaused);
+            EventBus.Subscribe<PointerNeeded>(OnPointerNeeded);
         }
 
         private void OnDisable()
@@ -114,6 +126,13 @@ namespace Nimbo.Art.CameraWork
             EventBus.Unsubscribe<GameLoaded>(OnGameLoaded);
             EventBus.Unsubscribe<IslanderFocused>(OnIslanderFocused);
             EventBus.Unsubscribe<GamePaused>(OnGamePaused);
+            EventBus.Unsubscribe<PointerNeeded>(OnPointerNeeded);
+
+            // Devolver el ratón al salir. Si no, apagar este componente —volver al
+            // menú, recargar la escena— deja el cursor capturado y sin nadie que lo
+            // suelte: no se puede clicar nada ni cerrar la ventana.
+            _pointerCaptured = false;
+            ReleasePointer();
         }
 
         // ── eventos del juego ──────────────────────────────────────────────
@@ -189,6 +208,52 @@ namespace Nimbo.Art.CameraWork
         private void OnGamePaused(GamePaused evt)
         {
             _paused = evt.Paused;
+            ApplyPointerState();
+        }
+
+        private bool _pointerNeeded;
+
+        private void OnPointerNeeded(PointerNeeded evt)
+        {
+            _pointerNeeded = evt.Needed;
+            ApplyPointerState();
+        }
+
+        /// <summary>
+        /// Girar con el ratón solo cuando no haga falta el ratón para otra cosa.
+        /// </summary>
+        /// <remarks>
+        /// Mientras se gira, el cursor va **capturado**: si no, se llega al borde de la
+        /// ventana y la cámara deja de girar a mitad de vuelta. Y capturado no se puede
+        /// clicar, así que en cuanto se abre la mochila, una ficha, la tienda o la
+        /// pausa hay que soltarlo. Es el trato normal de un juego en tercera persona, y
+        /// la parte que se rompe sola si alguien añade un panel: por eso quien decide
+        /// es la interfaz entera de una vez y no cada panel por su cuenta.
+        /// </remarks>
+        private bool ShouldLook => _freeLook && _player != null && !_paused
+                                && !_pointerNeeded && !PlayerView.DebugPanel.AnyOpen;
+
+        private bool _pointerCaptured;
+
+        private void ApplyPointerState()
+        {
+            bool capture = ShouldLook;
+            if (capture == _pointerCaptured) return;
+
+            _pointerCaptured = capture;
+            if (capture) CapturePointer(); else ReleasePointer();
+        }
+
+        private static void CapturePointer()
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+
+        private static void ReleasePointer()
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
 
         // ── bucle principal ────────────────────────────────────────────────
@@ -196,6 +261,11 @@ namespace Nimbo.Art.CameraWork
         private void Update()
         {
             if (_rig == null || _world == null) return;
+
+            // Se repasa cada fotograma porque el panel de pruebas no avisa por evento
+            // —es un estático del mismo ensamblado— y sin repasar, abrirlo con F1
+            // dejaría el ratón capturado y sus botones sin poder pulsarse.
+            ApplyPointerState();
 
             if (!_paused)
                 HandleInput();
@@ -295,6 +365,28 @@ namespace Nimbo.Art.CameraWork
                 if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) panInput.x += 1f;
             }
 
+            // Mirar libre: mover el ratón a los lados gira la cámara alrededor del
+            // protagonista, sin apretar nada.
+            //
+            // Solo el eje horizontal. La altura de la cámara la decide el juego —un
+            // picado de cuarenta y ocho grados, que es el que deja ver a la vez al
+            // muñeco y lo que tiene delante— y dejar que el ratón la moviera sin querer
+            // convertiría cada giro en una pelea por recuperar el encuadre. Quien
+            // quiera cambiarla, con el botón derecho sigue estando.
+            //
+            // `Mouse X` ya viene como diferencia por fotograma: multiplicarlo por
+            // deltaTime lo dejaría el doble de lento a sesenta fotogramas que a ciento
+            // veinte, que es justo lo contrario de lo que se busca.
+            if (ShouldLook)
+            {
+                float look = Input.GetAxis("Mouse X");
+                if (Mathf.Abs(look) > 0.0001f)
+                {
+                    _rig.Orbit(look * _lookSensitivity, 0f);
+                    _followingFocus = false;
+                }
+            }
+
             bool orbiting = Input.GetMouseButton(1) || Input.GetMouseButton(2);
             float scroll = Input.mouseScrollDelta.y;
 
@@ -302,11 +394,7 @@ namespace Nimbo.Art.CameraWork
                             || orbiting
                             || Mathf.Abs(scroll) > 0.001f;
 
-            if (!manualInput)
-            {
-                _lastMousePosition = Input.mousePosition;
-                return;
-            }
+            if (!manualInput) return;
 
             // Desplazar en el plano de la cámara proyectado sobre el suelo.
             if (panInput.sqrMagnitude > 0.001f)
@@ -333,11 +421,17 @@ namespace Nimbo.Art.CameraWork
                 _rig.Pan(worldDelta);
             }
 
+            // Arrastrar con el derecho sigue existiendo, y es la única forma de
+            // cambiar la altura de la cámara.
+            //
+            // Va por ejes del ratón y no por diferencias de `mousePosition`, que es
+            // como estaba: con el cursor capturado para mirar libre, `mousePosition` se
+            // queda clavada en el centro de la ventana y el arrastre dejaría de girar
+            // sin que nada avisara. Los ejes funcionan capturado y suelto.
             if (orbiting)
             {
-                Vector3 mouseDelta = Input.mousePosition - _lastMousePosition;
-                float sensitivity = 0.3f;
-                _rig.Orbit(-mouseDelta.x * sensitivity, -mouseDelta.y * sensitivity);
+                _rig.Orbit(Input.GetAxis("Mouse X") * _lookSensitivity,
+                           -Input.GetAxis("Mouse Y") * _lookSensitivity);
             }
 
             if (Mathf.Abs(scroll) > 0.001f)
@@ -350,8 +444,6 @@ namespace Nimbo.Art.CameraWork
 
             // El jugador ha movido la cámara a mano: manda él.
             _followingFocus = false;
-
-            _lastMousePosition = Input.mousePosition;
         }
 
         // ── seguimiento ────────────────────────────────────────────────────

@@ -39,10 +39,31 @@ namespace Nimbo.Art.PlayerView
 
         private void Awake() => _body = GetComponent<PlayerBody>();
 
+        /// <summary>
+        /// Cierto mientras el panel esté abierto. Lo mira la cámara para soltar el
+        /// ratón, porque esto se maneja clicando.
+        /// </summary>
+        /// <remarks>
+        /// Estático y no por aviso, aunque los paneles de la interfaz sí avisen. Es que
+        /// aquellos viven en <c>Nimbo.UI</c>, que la cámara no ve, y este vive en el
+        /// mismo ensamblado que ella. Y sobre todo: con dos emisores del mismo aviso se
+        /// pisan — cerrar la mochila mandaría «ya no hace falta el puntero» con este
+        /// panel abierto delante, y sus botones dejarían de poder pulsarse.
+        /// </remarks>
+        public static bool AnyOpen { get; private set; }
+
         private void Update()
         {
             // Sistema de entrada antiguo: nada de Keyboard.current.
-            if (Input.GetKeyDown(KeyCode.F1)) _open = !_open;
+            if (Input.GetKeyDown(KeyCode.F1)) SetOpen(!_open);
+        }
+
+        private void OnDisable() => SetOpen(false);
+
+        private void SetOpen(bool open)
+        {
+            _open = open;
+            AnyOpen = open;
         }
 
         private void OnGUI()

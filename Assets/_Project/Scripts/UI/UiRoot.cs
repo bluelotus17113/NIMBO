@@ -469,6 +469,36 @@ namespace Nimbo.UI
             EventBus.Publish(new IslanderFocused(islanderId));
         }
 
+        /// <summary>¿Hay algo abierto que se maneje con el ratón?</summary>
+        private bool AnyPanelOpen =>
+            _panel.IsShowing || _shop.IsShowing || _decor.IsShowing ||
+            _achievements.IsShowing || _bag.IsShowing || _craft.IsShowing ||
+            _shipping.IsShowing || _map.IsShowing || _build.IsShowing ||
+            _furnish.IsShowing || _creator.IsShowing;
+
+        private bool _pointerWasNeeded;
+
+        /// <summary>
+        /// Avisa cuando se abre o se cierra algo, para que la cámara suelte el ratón.
+        /// </summary>
+        /// <remarks>
+        /// Se mira cada fotograma en vez de avisar desde cada <c>Show</c> y cada
+        /// <c>Hide</c>. Son once paneles y varios se cierran solos —el creador al
+        /// terminar, la ficha cuando el vecino se va de la isla—: enganchando el aviso
+        /// a mano en cada sitio, el día que alguien añada un panel o un camino de
+        /// cierre nuevo, el ratón se queda capturado con un panel abierto delante y no
+        /// hay forma de cerrarlo. Comparar un booleano sesenta veces por segundo no le
+        /// cuesta nada a nadie.
+        /// </remarks>
+        private void RefreshPointer()
+        {
+            bool needed = AnyPanelOpen;
+            if (needed == _pointerWasNeeded) return;
+
+            _pointerWasNeeded = needed;
+            EventBus.Publish(new PointerNeeded(needed));
+        }
+
         private void Update()
         {
             if (!_mounted) return;
@@ -481,6 +511,7 @@ namespace Nimbo.UI
             _fade.Tick(Time.unscaledDeltaTime);
             _hotbar.Tick();
             RefreshPrompt();
+            RefreshPointer();
 
             // Tab abre y cierra la mochila. Es la tecla que todo el mundo prueba
             // primero en un juego con inventario.
