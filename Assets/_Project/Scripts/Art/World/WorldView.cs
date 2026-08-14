@@ -150,41 +150,83 @@ namespace Nimbo.Art.World
         /// Con barandilla, y no es adorno: es lo único que impide caerse a media
         /// travesía. Sin ella, el paso más ancho de la cuenta te tira al vacío y la red
         /// de seguridad te devuelve al principio, que es peor que no poder cruzar.
+        ///
+        /// **El tablero busca el suelo en cada punta en vez de ir clavado a altura
+        /// cero.** Iba clavado, y no se podía cruzar: el borde de un prado se hunde
+        /// —`BuildSurface` le resta `t⁶ × 3,2` para que la hierba se doble hacia el
+        /// vacío— y en la isla del jugador, que es más pequeña, la punta del puente
+        /// caía en la parte hundida. Medido con la sonda: **el suelo llega a −1,85 y el
+        /// tablero estaba en 0**. Un escalón de metro ochenta y cinco para un muñeco
+        /// que sube cuarenta y cinco centímetros: la aldea entera era inalcanzable a
+        /// pie. En la punta de la aldea el desnivel era de cuatro centímetros y por eso
+        /// no se había visto nunca.
+        ///
+        /// Preguntando por el suelo, el puente sigue encajando aunque cambien el radio
+        /// de una isla o su semilla. Con las alturas escritas a mano habría que
+        /// acordarse de volver a medirlas, y no se acuerda nadie.
         /// </remarks>
         private void BuildBridge()
         {
             var bridge = new GameObject("Puente").transform;
             bridge.SetParent(transform, worldPositionStays: false);
 
-            var from = Data.World.Archipelago.BridgeFromVillage;
-            var to = Data.World.Archipelago.BridgeToHome;
-            float length = Mathf.Abs(from.z - to.z);
-            float middle = (from.z + to.z) * 0.5f;
             float width = Data.World.Archipelago.BridgeWidth;
+
+            // Los colisionadores de los dos prados se acaban de añadir en este mismo
+            // fotograma: sin sincronizar, la física todavía no los ve y los rayos
+            // salen al vacío.
+            Physics.SyncTransforms();
+
+            var from = GroundedEnd(Data.World.Archipelago.BridgeFromVillage);
+            var to = GroundedEnd(Data.World.Archipelago.BridgeToHome);
+
+            var span = to - from;
+            float length = span.magnitude;
+            var middle = (from + to) * 0.5f;
+            var facing = Quaternion.LookRotation(span.normalized, Vector3.up);
 
             var plank = ToonPalette.Solid(new Color32(0xA9, 0x86, 0x63, 255));
             var rail = ToonPalette.Solid(ToonPalette.TrunkBrown);
 
+            // Medio grosor por debajo: así la **cara de arriba** queda al ras del prado
+            // en las dos puntas, que es lo que se pisa.
             AddMesh(bridge, "tablero", MeshShapes.Box(new Vector3(width, 0.3f, length)),
-                    plank, new Vector3(from.x, -0.15f, middle), solid: true);
+                    plank, middle - Vector3.up * 0.15f, facing, solid: true);
 
             // Barandillas a los dos lados, sólidas: son las que te mantienen encima.
             for (int side = -1; side <= 1; side += 2)
             {
                 AddMesh(bridge, "baranda", MeshShapes.Box(new Vector3(0.22f, 1.1f, length)),
-                        rail, new Vector3(from.x + side * width * 0.5f, 0.55f, middle),
-                        solid: true);
+                        rail, middle + new Vector3(side * width * 0.5f, 0.55f, 0f),
+                        facing, solid: true);
             }
 
             // Postes cada pocos metros: sin ellos el puente parece una tabla flotando.
             int posts = Mathf.Max(2, Mathf.RoundToInt(length / 6f));
             for (int i = 0; i <= posts; i++)
             {
-                float z = Mathf.Lerp(from.z, to.z, i / (float)posts);
+                var at = Vector3.Lerp(from, to, i / (float)posts);
                 for (int side = -1; side <= 1; side += 2)
                     AddMesh(bridge, "poste", MeshShapes.Box(new Vector3(0.3f, 1.5f, 0.3f)),
-                            rail, new Vector3(from.x + side * width * 0.5f, 0.4f, z));
+                            rail, at + new Vector3(side * width * 0.5f, 0.4f, 0f));
             }
+        }
+
+        /// <summary>
+        /// La punta del puente puesta sobre el prado que tiene debajo.
+        /// </summary>
+        /// <remarks>
+        /// Si no encuentra suelo se queda donde decía la tabla. Es lo que había antes,
+        /// así que en el peor caso el puente vuelve a estar como estaba en vez de
+        /// desaparecer.
+        /// </remarks>
+        private static Vector3 GroundedEnd(Vector3 nominal)
+        {
+            var from = nominal + Vector3.up * 40f;
+            return Physics.Raycast(from, Vector3.down, out var hit, 80f,
+                                   ~0, QueryTriggerInteraction.Ignore)
+                ? new Vector3(nominal.x, hit.point.y, nominal.z)
+                : nominal;
         }
 
         /// <summary>Nubes alrededor y por debajo: son las que venden que la isla flota.</summary>
@@ -361,6 +403,11 @@ namespace Nimbo.Art.World
                 player.State.Appearance, player.Position, player.State.Yaw, transform);
             body.Bind(player);
             body.gameObject.AddComponent<PlayerView.PlayerInteractor>();
+
+            // El panel de pruebas, cerrado. Se abre con F1 y ahorra los cinco minutos
+            // de caminata que cuesta llegar a lo que quieras mirar.
+            body.gameObject.AddComponent<PlayerView.DebugPanel>();
+
             EventBus.Publish(new PlayerSpawned());
 
             var camera = Camera.main != null

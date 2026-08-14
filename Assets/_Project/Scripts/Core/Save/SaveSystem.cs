@@ -33,9 +33,38 @@ namespace Nimbo.Core.Save
         private static string _directoryOverride;
 
         /// <summary>
+        /// Dónde se apunta el desvío para que sobreviva a una recarga de dominio.
+        /// </summary>
+        /// <remarks>
+        /// Un campo estático no basta, y esto costó tres partidas. Entrar en modo juego
+        /// recarga el dominio de scripts y **pone a cero todos los estáticos**: el
+        /// aislamiento de las pruebas de juego desviaba el guardado en su
+        /// <c>OneTimeSetUp</c> —lo dejaba escrito en el registro, «el guardado va a
+        /// /tmp/...»— y la recarga se lo llevaba por delante antes de la primera
+        /// prueba. Desde ahí, cada arranque de prueba guardaba encima de la partida del
+        /// jugador con su isla de tres habitantes recién sorteados.
+        ///
+        /// Una variable de entorno del proceso sí sobrevive a la recarga. Y de regalo
+        /// deja lanzar el juego compilado contra una carpeta de usar y tirar:
+        /// <c>NIMBO_SAVE_DIR=/tmp/prueba ./IslaNimbo</c>.
+        /// </remarks>
+        private const string DirectoryVariable = "NIMBO_SAVE_DIR";
+
+        /// <summary>
         /// Dónde vive la partida. Normalmente la carpeta de datos del jugador.
         /// </summary>
-        public static string SaveDirectory => _directoryOverride ?? Application.persistentDataPath;
+        public static string SaveDirectory
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_directoryOverride)) return _directoryOverride;
+
+                var fromEnvironment = Environment.GetEnvironmentVariable(DirectoryVariable);
+                if (!string.IsNullOrEmpty(fromEnvironment)) return fromEnvironment;
+
+                return Application.persistentDataPath;
+            }
+        }
 
         /// <summary>
         /// Manda el guardado a otra carpeta. Es SOLO para las pruebas y existe por un
@@ -50,10 +79,21 @@ namespace Nimbo.Core.Save
         /// cualquier prueba del ensamblado, para que también proteja a las que escriba
         /// alguien que no haya leído esto.
         /// </remarks>
-        public static void RedirectTo(string directory) => _directoryOverride = directory;
+        public static void RedirectTo(string directory)
+        {
+            _directoryOverride = directory;
+
+            // Y en la variable de entorno, que es la que aguanta la recarga de dominio
+            // al entrar en modo juego. Sin esto el desvío dura hasta la primera prueba.
+            Environment.SetEnvironmentVariable(DirectoryVariable, directory);
+        }
 
         /// <summary>Vuelve a la carpeta del jugador.</summary>
-        public static void UseDefaultDirectory() => _directoryOverride = null;
+        public static void UseDefaultDirectory()
+        {
+            _directoryOverride = null;
+            Environment.SetEnvironmentVariable(DirectoryVariable, null);
+        }
 
         public static string SavePath => Path.Combine(SaveDirectory, SaveFileName);
         public static string BackupPath => Path.Combine(SaveDirectory, BackupFileName);
