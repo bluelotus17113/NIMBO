@@ -1,4 +1,5 @@
 using System;
+using Nimbo.Core.Services.Contracts;
 using Nimbo.Core.Util;
 
 namespace Nimbo.Events.Minigames
@@ -35,11 +36,17 @@ namespace Nimbo.Events.Minigames
         MinigameConfig _cfg;
 
         // ── pools de pistas ───────────────────────────────────────────────
-        static readonly string[] ChopHints = { "It needs cutting", "The pieces are too big", "Grab the knife", "Something must be chopped" };
-        static readonly string[] StirHints = { "It needs mixing", "Keep the pot moving", "Grab the spoon", "Don't let it stick" };
-        static readonly string[] SeasonHints = { "It tastes a bit bland", "Needs more flavor", "Grab the spices", "Something is missing" };
-
-        static readonly string[] RecipeNames = { "Vegetable Stew", "Mushroom Risotto", "Spicy Curry", "Fish Soup", "Herb Omelette" };
+        //
+        // Estaban en inglés, y el juego entero está en castellano. Nunca se había
+        // notado porque nada de esto había llegado a salir en pantalla.
+        static readonly string[] ChopHints =
+            { "Esto hay que cortarlo", "Los trozos están muy gordos", "Coge el cuchillo",
+              "Algo pide tabla" };
+        static readonly string[] StirHints =
+            { "Hay que removerlo", "No dejes de mover la olla", "Coge la cuchara",
+              "Como se pegue, adiós" };
+        static readonly string[] SeasonHints =
+            { "Está soso", "Le falta gracia", "Coge las especias", "Aquí falta algo" };
 
         // ── defaults ──────────────────────────────────────────────────────
 
@@ -55,7 +62,14 @@ namespace Nimbo.Events.Minigames
         public int RemainingFailures => _remainingFailures;
         public string CurrentHint => _started && !_finished && _currentStep < _totalSteps
             ? _hints[_currentStep] : "";
-        public string RecipeName { get; private set; }
+        /// <summary>Qué se está cocinando.</summary>
+        /// <remarks>
+        /// Lo pone quien lo arranca, sacándolo de la receta de verdad. Antes se sorteaba
+        /// de una lista de cinco nombres inventados —en inglés— que no existían en el
+        /// catálogo: se cocinaba un «Mushroom Risotto» y salía de la olla una sopa de
+        /// nube. Se notaba justo el día que esto llegase a verse, y ese día es hoy.
+        /// </remarks>
+        public string RecipeName { get; set; } = "Algo de comer";
         public int Score => _score;
         public bool LastStepCorrect => _lastStepCorrect;
         public int LastStepAction => _lastStepAction;
@@ -80,9 +94,6 @@ namespace Nimbo.Events.Minigames
             _finished = false;
 
             var rng = new Rng(seed);
-
-            // nombre de receta
-            RecipeName = RecipeNames[rng.Range(0, RecipeNames.Length)];
 
             // acciones correctas por paso
             _correctActions = new int[_totalSteps];

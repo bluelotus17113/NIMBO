@@ -1,4 +1,5 @@
 using System;
+using Nimbo.Core.Services.Contracts;
 using Nimbo.Core.Util;
 
 namespace Nimbo.Events.Minigames

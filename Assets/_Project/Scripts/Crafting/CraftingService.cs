@@ -77,7 +77,7 @@ namespace Nimbo.Crafting
         /// gastar un solo material. Si se gastara primero y luego fallara el hueco,
         /// el jugador perdería materiales sin recibir nada, y eso no se puede deshacer.
         /// </summary>
-        public CraftError Craft(string recipeId, CraftStation station)
+        public CraftError Craft(string recipeId, CraftStation station, string outputOverride = null)
         {
             // ── comprobar todo antes de tocar nada ──────────────────────────
             if (!_catalog.TryGet(recipeId, out var recipe))
@@ -95,8 +95,13 @@ namespace Nimbo.Crafting
                     return CraftError.MissingIngredients;
             }
 
+            // Lo que va a salir de verdad. La cocina manda engrudo cuando el minijuego
+            // se tuerce, y entonces sale una unidad: un desastre no rinde tres platos.
+            string outputId = string.IsNullOrEmpty(outputOverride) ? recipe.OutputId : outputOverride;
+            int outputQuantity = string.IsNullOrEmpty(outputOverride) ? recipe.OutputQuantity : 1;
+
             // se comprueba que quepa antes de gastar, o te quedas sin materiales y sin objeto
-            if (!WouldFit(recipe.OutputId, recipe.OutputQuantity))
+            if (!WouldFit(outputId, outputQuantity))
                 return CraftError.InventoryFull;
 
             // ── todo bien: gastar ingredientes ──────────────────────────────
@@ -106,10 +111,10 @@ namespace Nimbo.Crafting
             }
 
             // ── meter el resultado en la mochila ────────────────────────────
-            _inventory.TryStore(recipe.OutputId, recipe.OutputQuantity, out _);
+            _inventory.TryStore(outputId, outputQuantity, out _);
 
             // ── avisar al resto del juego, una sola vez y solo si salió bien ──
-            EventBus.Publish(new ItemCrafted(recipe.RecipeId, recipe.OutputId, recipe.OutputQuantity));
+            EventBus.Publish(new ItemCrafted(recipe.RecipeId, outputId, outputQuantity));
 
             return CraftError.Ok;
         }

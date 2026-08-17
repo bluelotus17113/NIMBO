@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Nimbo.Core.Services.Contracts;
 using Nimbo.Core.Util;
 using Nimbo.Events.Minigames;
 using NUnit.Framework;
@@ -273,25 +274,29 @@ namespace Nimbo.Tests
             // Comparar UN par de semillas por el marcador final es frágil: con las
             // entradas fijas la partida acaba siempre a los tres fallos, y el número
             // de aciertos antes de eso coincide por azar cerca de un tercio de las
-            // veces. Lo que sí tiene que divergir es la receta: si la semilla no la
-            // moviera, todas las partidas serían la misma.
+            // veces. Por eso se miran ocho.
+            //
+            // Se miraba también que divergiera el nombre de la receta, y eso dejó de
+            // tener sentido: el nombre ya no se sortea de una lista inventada —salía un
+            // «Mushroom Risotto» que no existe en el catálogo— sino que lo pone quien
+            // arranca la partida, con la receta de verdad que se está cocinando.
             var inputs = new[] { 0, 0, 0, 0, 0, 0, 0 };
-            var recipes = new HashSet<string>();
+            var hints = new HashSet<string>();
             var scores = new HashSet<(int, int, int)>();
 
             foreach (uint seed in new uint[] { 111, 999, 4242, 7, 31337, 2024, 88, 5150 })
             {
                 var game = new CookingGame();
                 game.Start(seed, 3);
-                recipes.Add(game.RecipeName);
+                hints.Add(game.CurrentHint);
 
                 foreach (int i in inputs) if (!game.IsOver) game.Step(i);
                 var result = game.Finish();
                 scores.Add((result.Successes, result.Failures, result.Points));
             }
 
-            Assert.Greater(recipes.Count, 1,
-                "ocho semillas dan siempre la misma receta: la semilla no se usa");
+            Assert.Greater(hints.Count, 1,
+                "ocho semillas piden lo mismo en el primer paso: la semilla no se usa");
             Assert.Greater(scores.Count, 1,
                 "ocho semillas dan siempre el mismo marcador: las acciones no cambian");
         }

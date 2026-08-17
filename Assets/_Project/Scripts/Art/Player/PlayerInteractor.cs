@@ -8,7 +8,8 @@ namespace Nimbo.Art.PlayerView
     /// <summary>Con qué está a punto de interactuar el jugador.</summary>
     public enum TargetKind { None = 0, Islander = 1, Node = 2, FarmTile = 3,
                              Hammock = 4, Bench = 5, ShippingBox = 6,
-                             Door = 7, Exit = 8, Food = 9, Board = 10 }
+                             Door = 7, Exit = 8, Food = 9, Board = 10,
+                             FishingSpot = 11, Stage = 12, Stove = 13 }
 
     /// <summary>
     /// Lo que el jugador tiene delante y qué pasa si pulsa.
@@ -33,6 +34,9 @@ namespace Nimbo.Art.PlayerView
 
         [SerializeField] private float _refreshInterval = 0.15f;
 
+        /// <summary>Desde qué parte del radio empieza a contar como borde de la isla.</summary>
+        public const float RimFraction = 0.78f;
+
         private PlayerBody _body;
         private Nimbo.Player.PlayerService _player;
         private IGatheringService _gathering;
@@ -45,6 +49,7 @@ namespace Nimbo.Art.PlayerView
         private ISocialService _social;
         private IGiftService _gifts;
         private IRequestService _requests;
+        private IMinigameService _minigames;
         private World.InteriorView _interior;
         private World.WorldView _world;
 
@@ -75,6 +80,7 @@ namespace Nimbo.Art.PlayerView
             ServiceRegistry.TryGet(out _social);
             ServiceRegistry.TryGet(out _gifts);
             ServiceRegistry.TryGet(out _requests);
+            ServiceRegistry.TryGet(out _minigames);
             _interior = FindFirstObjectByType<World.InteriorView>();
 
             // Se busca una vez. Estaba dentro del bucle que recorre a los vecinos, así
@@ -148,6 +154,11 @@ namespace Nimbo.Art.PlayerView
             if (TryTargetHome()) return;
 
             if (TryTargetBoard()) return;
+
+            // El concierto por delante de la caña: si hay fiesta en la plaza y estás
+            // ahí, lo que quieres es subirte, no ponerte a pescar de espaldas.
+            if (TryTargetStage()) return;
+            if (TryTargetFishingSpot()) return;
 
             if (TryTargetFarmTile()) return;
 
@@ -342,7 +353,85 @@ namespace Nimbo.Art.PlayerView
                 return true;
             }
 
+            if (Near(position, Data.Player.PlayerHome.Stove, range))
+            {
+                Kind = TargetKind.Stove;
+                Prompt = "Ponerte a cocinar";
+                return true;
+            }
+
             return false;
+        }
+
+        /// <summary>
+        /// ¿Está en el borde de la isla con la caña en la mano?
+        /// </summary>
+        /// <remarks>
+        /// En el borde y no en el embarcadero, aunque el embarcadero exista: esa zona
+        /// pide doce vecinos y una bandera de suceso para abrirse, así que pescar habría
+        /// nacido bloqueado hasta el final de la partida. El borde está desde el primer
+        /// día y lo tienen las dos islas, incluida la tuya.
+        ///
+        /// Pide llevar la caña **en la mano** y no solo tenerla, igual que talar pide el
+        /// hacha. Con solo tenerla, el cartel de pescar saldría encima de cualquier otra
+        /// cosa cada vez que pasas cerca del borde.
+        /// </remarks>
+        private bool TryTargetFishingSpot()
+        {
+            if (_inventory == null || _inventory.ToolInHand != ToolKind.FishingRod) return false;
+
+            var position = transform.position;
+            if (Data.World.Archipelago.OnBridge(position)) return false;
+
+            var side = Data.World.Archipelago.SideOf(position);
+            var centre = Data.World.Archipelago.CentreOf(side);
+            float radius = Data.World.Archipelago.RadiusOf(side);
+
+            // En proporción y no en metros: la isla del jugador mide menos de la mitad
+            // que la aldea, y un margen fijo la dejaría casi entera contando como borde.
+            //
+            // Y con margen de sobra —desde el 78%— porque el contorno de un prado es
+            // irregular: `BuildSurface` lo mueve entre el 86% y el 100% del radio. Un
+            // umbral pegado al borde deja el sitio de pescar en la parte que se hunde
+            // hacia el vacío, y ahí no se puede estar de pie.
+            float dx = position.x - centre.x;
+            float dz = position.z - centre.z;
+            if (dx * dx + dz * dz < radius * radius * RimFraction * RimFraction) return false;
+
+            Kind = TargetKind.FishingSpot;
+            TargetId = "";
+            Prompt = "Echar la caña";
+            return true;
+        }
+
+        /// <summary>
+        /// ¿Hay concierto y está donde se toca?
+        /// </summary>
+        /// <remarks>
+        /// En el escenario cuando la aldea tiene escenario, y si no en el Árbol Nimbo,
+        /// que es donde se junta todo el mundo desde el primer día. El concierto lo pone
+        /// el calendario y ocurre haya escenario o no; atar el cartel a un edificio que
+        /// tarda ocho vecinos en abrirse habría dejado el minijuego sin puerta durante
+        /// media partida.
+        /// </remarks>
+        private bool TryTargetStage()
+        {
+            if (_minigames == null || !_minigames.ConcertRunning) return false;
+
+            var position = transform.position;
+            var spot = Vector3.zero;   // el Árbol Nimbo, en el centro de la plaza
+
+            if (_island != null && _build != null &&
+                _island.IsUnlocked(Data.World.Archipelago.StageZone) &&
+                _build.TryGetWorldCentre(Data.World.Archipelago.StageZone, out var stage))
+                spot = stage;
+
+            if (!Near(position, spot, 7f)) return false;
+
+            Kind = TargetKind.Stage;
+            TargetId = "";
+            Prompt = "Subir a tocar";
+            return true;
         }
 
         /// <summary>
@@ -372,6 +461,10 @@ namespace Nimbo.Art.PlayerView
             };
             return true;
         }
+
+        /// <summary>El nivel de la isla, de 1 a 5. Sin isla registrada, el más fácil.</summary>
+        private int IslandLevel() =>
+            _island == null ? 1 : Mathf.Clamp(_island.State.Level, 1, 5);
 
         private static bool Near(Vector3 from, Vector3 to, float range)
         {
@@ -651,6 +744,22 @@ namespace Nimbo.Art.PlayerView
 
                 case TargetKind.Board:
                     EventBus.Publish(new RequestBoardRead());
+                    break;
+
+                case TargetKind.Stove:
+                    EventBus.Publish(new StationUsed(CraftStationKind.Kitchen));
+                    break;
+
+                // La dificultad sube con la isla: cuanto más crece la aldea, más lejos
+                // pican los peces y más larga es la canción. Es el único medidor de
+                // avance que existe hoy; cuando el protagonista tenga niveles (§12)
+                // será el suyo.
+                case TargetKind.FishingSpot:
+                    EventBus.Publish(new MinigameRequested(MinigameKind.Fishing, IslandLevel()));
+                    break;
+
+                case TargetKind.Stage:
+                    EventBus.Publish(new MinigameRequested(MinigameKind.Rhythm, IslandLevel()));
                     break;
 
                 case TargetKind.Door:

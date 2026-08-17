@@ -82,6 +82,13 @@ namespace Nimbo.Core.Services.Contracts
         /// Gasta los ingredientes y mete el resultado en la mochila. Si no cabe, no
         /// gasta nada: quedarse sin materiales y sin objeto no puede pasar.
         /// </summary>
-        CraftError Craft(string recipeId, CraftStation station);
+        /// <param name="outputOverride">
+        /// Qué sale en lugar de lo que dice la receta. Lo usa la cocina: si el
+        /// minijuego se tuerce, los ingredientes se gastan igual y de la olla sale
+        /// engrudo. Los ingredientes se cobran en un solo sitio a propósito — con la
+        /// cocina descontándolos por su cuenta, cualquier cambio en el crafteo dejaría
+        /// de aplicarse justo ahí.
+        /// </param>
+        CraftError Craft(string recipeId, CraftStation station, string outputOverride = null);
     }
 }

@@ -74,6 +74,17 @@ namespace Nimbo.Data.Player
         // del huerto, que es para lo que está ahí.
         public static readonly UnityEngine.Vector3 ShippingBox = new(14.6f, 0f, -171.4f);
 
+        /// <summary>
+        /// El fogón, al otro lado del porche que la mesa de trabajo.
+        /// </summary>
+        /// <remarks>
+        /// La cocina era una pestaña del menú de crafteo y nada más: <c>CraftStation
+        /// .Kitchen</c> existía, tenía seis recetas y no había cocina en ninguna parte.
+        /// Ahora es un sitio al que se va, como la mesa, y por eso está separado de
+        /// ella: dos verbos distintos no se hacen desde el mismo palmo de suelo.
+        /// </remarks>
+        public static readonly UnityEngine.Vector3 Stove = new(8.8f, 0f, -171.4f);
+
         /// <summary>Donde apareces: al sur, con el huerto y la casa por delante.</summary>
         public static readonly UnityEngine.Vector3 Spawn = new(0f, 3f, -176f);
 

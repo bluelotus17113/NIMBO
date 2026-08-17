@@ -56,6 +56,17 @@
         "herramienta"
       ],
       "toolKind": "Scythe"
+    },
+    {
+      "catalogId": "tool_cana",
+      "displayName": "Caña",
+      "description": "Un junco largo y un sedal. Se pesca en el embarcadero, donde las nubes son más hondas.",
+      "price": 110,
+      "unlockLevel": 1,
+      "tags": [
+        "herramienta"
+      ],
+      "toolKind": "FishingRod"
     }
   ]
 }

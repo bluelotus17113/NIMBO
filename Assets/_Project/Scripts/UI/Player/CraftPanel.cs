@@ -62,6 +62,24 @@ namespace Nimbo.UI.Player
             Root.Add(_hint);
         }
 
+        /// <summary>
+        /// Lo que hay que hacer cuando el jugador le da a una receta de cocina.
+        /// </summary>
+        /// <remarks>
+        /// La cocina no se craftea de un clic: se juega. El panel no abre ventanas —eso
+        /// lo hace quien las tiene todas— así que avisa y se aparta. Si nadie ha puesto
+        /// nada aquí, cocinar vuelve a ser instantáneo, que es lo que había antes y no
+        /// deja el menú roto.
+        /// </remarks>
+        public System.Action<Recipe> OnCook;
+
+        /// <summary>Abre el menú ya en esa pestaña. Lo usa el fogón.</summary>
+        public void Show(CraftStation station)
+        {
+            _station = station;
+            Show();
+        }
+
         public void Show()
         {
             if (!ServiceRegistry.TryGet(out _crafting)) return;
@@ -172,6 +190,18 @@ namespace Nimbo.UI.Player
 
         private void Craft(Recipe recipe)
         {
+            // Cocinar es jugar. Se comprueba antes de arrancar el minijuego para no
+            // hacerle pasar cinco pasos a alguien al que le falta un huevo: los
+            // ingredientes se gastan al final, gane o pierda.
+            if (recipe.Station == CraftStation.Kitchen && OnCook != null)
+            {
+                var check = _crafting.CanCraft(recipe.RecipeId, _station);
+                if (check != CraftError.Ok) { _hint.text = Excuse(check); Rebuild(); return; }
+
+                OnCook(recipe);
+                return;
+            }
+
             var error = _crafting.Craft(recipe.RecipeId, _station);
             _hint.text = error == CraftError.Ok
                 ? $"Hecho: {recipe.DisplayName}."

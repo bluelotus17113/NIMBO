@@ -499,22 +499,56 @@ memorables.
 | Sueño | 1 por noche | 1 isleño | Sueños absurdos: "Soñé que el Árbol Nimbo me hablaba con voz de pato" |
 | Concierto | 1 cada 3–5 días | 1–4 isleños | Un isleño canta en el escenario; los demás miran y aplauden (o abuchean) |
 | Noticia de la isla | 1 por día | Todos | "El mercado de muebles se inunda de ofertas", "Avistado un Nimbo dorado" |
-| Minijuego | Cuando el jugador quiere | 1 isleño | Cocina (puzle de ingredientes), Pesca (timing), Música (ritmo) |
+| Minijuego | Cuando el jugador quiere | el protagonista | Cocina (los pasos de la receta), Pesca (tirar o aguantar), Música (ritmo) — §9.2 |
 | Festival | 1 cada 15–20 días de juego | Todos | "Noche de estrellas fugaces", "Festival de la cosecha Nimbo", "Torneo de cocina" |
 | Visita misteriosa | 1 cada 7–10 días | Todos | Un viajero de otra isla llega con objetos raros e historias |
 | Expedición | Cuando se desbloquea | 2–4 isleños | Explorar una nube densa y encontrar objetos únicos |
 
 ### 9.2 Minijuegos concretos
 
-1. **Cocina:** el jugador elige ingredientes (máx. 4) y los coloca en un
-   tablero 3×3. Cada receta pide una disposición concreta. Acierto = plato
-   cocinado (mejor efecto que ingredientes sueltos). Fallo = "engrudo" (efecto
-   mínimo).
-2. **Pesca en las nubes:** el isleño lanza una caña al borde de la isla. El
-   jugador pulsa en el momento justo cuando el flotador se hunde (timing).
-   Peces raros valen más monedas.
-3. **Ritmo:** los isleños bailan o tocan en el escenario. El jugador pulsa
-   botones al ritmo de una melodía (4 carriles, estilo Taiko simplificado).
+**Hecho.** Los tres estaban escritos y probados desde hacía meses y **no los
+construía nadie**: cero usos fuera de su propia carpeta. Lo que faltaba no era
+lógica, era quién los empieza, dónde se juegan y qué pasa con sus puntos.
+
+Lo que hay ahora no es exactamente lo que decía este apartado, y conviene dejar
+escrito en qué se separó, porque el código llevaba razón:
+
+| | Lo que decía el diseño | Lo que hay | Por qué |
+|---|---|---|---|
+| Cocina | tablero 3×3 de ingredientes | seguir los pasos de la receta: cortar, remover, sazonar | el tablero pide una interfaz de arrastrar y una tabla de disposiciones por receta; los pasos usan las seis recetas de cocina que ya existen |
+| Pesca | pulsar cuando se hunde el flotador | tirar o aguantar mientras el pez tensa el sedal | el timing puro castiga la mano, no la cabeza, y este juego no va de reflejos |
+| Ritmo | cuatro carriles tipo Taiko | un carril y una aguja que llega a la marca | cuatro carriles necesitan un mando; uno se toca con la barra espaciadora y se entiende sin explicarlo |
+
+**Dónde se juega cada uno.** Los tres tienen un sitio, y ninguno es un botón de
+la barra de arriba:
+
+- **La cocina, en el fogón de tu casa.** `CraftStation.Kitchen` existía, tenía
+  seis recetas y no había cocina en ninguna parte: se cocinaba desde una pestaña
+  del menú. Ahora hay fogón junto al huerto y darle a una receta de cocina abre
+  el minijuego en vez de fabricarla de un clic. La dificultad es **cuántos
+  ingredientes lleva**: lo que cuesta reunir cuesta también hacerlo.
+- **La pesca, en el borde de la isla**, con la caña en la mano. En el borde y no
+  en el embarcadero aunque el embarcadero exista, porque esa zona pide doce
+  vecinos y una bandera de suceso: pescar habría nacido bloqueado hasta el final
+  de la partida. El borde está desde el primer día y lo tienen las dos islas.
+- **El ritmo, mientras hay concierto**, en el escenario si la aldea ya tiene, y
+  si no en el Árbol Nimbo. El concierto lo pone el calendario y ocurre haya
+  escenario o no.
+
+**Cada uno cobra en la moneda que le pega**, y eso es lo que evita que sean tres
+máquinas de nimbos con temática distinta:
+
+- La cocina **no da monedas**: da el plato. Y los ingredientes se gastan gane o
+  pierda — si no, el minijuego sería un trámite que se repite hasta que sale.
+- La pesca da lo pescado y unas monedas. Si el pez escapa no da nada, y eso es
+  lo que hace que elegir entre recoger y aguantar sea elegir. Cuanto más limpia
+  la pelea, mejor el pez; y una de cada ocho veces sale una bota vieja.
+- El ritmo da monedas pocas y, si suena durante un concierto, **ánimo a toda la
+  aldea**. Tocar bien en la fiesta del pueblo tiene que notarse en el pueblo, no
+  en tu monedero.
+
+La caña (`tool_cana`) se fabrica a mano con madera, fibra y una concha, así que
+pescar es algo a lo que se llega recogiendo, no comprando.
 
 ### 9.3 El Árbol Nimbo
 
@@ -594,9 +628,12 @@ lo que haya en la nevera y se quejan al volver ("¡Te echamos de menos!").
 
 - **Nada de estrés:** sin temporizadores que caducan, sin sanciones por jugar
   mal o lento. No hay forma de "perder".
-- **Nada de fallar:** los minijuegos dan recompensa incluso si lo haces mal
-  (fallar cocina = "engrudo comestible", no "pierdes los ingredientes"). La
-  puntuación alta da recompensa extra, no es requisito.
+- **Nada de fallar en seco:** de los minijuegos no se sale con las manos vacías
+  y sin nada que enseñar. Quemar la cocina da **engrudo**, que se come; lo que
+  se pierde es el plato bueno, no la cena. Los ingredientes sí se gastan, y esa
+  es la única forma de que el minijuego signifique algo: si al fallar se
+  devolvieran, sería un trámite que se repite hasta que sale. La puntuación alta
+  da de más, no es requisito.
 - **Nada de conflicto grave:** las discusiones son por tonterías (quién se comió
   el último pastel, no quién traicionó a quién). Las reconciliaciones son
   cálidas y un poco ridículas.
@@ -1217,9 +1254,8 @@ pasan los tests y no existen en el juego.
 - [x] 40 muebles del catálogo base + pool de 200 en tienda rotatoria.
 - [x] Sistema de relaciones con los 10 niveles y 9 estados.
 - [x] Economía con monedas, tiendas, trabajo y balance diario.
-- [~] 3 minijuegos (cocina, pesca, ritmo). Las tres clases están escritas y con
-      tests, pero **nadie las instancia**: sin servicio, sin UI y sin caña en el
-      catálogo de herramientas. Hoy no se pueden jugar.
+- [x] 3 minijuegos (cocina, pesca, ritmo), con su servicio, su pantalla y un sitio
+      en el mundo cada uno (§9.2). La caña se fabrica a mano.
 - [x] Eventos: sucesos diarios, sueños, conciertos, noticias, festivales. Encendidos
       desde el arranque; el tablón alimenta además la Crónica (§13.3).
 - [x] El Árbol Nimbo funcional.
@@ -1329,7 +1365,7 @@ cuatro primeras son código que ya existe y solo hay que conectar.
 | ~~2~~ | ~~Bodas y bebés por el calendario: `WeddingPlanner` (§13.1)~~ | **hecho** | prometidos deja de ser un callejón; la aldea crece sola |
 | ~~3~~ | ~~La Crónica en el menú, y `EventsService` encendido (§13.3)~~ | **hecho** | la aldea deja de vivir a ciegas |
 | ~~4~~ | ~~`Resolve` que consume el payload + `RequestKind.Material` y el tablón (§15.4)~~ | **hecho** | recolectar tiene un porqué social |
-| 5 | Enchufar los tres minijuegos (§17.1) | un día | tres verbos escritos y apagados |
+| ~~5~~ | ~~Enchufar los tres minijuegos (§9.2)~~ | **hecho** | tres verbos escritos y apagados |
 | 6 | Las cinco vías y sus desbloqueos (§12) | dos o tres días | la progresión entera; no toca ningún servicio existente |
 | 7 | Rivales y triángulos (§13.2) | un día | las historias que el jugador va a contar |
 | 8 | Cortejo del protagonista con rechazo (§14) | dos días | el pilar romántico, apoyado en 6 y 7 |

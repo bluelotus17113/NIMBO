@@ -38,6 +38,38 @@ namespace Nimbo.Art.World
             BuildHammock();
             BuildBench();
             BuildShippingBox();
+            BuildStove();
+        }
+
+        /// <summary>
+        /// El fogón: piedra, un puchero y el fuego debajo.
+        /// </summary>
+        /// <remarks>
+        /// Fuera y no dentro de la cabaña porque el interior es una escena aparte y la
+        /// cocina tiene que verse desde el huerto: lo que se cocina sale de ahí al lado,
+        /// y la cocina es lo que le da salida a la cosecha que no se vende.
+        /// </remarks>
+        private void BuildStove()
+        {
+            var stove = Child("fogon", PlayerHome.Stove);
+            var stone = ToonPalette.Solid(ToonPalette.Rock);
+
+            AddMesh(stove, "base", MeshShapes.Box(new Vector3(1.3f, 0.75f, 1.1f)), stone,
+                    new Vector3(0f, 0.38f, 0f), solid: true);
+
+            // La boca del fuego, en el frente y hacia abajo: es lo que dice que es un
+            // fogón y no un poyete.
+            AddMesh(stove, "boca", MeshShapes.Box(new Vector3(0.7f, 0.34f, 0.1f)),
+                    ToonPalette.Solid(new Color32(0xF0, 0x8A, 0x4B, 255)),
+                    new Vector3(0f, 0.3f, -0.56f));
+
+            AddMesh(stove, "puchero", MeshShapes.Cylinder(9, 0.42f, 0.36f, 0.5f),
+                    ToonPalette.Solid(new Color32(0x5E, 0x6B, 0x73, 255)),
+                    new Vector3(0f, 1f, 0f));
+
+            AddMesh(stove, "tapa", MeshShapes.Cylinder(9, 0.44f, 0.44f, 0.08f),
+                    ToonPalette.Solid(new Color32(0x8C, 0x93, 0x9B, 255)),
+                    new Vector3(0f, 1.29f, 0f));
         }
 
         private void BuildCabin()

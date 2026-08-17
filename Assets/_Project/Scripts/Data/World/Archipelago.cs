@@ -82,6 +82,19 @@ namespace Nimbo.Data.World
         /// <summary>A cuánto hay que estar para poder leerlo.</summary>
         public const float RequestBoardRange = 3f;
 
+        /// <summary>El escenario: donde se dan los conciertos y donde el jugador toca.</summary>
+        /// <remarks>
+        /// Los identificadores de las dos zonas donde se hace algo —y no solo se
+        /// entra— viven aquí y no en el plano de la isla, porque los usan los dos: quien
+        /// coloca las zonas y quien pone la actividad encima. Escritos dos veces, un
+        /// cambio de nombre dejaría el embarcadero en pie y sin pescar, sin que fallara
+        /// nada.
+        /// </remarks>
+        public const string StageZone = "zona_escenario";
+
+        /// <summary>El embarcadero: el borde donde las nubes son más hondas.</summary>
+        public const string JettyZone = "zona_embarcadero";
+
         /// <summary>Está sobre el puente, entre las dos islas.</summary>
         public static bool OnBridge(Vector3 position) =>
             position.z <= BridgeFromVillage.z && position.z >= BridgeToHome.z &&

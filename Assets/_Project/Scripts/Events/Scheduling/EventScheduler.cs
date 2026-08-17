@@ -47,6 +47,28 @@ namespace Nimbo.Events.Scheduling
             EventBus.Unsubscribe(_onDay);
         }
 
+        /// <summary>
+        /// Pone un evento en marcha a mano, sin esperar al sorteo.
+        /// </summary>
+        /// <remarks>
+        /// Es el gemelo de <c>RequestService.Raise</c> y existe por lo mismo: hay cosas
+        /// que tienen que pasar cuando toca y no cuando el azar quiera —el tutorial, un
+        /// suceso guionizado, una prueba que necesita un concierto puesto—. El sorteo
+        /// normal no se toca; esto solo se salta la espera.
+        ///
+        /// No hace nada si ya hay otro en marcha: la regla de uno cada vez manda igual.
+        /// </remarks>
+        public bool TryStartEvent(string eventId, int hour)
+        {
+            if (_activeEvent != null) return false;
+
+            var def = EventCalendar.ById(eventId);
+            if (def == null) return false;
+
+            StartEvent(def, hour);
+            return true;
+        }
+
         /// <summary>La lógica interna puede forzar el final del evento activo.</summary>
         public void FinishActiveEvent()
         {

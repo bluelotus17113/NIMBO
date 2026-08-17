@@ -88,6 +88,7 @@ namespace Nimbo.Game.Bootstrap
         private HomeUpgradeService _homeUpgrades;
         private WeddingPlanner _weddings;
         private Nimbo.Events.EventsService _events;
+        private Nimbo.Events.Minigames.MinigameService _minigames;
 
         private IslanderRegistry _registry;
         private long _lastAutosaveMinute;
@@ -298,6 +299,12 @@ namespace Nimbo.Game.Bootstrap
             // puesto arriba, y con los dos importados «Events» se vuelve ambiguo.
             _events = new Nimbo.Events.EventsService(null, _save, _clock);
 
+            // Los tres minijuegos. Estaban escritos, probados y sin construir por nadie:
+            // lógica pura sin arranque, sin pantalla y sin premio. Van detrás del módulo
+            // de eventos porque el de ritmo pregunta al calendario si hay concierto
+            // puesto — tocar en la fiesta del pueblo tiene que notarse en el pueblo.
+            _minigames = new Nimbo.Events.Minigames.MinigameService(null, _events.Scheduler);
+
             _brain = new IslanderBrain(registry, _island, personalities, _social, _clock);
             _jobs = new JobService(registry, _simulation, _island, _clock);
             _tree = new NimboTree(_save, _clock, registry);
@@ -316,6 +323,7 @@ namespace Nimbo.Game.Bootstrap
             ServiceRegistry.Register<IHousingService>(housing);
             ServiceRegistry.Register<IHomeUpgradeService>(_homeUpgrades);
             ServiceRegistry.Register<IChronicleService>(_events.News);
+            ServiceRegistry.Register<IMinigameService>(_minigames);
             ServiceRegistry.Register<IEconomyService>(_economy);
             ServiceRegistry.Register<IIslandService>(_island);
             ServiceRegistry.Register<IDecorService>(decor);

@@ -1,3 +1,5 @@
+using Nimbo.Core.Services.Contracts;
+
 namespace Nimbo.Events.Minigames
 {
     /// <summary>

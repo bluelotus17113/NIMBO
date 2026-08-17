@@ -100,6 +100,29 @@ namespace Nimbo.Core.Events
         }
     }
 
+    /// <summary>
+    /// El jugador quiere ponerse a jugar a uno de los tres.
+    /// </summary>
+    /// <remarks>
+    /// Lo publica quien tiene el sitio —el borde de la isla, el escenario, la pestaña
+    /// de cocina— y lo recoge la interfaz, que es la única que sabe abrir una ventana.
+    /// Sin esto, el mundo tendría que conocer los paneles.
+    /// </remarks>
+    public readonly struct MinigameRequested
+    {
+        public readonly Services.Contracts.MinigameKind Kind;
+        public readonly int Difficulty;
+
+        /// <summary>Para la cocina, el id de la receta. Los otros dos no lo usan.</summary>
+        public readonly string Context;
+
+        public MinigameRequested(Services.Contracts.MinigameKind kind, int difficulty,
+                                 string context = null)
+        {
+            Kind = kind; Difficulty = difficulty; Context = context;
+        }
+    }
+
     /// <summary>El jugador se ha puesto delante del tablón de la plaza y ha pulsado.</summary>
     /// <remarks>
     /// Un aviso propio en vez de colarlo por <see cref="StationUsed"/>: el tablón no es

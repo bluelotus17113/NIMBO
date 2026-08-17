@@ -37,6 +37,7 @@ namespace Nimbo.UI
         private Achievements.AchievementToast _toast;
         private Chronicle.ChroniclePanel _chronicle;
         private Requests.RequestBoardPanel _board;
+        private Minigames.MinigamePanel _minigame;
         private Player.HotbarView _hotbar;
         private Player.BagPanel _bag;
         private Player.CraftPanel _craft;
@@ -64,6 +65,7 @@ namespace Nimbo.UI
             EventBus.Unsubscribe<IslanderLeft>(OnRosterChanged);
             EventBus.Unsubscribe<StationUsed>(OnStationUsed);
             EventBus.Unsubscribe<RequestBoardRead>(OnRequestBoardRead);
+            EventBus.Unsubscribe<MinigameRequested>(OnMinigameRequested);
             EventBus.Unsubscribe<BuildModeChanged>(OnBuildModeChanged);
             EventBus.Unsubscribe<FurnishModeChanged>(OnFurnishModeChanged);
             EventBus.Unsubscribe<InteriorEntered>(OnInteriorEntered);
@@ -134,10 +136,17 @@ namespace Nimbo.UI
             _board = new Requests.RequestBoardPanel();
             body.Add(_board.Root);
 
+            _minigame = new Minigames.MinigamePanel();
+            body.Add(_minigame.Root);
+
             _bag = new Player.BagPanel();
             body.Add(_bag.Root);
 
             _craft = new Player.CraftPanel();
+            // Las recetas de cocina no se hacen de un clic: se juegan. El menú avisa y
+            // aquí se abre el minijuego, porque el menú no sabe de otras ventanas.
+            _craft.OnCook = recipe => EventBus.Publish(new MinigameRequested(
+                MinigameKind.Cooking, DifficultyOf(recipe), recipe.RecipeId));
             body.Add(_craft.Root);
 
             _shipping = new Player.ShippingPanel();
@@ -190,6 +199,7 @@ namespace Nimbo.UI
             EventBus.Subscribe<IslanderLeft>(OnRosterChanged);
             EventBus.Subscribe<StationUsed>(OnStationUsed);
             EventBus.Subscribe<RequestBoardRead>(OnRequestBoardRead);
+            EventBus.Subscribe<MinigameRequested>(OnMinigameRequested);
             EventBus.Subscribe<BuildModeChanged>(OnBuildModeChanged);
             EventBus.Subscribe<FurnishModeChanged>(OnFurnishModeChanged);
             EventBus.Subscribe<InteriorEntered>(OnInteriorEntered);
@@ -272,6 +282,17 @@ namespace Nimbo.UI
             }
         }
 
+        /// <summary>
+        /// Lo difícil que es cocinar una receta: cuántas cosas lleva.
+        /// </summary>
+        /// <remarks>
+        /// Una sopa de dos ingredientes son tres pasos y unas croquetas de cinco son
+        /// seis. Sale gratis del dato que ya está en la receta y ordena la cocina sola:
+        /// lo que cuesta reunir cuesta también hacerlo.
+        /// </remarks>
+        private static int DifficultyOf(Recipe recipe) =>
+            Mathf.Clamp(recipe.Ingredients?.Count ?? 1, 1, 5);
+
         /// <summary>Abre lo pedido, o lo cierra si ya estaba abierto.</summary>
         private void Toggle(System.Action open, bool alreadyOpen)
         {
@@ -304,10 +325,32 @@ namespace Nimbo.UI
                     if (_shipping.IsShowing) _shipping.Hide(); else _shipping.Show();
                     break;
 
+                // El fogón abre el mismo menú pero ya en su pestaña. Llegar a la cocina
+                // y tener que buscar la cocina en una fila de tres botones es de las
+                // cosas que hacen dudar de si has pulsado lo que querías.
+                case CraftStationKind.Kitchen:
+                    if (_craft.IsShowing) _craft.Hide(); else _craft.Show(CraftStation.Kitchen);
+                    break;
+
                 default:
                     if (_craft.IsShowing) _craft.Hide(); else _craft.Show();
                     break;
             }
+        }
+
+        /// <summary>
+        /// Se abre el minijuego que han pedido, y lo que estuviera abierto se cierra.
+        /// </summary>
+        /// <remarks>
+        /// Si no se puede arrancar —no hay servicio, o ya hay otro a medias— no se abre
+        /// nada. Una ventana vacía es peor que ninguna: parece que el juego se ha roto.
+        /// </remarks>
+        private void OnMinigameRequested(MinigameRequested evt)
+        {
+            if (_minigame == null) return;
+
+            _craft.Hide();
+            _minigame.Show(evt.Kind, evt.Difficulty, evt.Context);
         }
 
         /// <summary>Ha leído el tablón de la plaza: se abre la misma pantalla que el botón.</summary>
@@ -505,6 +548,7 @@ namespace Nimbo.UI
         private bool AnyPanelOpen =>
             _panel.IsShowing || _shop.IsShowing || _decor.IsShowing ||
             _achievements.IsShowing || _bag.IsShowing || _craft.IsShowing || _board.IsShowing ||
+            _minigame.IsShowing ||
             _shipping.IsShowing || _map.IsShowing || _build.IsShowing ||
             _furnish.IsShowing || _creator.IsShowing || _chronicle.IsShowing;
 
@@ -541,6 +585,11 @@ namespace Nimbo.UI
             // juego esté en pausa, en vez de quedarse clavado en pantalla.
             _toast.Tick(Time.unscaledDeltaTime);
             _fade.Tick(Time.unscaledDeltaTime);
+
+            // El minijuego de ritmo va con reloj propio, así que necesita el fotograma
+            // entero y no el refresco lento de las listas: a dos veces por segundo no
+            // hay ritmo que valga. Los otros dos lo ignoran.
+            _minigame.Tick(Time.unscaledDeltaTime);
             _hotbar.Tick();
             RefreshPrompt();
             RefreshPointer();

@@ -1,4 +1,4 @@
-namespace Nimbo.Events.Minigames
+namespace Nimbo.Core.Services.Contracts
 {
     /// <summary>
     /// Calidad del golpe en el minijuego de ritmo.

@@ -33,6 +33,7 @@ namespace Nimbo.Core.Services.Contracts
         Axe = 3,          // madera
         Pickaxe = 4,      // piedra
         Scythe = 5,       // hierba y cosecha rápida
+        FishingRod = 6,   // el embarcadero
     }
 
     /// <summary>Una entrada del catálogo. Solo lectura: el catálogo se define en datos, no en código.</summary>

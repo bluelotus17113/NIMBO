@@ -1,4 +1,4 @@
-namespace Nimbo.Events.Minigames
+namespace Nimbo.Core.Services.Contracts
 {
     /// <summary>
     /// Lo que devuelve un minijuego al terminar. Son solo números: quien lo llama

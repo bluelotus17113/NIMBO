@@ -622,6 +622,71 @@
       ],
       "hungerRestore": 8,
       "foodKind": "drink"
+    },
+    {
+      "catalogId": "food_pez_nube",
+      "displayName": "Pez nube",
+      "description": "Blanco y translúcido, del color de la niebla en la que vive. Sabe a poco y llena mucho.",
+      "price": 9,
+      "unlockLevel": 1,
+      "tags": [
+        "pez",
+        "fresco"
+      ],
+      "hungerRestore": 20,
+      "foodKind": "homemade"
+    },
+    {
+      "catalogId": "food_pez_farol",
+      "displayName": "Pez farol",
+      "description": "Lleva una lucecita en la frente que no se apaga ni fuera del agua. Los niños los quieren de mascota.",
+      "price": 16,
+      "unlockLevel": 1,
+      "tags": [
+        "pez",
+        "raro"
+      ],
+      "hungerRestore": 20,
+      "foodKind": "homemade"
+    },
+    {
+      "catalogId": "food_anguila_de_viento",
+      "displayName": "Anguila de viento",
+      "description": "Se enrosca en las corrientes que suben por el borde de la isla. Cuesta un rato sacarla.",
+      "price": 24,
+      "unlockLevel": 1,
+      "tags": [
+        "pez",
+        "raro"
+      ],
+      "hungerRestore": 35,
+      "foodKind": "homemade"
+    },
+    {
+      "catalogId": "food_bota_vieja",
+      "displayName": "Bota vieja",
+      "description": "Alguien la perdió hace mucho y el cielo la devuelve de vez en cuando. No se come, pero hace gracia.",
+      "price": 2,
+      "unlockLevel": 1,
+      "tags": [
+        "pez",
+        "chatarra"
+      ],
+      "hungerRestore": 8,
+      "foodKind": "snack"
+    },
+    {
+      "catalogId": "food_engrudo",
+      "displayName": "Engrudo",
+      "description": "Lo que sale cuando la receta se tuerce. Alimenta, que es lo único bueno que se puede decir.",
+      "price": 1,
+      "unlockLevel": 1,
+      "tags": [
+        "cocina",
+        "desastre"
+      ],
+      "hungerRestore": 8,
+      "foodKind": "homemade"
     }
   ]
 }
