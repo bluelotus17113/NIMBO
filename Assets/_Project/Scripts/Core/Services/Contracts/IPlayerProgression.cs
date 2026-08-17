@@ -58,6 +58,16 @@ namespace Nimbo.Core.Services.Contracts
 
         /// <summary>Pagar la obra de las casas de los vecinos (§15.2).</summary>
         UpgradeHomes = 12,
+
+        // ── el segundo escalón ───────────────────────────────────────────────
+        /// <summary>Fabricar las herramientas de nivel 2 (§12.4).</summary>
+        BetterTools = 13,
+
+        /// <summary>La regadera moja tres casillas en línea, sea del escalón que sea.</summary>
+        WideWatering = 14,
+
+        /// <summary>Los nodos listos para recoger salen en el mapa.</summary>
+        NodesOnMap = 15,
     }
 
     /// <summary>

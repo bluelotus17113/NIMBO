@@ -715,19 +715,19 @@ Lo que falta se agrupa en tres bolsas y conviene saber por qué:
 
 - **Lo que necesita contenido nuevo** (bancal de nube, invernadero, muebles
   legendarios, nodos raros): no es progresión, son cosas que todavía no existen en
-  ningún catálogo.
-- **Lo que necesita las herramientas de nivel 2** (§12.4): azada y regadera de tres
-  casillas, guadaña en arco. Es un bloque entero por sí solo.
+  ningún catálogo. Cultivo 6 y 10, Recolección 3, Oficio 10.
 - **Lo que necesita un menú de interacciones sociales** que hoy no existe: pulsar E
   junto a un vecino siempre es «charlar», así que casi toda la vía de Convivencia no
   tiene dónde ponerle puerta. Eso llega con §14 (el cortejo).
+- **Lo que necesita sistemas de aldea que no están escritos**: ascensos de rango,
+  organizar eventos y festivales, invitar por encima del cupo. Aldea 4 en adelante.
 
 **Cultivo** — la parcela arranca con 4×3 casillas útiles de las 8×6 que hay.
 
 | Nivel | Desbloquea |
 |---|---|
 | 2 | `[x]` +1 fila de parcela (4×4) |
-| 3 | La regadera moja 3 casillas en línea — pide §12.4 |
+| 3 | `[x]` La regadera moja 3 casillas en línea |
 | 4 | `[x]` +1 fila y +1 columna (6×5) |
 | 5 | `[x]` Las cosechas rinden +1 unidad con 25% de probabilidad |
 | 6 | Bancal de nube: 4 casillas que no necesitan riego diario |
@@ -743,7 +743,7 @@ Lo que falta se agrupa en tres bolsas y conviene saber por qué:
 | 5 | `[x]` Un golpe menos en árboles y rocas |
 | 6 | `[x]` Los nodos se reponen un día antes |
 | 8 | `[x]` Recoges el doble de flores y hierbas |
-| 10 | Ves los nodos maduros en el mapa (`MapPanel`) |
+| 10 | `[x]` Ves los nodos maduros en el mapa (`MapPanel`) |
 
 **Oficio** — sustituye la puerta por nivel de isla que hoy tiene `AvailableAt`.
 
@@ -752,7 +752,7 @@ Lo que falta se agrupa en tres bolsas y conviene saber por qué:
 | 2 | `[x]` Recetas de nivel medio (las que pedían isla 4 o más) |
 | 4 | `[x]` Crafteo en lote (×5 de una vez), menos en la cocina |
 | 5 | `[x]` Las recetas más finas (las que pedían isla 8 o más) |
-| 6 | **Herramientas de nivel 2** (§12.4) |
+| 6 | `[x]` **Herramientas de nivel 2** (§12.4) |
 | 8 | **El anillo de compromiso** (§14.4) |
 | 10 | Muebles legendarios y adornos de isla |
 
@@ -784,17 +784,38 @@ es lo que convierte «ser el alcalde» en algo que se gana.
 
 ### 12.4 Herramientas de nivel 2
 
-Las cinco herramientas de hoy son todas de nivel 1 y cuestan monedas. El nivel 2 se
-**craftea** (Oficio 6) con material recogido, y es el sumidero que le da sentido a
-acumular madera y piedra.
+**Hecho.** Las cinco herramientas de siempre son de nivel 1 y cuestan monedas. El
+nivel 2 se **craftea** en la mesa de trabajo (Oficio 6) y es el sumidero que le da
+sentido a acumular madera y piedra.
 
 | Herramienta | Nivel 1 | Nivel 2 (crafteada) |
 |---|---|---|
-| Azada | 1 casilla | 3 casillas en línea |
-| Regadera | 1 casilla | 3 casillas, y aguanta el doble de agua |
-| Hacha | 3 golpes por árbol | 2 golpes |
-| Pico | 3 golpes por roca | 2 golpes |
-| Guadaña | 1 mata | un arco de 3 matas |
+| Azada recia | 1 casilla | 3 casillas en línea |
+| Regadera grande | 1 casilla | 3 casillas |
+| Hacha buena | los golpes del nodo | un golpe menos |
+| Pico bueno | los golpes del nodo | un golpe menos |
+| Guadaña larga | 1 mata | un arco de hasta 3 matas |
+
+**Cada receta se come la herramienta vieja.** Si no, acabarías con las dos en la
+mochila y usando la mala por descuido, y el segundo escalón sería un objeto más en
+vez de una mejora.
+
+Tres detalles que salieron al escribirlo:
+
+- **La barrida es de lado, no hacia delante.** Barrer hacia delante alcanza casillas
+  que no se ven y de las que no salía ningún cartel, así que se labra sin haber
+  mirado. De lado se ve lo que se está segando.
+- **Ningún nodo cae de un solo golpe**, sumen lo que sumen las mejoras. Con
+  Recolección 5 y la herramienta buena se descuentan tres golpes de una vez, y un
+  árbol que cae al primer toque deja de ser un sitio al que ir y pasa a ser un botón.
+- **Cae "aguanta el doble de agua"**, que decía la tabla vieja: no hay depósito en la
+  regadera, así que no era una mejora de nada. Si algún día lo hay, vuelve.
+
+Y la regadera de tres casillas se consigue **por dos caminos**: esta herramienta
+(Oficio 6) o Cultivo 3. Es a propósito — quien se dedica al huerto lo consigue
+regando y quien se dedica al taller lo consigue fabricando. Dos vías separadas tienen
+que poder llegar a lo mismo por su cuenta, o dejan de ser cinco caminos y vuelven a
+ser una lista.
 
 No hay nivel 3. Dos escalones bastan para que se note la mejora y no obligan a
 rehacer el equilibrio de todos los nodos.

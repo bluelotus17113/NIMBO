@@ -64,6 +64,16 @@ namespace Nimbo.Core.Services.Contracts
         /// talar, y no fallaba nada: simplemente no pasaba nada al pulsar.
         /// </remarks>
         ToolKind Tool { get; }
+
+        /// <summary>
+        /// Qué escalón de herramienta es: 1 la que se compra, 2 la que se craftea.
+        /// </summary>
+        /// <remarks>
+        /// Solo dos, y no hay tercero a propósito: dos escalones bastan para que la
+        /// mejora se note y no obligan a rehacer el equilibrio de los ciento veinte
+        /// nodos de la isla. Todo lo que no sea herramienta vale 1.
+        /// </remarks>
+        int ToolTier { get; }
     }
 
     /// <summary>Monedas, tiendas, catálogo e inventario del jugador.</summary>

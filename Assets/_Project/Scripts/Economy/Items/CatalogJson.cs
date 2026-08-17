@@ -30,6 +30,9 @@ namespace Nimbo.Economy.Items
         // ── herramientas ──
         public string toolKind;
 
+        /// <summary>1 la de siempre, 2 la crafteada. Sin escribir se lee como 1.</summary>
+        public int toolTier;
+
         // ── comida ──
         public int hungerRestore;
         public string foodKind;

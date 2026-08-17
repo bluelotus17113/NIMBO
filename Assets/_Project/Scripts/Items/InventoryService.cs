@@ -134,6 +134,22 @@ namespace Nimbo.Items
             }
         }
 
+        /// <summary>De qué escalón es lo que lleva en la mano. 1 si no es herramienta.</summary>
+        public int ToolTierInHand
+        {
+            get
+            {
+                var slot = _player.SelectedSlot;
+                if (slot < 0 || slot >= SlotCount) return 1;
+
+                var stack = _player.Bag.Stacks[slot];
+                if (stack.Quantity <= 0) return 1;
+
+                var def = _economy.GetItem(stack.CatalogId);
+                return def == null || def.Category != ItemCategory.Tool ? 1 : def.ToolTier;
+            }
+        }
+
         // ── guardar ───────────────────────────────────────────────────────────
 
         /// <summary>

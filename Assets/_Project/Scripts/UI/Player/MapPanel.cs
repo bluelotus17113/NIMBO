@@ -98,11 +98,41 @@ namespace Nimbo.UI.Player
                        new Color32(0xBF, 0xE0, 0x96, 255));
             DrawBridge(scale);
 
+            // Los nodos antes que los vecinos y que tú: son el fondo del mapa, no la
+            // información principal, y dibujados encima taparían a la gente.
+            DrawReadyNodes();
+
             if (_registry != null)
                 foreach (var islander in _registry.All)
                     DrawIslander(islander);
 
             DrawPlayer();
+        }
+
+        /// <summary>
+        /// Lo que está listo para recoger, con Recolección 10.
+        /// </summary>
+        /// <remarks>
+        /// Es el último desbloqueo de la vía y el más difícil de justificar hasta que se
+        /// juega: con ciento veinte nodos repartidos y una semana de reposiciones, saber
+        /// **dónde queda algo** es lo que convierte salir a por madera en una ruta en
+        /// vez de un paseo dando vueltas.
+        ///
+        /// Puntos pequeños y sin nombre: son de dónde ir, no qué mirar.
+        /// </remarks>
+        private void DrawReadyNodes()
+        {
+            if (!Gates.Allows(Unlock.NodesOnMap)) return;
+            if (!ServiceRegistry.TryGet<IGatheringService>(out var gathering)) return;
+
+            var nodes = gathering.Nodes;
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                var node = nodes[i];
+                if (node.IsDepleted) continue;
+
+                Dot(new Vector3(node.X, node.Y, node.Z), UiTheme.Sage, 5f, "");
+            }
         }
 
         private void DrawIsland(Vector3 centre, float radius, float scale, Color colour)

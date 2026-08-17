@@ -59,6 +59,9 @@ namespace Nimbo.Player
             (SkillKind.Social, 5),       // Courtship
             (SkillKind.Village, 2),      // AssignJobs
             (SkillKind.Village, 3),      // UpgradeHomes
+            (SkillKind.Crafting, 6),     // BetterTools
+            (SkillKind.Farming, 3),      // WideWatering
+            (SkillKind.Gathering, 10),   // NodesOnMap
         };
 
         public PlayerProgressionService(PlayerState player, PlayerProgressionConfig config = null)

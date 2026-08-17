@@ -743,6 +743,121 @@
       "outputId": "tool_cana",
       "outputQuantity": 1,
       "unlockLevel": 1
+    },
+    {
+      "recipeId": "recipe_azada_recia",
+      "displayName": "Azada recia",
+      "description": "La de siempre, reforzada con piedra y savia para que aguante el triple de tierra.",
+      "station": "Bench",
+      "ingredients": [
+        {
+          "catalogId": "tool_azada",
+          "quantity": 1
+        },
+        {
+          "catalogId": "mat_piedra",
+          "quantity": 8
+        },
+        {
+          "catalogId": "mat_savia",
+          "quantity": 3
+        }
+      ],
+      "outputId": "tool_azada_recia",
+      "outputQuantity": 1,
+      "unlockLevel": 1
+    },
+    {
+      "recipeId": "recipe_regadera_grande",
+      "displayName": "Regadera grande",
+      "description": "Más chapa y una alcachofa nueva. Pesa, pero se va menos veces al pozo.",
+      "station": "Bench",
+      "ingredients": [
+        {
+          "catalogId": "tool_regadera",
+          "quantity": 1
+        },
+        {
+          "catalogId": "mat_concha",
+          "quantity": 4
+        },
+        {
+          "catalogId": "mat_fibra",
+          "quantity": 6
+        }
+      ],
+      "outputId": "tool_regadera_grande",
+      "outputQuantity": 1,
+      "unlockLevel": 1
+    },
+    {
+      "recipeId": "recipe_hacha_buena",
+      "displayName": "Hacha buena",
+      "description": "Cabeza nueva sobre el mismo mango. Lo que cambia es lo que muerde.",
+      "station": "Bench",
+      "ingredients": [
+        {
+          "catalogId": "tool_hacha",
+          "quantity": 1
+        },
+        {
+          "catalogId": "mat_piedra",
+          "quantity": 10
+        },
+        {
+          "catalogId": "mat_madera",
+          "quantity": 6
+        }
+      ],
+      "outputId": "tool_hacha_buena",
+      "outputQuantity": 1,
+      "unlockLevel": 1
+    },
+    {
+      "recipeId": "recipe_pico_buena",
+      "displayName": "Pico bueno",
+      "description": "Punta templada. Deja de rebotar en la roca dura.",
+      "station": "Bench",
+      "ingredients": [
+        {
+          "catalogId": "tool_pico",
+          "quantity": 1
+        },
+        {
+          "catalogId": "mat_piedra",
+          "quantity": 12
+        },
+        {
+          "catalogId": "mat_savia",
+          "quantity": 4
+        }
+      ],
+      "outputId": "tool_pico_buena",
+      "outputQuantity": 1,
+      "unlockLevel": 1
+    },
+    {
+      "recipeId": "recipe_guadana_larga",
+      "displayName": "Guadaña larga",
+      "description": "Hoja más curva y mango de dos manos, para segar de una barrida.",
+      "station": "Bench",
+      "ingredients": [
+        {
+          "catalogId": "tool_guadana",
+          "quantity": 1
+        },
+        {
+          "catalogId": "mat_madera",
+          "quantity": 8
+        },
+        {
+          "catalogId": "mat_fibra",
+          "quantity": 8
+        }
+      ],
+      "outputId": "tool_guadana_larga",
+      "outputQuantity": 1,
+      "unlockLevel": 1
     }
   ]
 }

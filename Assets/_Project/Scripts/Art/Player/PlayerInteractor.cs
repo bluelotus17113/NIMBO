@@ -626,7 +626,10 @@ namespace Nimbo.Art.PlayerView
             {
                 case Data.Farming.TileState.Wild:
                     if (tool != ToolKind.Hoe || !_player.CanUseTool) return;
-                    if (_farming.Till(_tileX, _tileY) == FarmError.Ok) _player.SpendVigor(1.5f);
+                    Swing(WideHoe, (x, y) =>
+                    {
+                        if (_farming.Till(x, y) == FarmError.Ok) _player.SpendVigor(1.5f);
+                    });
                     break;
 
                 case Data.Farming.TileState.Tilled:
@@ -636,7 +639,10 @@ namespace Nimbo.Art.PlayerView
 
                 case Data.Farming.TileState.Planted:
                     if (tool != ToolKind.WateringCan || !_player.CanUseTool) return;
-                    if (_farming.Water(_tileX, _tileY) == FarmError.Ok) _player.SpendVigor(1f);
+                    Swing(WideCan, (x, y) =>
+                    {
+                        if (_farming.Water(x, y) == FarmError.Ok) _player.SpendVigor(1f);
+                    });
                     break;
 
                 default:
@@ -650,6 +656,50 @@ namespace Nimbo.Art.PlayerView
             // servicio, pero el texto de la barra lo calculamos aquí: sin refrescarlo,
             // sigue diciendo «Labrar» sobre una casilla ya labrada hasta que te muevas.
             FindTarget();
+        }
+
+        /// <summary>¿La azada de la mano abre tres surcos? (§12.4)</summary>
+        private bool WideHoe => (_inventory?.ToolTierInHand ?? 1) >= 2;
+
+        /// <summary>
+        /// ¿La regadera moja tres casillas?
+        /// </summary>
+        /// <remarks>
+        /// Por dos caminos que llegan al mismo sitio: la regadera grande (§12.4) y
+        /// Cultivo 3 (§12.3). Es a propósito — el jugador que se dedica al huerto lo
+        /// consigue regando, y el que se dedica al taller lo consigue fabricando. Dos
+        /// vías separadas tienen que poder llegar a lo mismo por su cuenta o dejan de
+        /// ser cinco caminos y vuelven a ser una lista.
+        /// </remarks>
+        private bool WideCan =>
+            (_inventory?.ToolTierInHand ?? 1) >= 2
+            || (_progression?.IsUnlocked(Unlock.WideWatering) ?? false);
+
+        /// <summary>
+        /// Aplica el gesto a la casilla de delante y, si la herramienta es ancha, a las
+        /// dos de al lado.
+        /// </summary>
+        /// <remarks>
+        /// A los lados y no hacia delante: barrer hacia delante alcanza casillas que no
+        /// se ven y de las que no salía ningún cartel, así que el jugador labra cosas
+        /// sin haberlas mirado. De lado se ve lo que se está segando.
+        ///
+        /// Las de fuera del huerto no hacen nada: el servicio ya contesta
+        /// <c>OutOfBounds</c> o <c>NotYourLandYet</c>, así que la barrida en el borde no
+        /// necesita comprobarse aquí.
+        /// </remarks>
+        private void Swing(bool wide, System.Action<int, int> act)
+        {
+            act(_tileX, _tileY);
+            if (!wide) return;
+
+            // Se barre en cruz con la mirada: mirando al norte o al sur se abre a los
+            // lados en X, y mirando al este o al oeste en Z.
+            var forward = transform.forward;
+            bool sweepX = Mathf.Abs(forward.z) >= Mathf.Abs(forward.x);
+
+            for (int step = -1; step <= 1; step += 2)
+                act(sweepX ? _tileX + step : _tileX, sweepX ? _tileY : _tileY + step);
         }
 
         private string PromptFor(in NodeDefinition definition)
@@ -847,6 +897,47 @@ namespace Nimbo.Art.PlayerView
 
             if (result == GatherResult.Ok && dropped > 0)
                 _body.SetEmotion(Data.Islanders.Emotion.Happy);
+
+            // La guadaña larga siega en arco: se lleva por delante lo que tenga al lado
+            // (§12.4). Solo con la guadaña, y solo si lo de delante ha salido bien —si
+            // no llegas ni a la primera mata, no estás segando un arco.
+            if (tool == ToolKind.Scythe && result == GatherResult.Ok &&
+                (_inventory?.ToolTierInHand ?? 1) >= 2)
+                SweepNearby();
+        }
+
+        /// <summary>
+        /// Siega también lo que tenga a los lados, hasta dos matas más.
+        /// </summary>
+        /// <remarks>
+        /// Se cobra vigor por cada una, que es lo justo: la guadaña larga ahorra
+        /// pulsaciones, no trabajo. Y se para a las dos porque en un prado de hierba
+        /// una barrida sin tope se llevaría media isla de un golpe.
+        /// </remarks>
+        private void SweepNearby()
+        {
+            const float ArcRange = 3.2f;
+            const int MaxExtra = 2;
+
+            var origin = transform.position;
+            int cut = 0;
+
+            var nodes = _gathering.Nodes;
+            for (int i = 0; i < nodes.Count && cut < MaxExtra; i++)
+            {
+                var node = nodes[i];
+                if (node.IsDepleted || node.InstanceId == TargetId) continue;
+                if (!Near(origin, new Vector3(node.X, node.Y, node.Z), ArcRange)) continue;
+                if (!_gathering.TryGetDefinition(node.NodeId, out var definition)) continue;
+                if (definition.RequiredTool != ToolKind.Scythe) continue;
+                if (!_player.CanUseTool) return;
+
+                if (_gathering.Gather(node.InstanceId, ToolKind.Scythe, out _) != GatherResult.Ok)
+                    continue;
+
+                _player.SpendVigor(2f);
+                cut++;
+            }
         }
     }
 }

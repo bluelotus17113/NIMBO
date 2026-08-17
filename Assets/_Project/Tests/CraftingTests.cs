@@ -425,6 +425,7 @@ namespace Nimbo.Tests
         public int HotbarSize => 10;
         public ItemStack InHand => default;
         public ToolKind ToolInHand => ToolKind.None;
+        public int ToolTierInHand => 1;
         public IReadOnlyList<ItemStack> Slots => new List<ItemStack>();
 
         public void Select(int slot) { }

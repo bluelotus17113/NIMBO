@@ -17,6 +17,7 @@ namespace Nimbo.Economy.Items
 
         /// <summary>Qué herramienta es. Lo dice el catálogo, no el nombre del id.</summary>
         public ToolKind Tool { get; }
+        public int ToolTier { get; }
         public int Price { get; }
         public int UnlockLevel { get; }
 
@@ -49,6 +50,9 @@ namespace Nimbo.Economy.Items
         {
             Tool = System.Enum.TryParse<ToolKind>(json.toolKind, ignoreCase: true, out var tool)
                 ? tool : ToolKind.None;
+            // Sin escribir en el catálogo es la de siempre. Un cero significaría que
+            // una herramienta no es de ningún escalón, y eso no existe.
+            ToolTier = json.toolTier > 0 ? json.toolTier : 1;
             CatalogId = json.catalogId;
             DisplayName = json.displayName;
             Description = json.description;

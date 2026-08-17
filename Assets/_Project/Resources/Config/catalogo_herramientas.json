@@ -67,6 +67,66 @@
         "herramienta"
       ],
       "toolKind": "FishingRod"
+    },
+    {
+      "catalogId": "tool_azada_recia",
+      "displayName": "Azada recia",
+      "description": "Ancha y con la punta reforzada. Abre tres surcos de una pasada.",
+      "price": 260,
+      "unlockLevel": 1,
+      "tags": [
+        "herramienta"
+      ],
+      "toolKind": "Hoe",
+      "toolTier": 2
+    },
+    {
+      "catalogId": "tool_regadera_grande",
+      "displayName": "Regadera grande",
+      "description": "El doble de panza y una alcachofa ancha. Riega tres de un viaje.",
+      "price": 210,
+      "unlockLevel": 1,
+      "tags": [
+        "herramienta"
+      ],
+      "toolKind": "WateringCan",
+      "toolTier": 2
+    },
+    {
+      "catalogId": "tool_hacha_buena",
+      "displayName": "Hacha buena",
+      "description": "Cabeza de piedra de nube, pesada donde hace falta. Un golpe menos por árbol.",
+      "price": 320,
+      "unlockLevel": 1,
+      "tags": [
+        "herramienta"
+      ],
+      "toolKind": "Axe",
+      "toolTier": 2
+    },
+    {
+      "catalogId": "tool_pico_buena",
+      "displayName": "Pico bueno",
+      "description": "Punta templada al fuego del fogón. Muerde la roca en vez de rebotar.",
+      "price": 340,
+      "unlockLevel": 1,
+      "tags": [
+        "herramienta"
+      ],
+      "toolKind": "Pickaxe",
+      "toolTier": 2
+    },
+    {
+      "catalogId": "tool_guadana_larga",
+      "displayName": "Guadaña larga",
+      "description": "Hoja curva y mango de dos manos. Siega en arco y se lleva tres matas.",
+      "price": 300,
+      "unlockLevel": 1,
+      "tags": [
+        "herramienta"
+      ],
+      "toolKind": "Scythe",
+      "toolTier": 2
     }
   ]
 }

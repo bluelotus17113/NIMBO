@@ -48,6 +48,17 @@ namespace Nimbo.Core.Services.Contracts
         ToolKind ToolInHand { get; }
 
         /// <summary>
+        /// De qué escalón es esa herramienta: 1 la de siempre, 2 la crafteada.
+        /// </summary>
+        /// <remarks>
+        /// Va aquí y no se deduce del identificador por lo de siempre: el escalón sale
+        /// del catálogo. Y va en la mochila y no en cada sistema porque lo preguntan
+        /// dos que no se ven entre sí —quien labra y quien tala—, y con el cálculo
+        /// copiado en los dos acabarían discrepando.
+        /// </remarks>
+        int ToolTierInHand { get; }
+
+        /// <summary>
         /// Mete lo que pueda. <paramref name="leftover"/> sale con lo que no cupo.
         /// </summary>
         StoreResult TryStore(string catalogId, int quantity, out int leftover);

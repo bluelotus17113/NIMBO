@@ -151,7 +151,7 @@ namespace Nimbo.UI.Player
             // Lo que pide más Oficio del que hay se enseña igual, con lo que falta
             // escrito. Un catálogo que se rellena solo con los niveles es de las pocas
             // formas de que subir de vía se vea sin abrir una pantalla de números.
-            var rank = RankOf(recipe);
+            var rank = RankOf(recipe) ?? ToolRankOf(recipe);
             if (rank.HasValue && !Gates.Allows(rank.Value, out string falta))
             {
                 var locked = UiTheme.Chip(Gates.Short(rank.Value), UiTheme.InkFaint);
@@ -194,6 +194,23 @@ namespace Nimbo.UI.Player
         /// salen de aquí, así que ponerles cualquier puerta dejaría al jugador nuevo sin
         /// azada y sin forma de subir Oficio para conseguirla.
         /// </remarks>
+        /// <summary>
+        /// Las herramientas del segundo escalón piden Oficio 6, salga lo que salga de
+        /// su nivel de desbloqueo.
+        /// </summary>
+        /// <remarks>
+        /// Se mira lo que fabrican y no cómo se llama la receta: el escalón está escrito
+        /// en el catálogo del objeto, así que una herramienta nueva queda detrás de la
+        /// misma puerta sin que haya que acordarse de apuntarla en ningún sitio.
+        /// </remarks>
+        private Unlock? ToolRankOf(Recipe recipe)
+        {
+            var item = _economy?.GetItem(recipe.OutputId);
+            return item != null && item.Category == ItemCategory.Tool && item.ToolTier >= 2
+                ? Unlock.BetterTools
+                : (Unlock?)null;
+        }
+
         private static Unlock? RankOf(Recipe recipe) =>
             recipe.UnlockLevel >= 8 ? Unlock.FineRecipes :
             recipe.UnlockLevel >= 4 ? Unlock.MiddlingRecipes :

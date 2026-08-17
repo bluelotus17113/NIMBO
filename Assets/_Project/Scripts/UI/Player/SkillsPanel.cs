@@ -30,11 +30,13 @@ namespace Nimbo.UI.Player
         /// <summary>Lo que abre cada vía, en orden. Para poder decir qué viene después.</summary>
         private static readonly Dictionary<SkillKind, Unlock[]> Ladder = new()
         {
-            [SkillKind.Farming] = new[] { Unlock.BiggerPlot, Unlock.GenerousHarvest },
+            [SkillKind.Farming] = new[] { Unlock.BiggerPlot, Unlock.WideWatering,
+                                          Unlock.GenerousHarvest },
             [SkillKind.Gathering] = new[] { Unlock.ReadTheNode, Unlock.StrongArms,
-                                            Unlock.FastRegrowth, Unlock.DeftHands },
+                                            Unlock.FastRegrowth, Unlock.DeftHands,
+                                            Unlock.NodesOnMap },
             [SkillKind.Crafting] = new[] { Unlock.MiddlingRecipes, Unlock.BatchCrafting,
-                                           Unlock.FineRecipes },
+                                           Unlock.FineRecipes, Unlock.BetterTools },
             [SkillKind.Social] = new[] { Unlock.ExtraGift, Unlock.Courtship },
             [SkillKind.Village] = new[] { Unlock.AssignJobs, Unlock.UpgradeHomes },
         };
@@ -180,7 +182,10 @@ namespace Nimbo.UI.Player
             Unlock.ExtraGift => "un regalo más al día",
             Unlock.Courtship => "declararte a un vecino",
             Unlock.AssignJobs => "repartir los trabajos de la aldea",
-            _ => "pagar la obra de las casas de los vecinos",
+            Unlock.UpgradeHomes => "pagar la obra de las casas de los vecinos",
+            Unlock.BetterTools => "fabricar las herramientas buenas",
+            Unlock.WideWatering => "la regadera moja tres casillas de una vez",
+            _ => "verás en el mapa lo que está listo para recoger",
         };
 
         private static Color ColourOf(SkillKind skill) => skill switch

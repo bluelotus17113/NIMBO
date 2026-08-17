@@ -190,10 +190,20 @@ namespace Nimbo.Gathering
             if (def.RequiredTool != ToolKind.None && tool != def.RequiredTool)
                 return GatherResult.WrongTool;
 
-            // 4. Restar un golpe, o dos con Recolección 5. Solo en lo que aguanta más
-            // de uno: quitarle un golpe a una flor que se coge a mano no significa
-            // nada, y dejaría la mitad de los nodos sin poder tocarse.
-            node.HitsLeft -= IsUnlocked(Unlock.StrongArms) && def.Hits > 1 ? 2 : 1;
+            // 4. Restar el golpe, y los que se hayan ganado por otro lado: uno por
+            // Recolección 5 y otro por llevar la herramienta buena (§12.4). Solo en lo
+            // que aguanta más de un golpe —quitarle uno a una flor que se coge a mano
+            // no significa nada— y nunca por debajo de uno, o habría nodos que se
+            // agotarían sin llegar a tocarlos.
+            int blow = 1;
+            if (def.Hits > 1)
+            {
+                if (IsUnlocked(Unlock.StrongArms)) blow++;
+                if (_inventory.ToolTierInHand >= 2 && tool != ToolKind.None) blow++;
+                if (blow >= def.Hits) blow = def.Hits - 1;
+            }
+
+            node.HitsLeft -= blow;
             if (node.HitsLeft < 0) node.HitsLeft = 0;
 
             // 5. Si aún le quedan golpes, solo fue un Hit

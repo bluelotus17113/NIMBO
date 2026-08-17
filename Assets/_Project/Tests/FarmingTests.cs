@@ -424,6 +424,7 @@ namespace Nimbo.Tests
         public ItemStack At(int slot) => default;
         public ItemStack InHand => default;
         public ToolKind ToolInHand => ToolKind.None;
+        public int ToolTierInHand => 1;
 
         public void Select(int slot) { }
         public bool TryConsumeSelected(int quantity = 1) => false;

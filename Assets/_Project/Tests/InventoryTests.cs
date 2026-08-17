@@ -55,6 +55,7 @@ namespace Nimbo.Tests
             public int FootprintY => 1;
             public int HungerRestore => 0;
             public ToolKind Tool { get; }
+            public int ToolTier => 1;
 
             public FakeItemDef(string catalogId, ItemCategory category,
                                ToolKind tool = ToolKind.None)

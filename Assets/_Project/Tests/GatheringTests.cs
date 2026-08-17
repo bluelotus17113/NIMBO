@@ -544,6 +544,7 @@ namespace Nimbo.Tests
         public ItemStack At(int slot) => default;
         public ItemStack InHand => default;
         public ToolKind ToolInHand => ToolKind.None;
+        public int ToolTierInHand => 1;
         public IReadOnlyList<ItemStack> Slots => System.Array.Empty<ItemStack>();
 
         public void Select(int slot) { }
