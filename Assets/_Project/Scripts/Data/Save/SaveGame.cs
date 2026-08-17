@@ -78,6 +78,16 @@ namespace Nimbo.Data.Save
         /// </remarks>
         public List<Social.WeddingBooking> Weddings = new List<Social.WeddingBooking>();
 
+        /// <summary>
+        /// Lo que ha ido pasando en la aldea, de lo más viejo a lo más reciente.
+        /// </summary>
+        /// <remarks>
+        /// Se guarda porque la crónica es lo primero que se lee al volver, y lo que se
+        /// quiere leer es lo que pasó **mientras no estabas**. Un tablón que solo viva
+        /// en memoria se vacía justo en el momento en que hace falta.
+        /// </remarks>
+        public List<World.ChronicleEntry> Chronicle = new List<World.ChronicleEntry>();
+
         // ── La aldea ────────────────────────────────────────────────────────
         //
         // Lo que trajo el giro a aldea que se recorre. Va aquí y no en IslandState

@@ -1180,9 +1180,8 @@ pasan los tests y no existen en el juego.
 - [~] 3 minijuegos (cocina, pesca, ritmo). Las tres clases están escritas y con
       tests, pero **nadie las instancia**: sin servicio, sin UI y sin caña en el
       catálogo de herramientas. Hoy no se pueden jugar.
-- [~] Eventos: sucesos diarios, sueños, conciertos, noticias, festivales. Están
-      escritos y probados, pero **`EventsService` no lo construye nadie** — ver el
-      bloque de vida y gestión, más abajo.
+- [x] Eventos: sucesos diarios, sueños, conciertos, noticias, festivales. Encendidos
+      desde el arranque; el tablón alimenta además la Crónica (§13.3).
 - [x] El Árbol Nimbo funcional.
 - [x] Semana de juego estructurada (lunes a domingo con bonos).
 - [x] Guardado y carga de partida (JSON versionado, copia atómica).
@@ -1218,11 +1217,13 @@ de la v1.0 y es la mitad del juego de hoy:
       ampliada. Revisa la lista en vez de escuchar el aviso, y eso es a propósito: así
       recoge también a las parejas que ya llevaban semanas congeladas en partidas
       guardadas. 13 tests en `BodasTests`.
-- [~] Que el jugador **se entere** de la boda: `WeddingAnnounced` y `WeddingHeld` se
-      publican y **no los escucha nadie todavía**. Hasta que exista la Crónica, la boda
-      ocurre a ciegas.
 - [ ] Rivales y triángulos amorosos entre habitantes (§13.2).
-- [ ] La Crónica: que el jugador se entere de lo que pasa (§13.3).
+- [x] **La Crónica** (§13.3). Botón «Crónica» en la barra, lo más reciente arriba,
+      agrupado por días con «Hoy» y «Ayer» en palabras. Se guarda en la partida —lo que
+      se quiere leer al volver es lo que pasó mientras no estabas— con tope de 150
+      líneas, y guarda el texto ya escrito y no los identificadores, para que la línea de
+      un vecino que se fue no salga en blanco. Lo escribe el `NewsBoard`, que ya tenía
+      las plantillas.
 - [ ] Cortejo del protagonista, con rechazo y rivales (§14).
 - [ ] Los cuatro ejes del protagonista deducidos de su conducta (§14.3).
 - [x] Trabajos: 8 oficios, afinidad por personalidad, rangos, sueldos, asignación.
@@ -1235,10 +1236,15 @@ de la v1.0 y es la mitad del juego de hoy:
 - [ ] Que el jugador pueda organizar eventos (§15.3).
 - [~] Peticiones: existen y se generan solas, pero atenderlas es un botón que no
       consume nada (§15.4).
-- [~] **`EventsService` no lo construye nadie.** Sucesos diarios, sueños, conciertos,
-      noticias y festivales están escritos y con tests, y el juego no los enciende: el
-      `NewsBoard` y el `EventScheduler` solo existen dentro de ese servicio. Es el mismo
-      fallo que tenían las ampliaciones de casa.
+- [x] **`EventsService` encendido.** Sucesos diarios, sueños, conciertos, noticias y
+      festivales estaban escritos, probados y apagados —el juego no los construía— igual
+      que las ampliaciones de casa. Ya arranca con la partida y el reloj.
+- [x] Al enchufarlo salió un fallo que ningún test veía: **casi todos los cambios de
+      relación se publican por los dos lados**, así que cada boda y cada riña salían
+      contadas dos veces, con dos plantillas distintas. El tablón filtra ahora los
+      repetidos por pareja y etapa — menos los flechazos, que sí son direccionales: que
+      a Ana le guste Leo y que a Leo le guste Ana son dos noticias, y en eso está la
+      gracia.
 
 ### 17.2 `[IMPORTANTE]` — El juego cojea sin esto
 
@@ -1281,18 +1287,23 @@ cuatro primeras son código que ya existe y solo hay que conectar.
 |---|---|---|---|
 | ~~1~~ | ~~Enchufar `HomeUpgradeService` y cobrarlo en material (§15.2)~~ | **hecho** | el puente entre la granja y la aldea |
 | ~~2~~ | ~~Bodas y bebés por el calendario: `WeddingPlanner` (§13.1)~~ | **hecho** | prometidos deja de ser un callejón; la aldea crece sola |
-| 3 | La Crónica en el menú (§13.3) | un día | **subió de puesto:** sin ella la boda del punto 2 ocurre a ciegas |
+| ~~3~~ | ~~La Crónica en el menú, y `EventsService` encendido (§13.3)~~ | **hecho** | la aldea deja de vivir a ciegas |
 | 4 | `Resolve` que consume el payload + `RequestKind.Material` (§15.4) | una tarde | recolectar tiene un porqué social |
-| 5 | Enchufar `EventsService` y los tres minijuegos (§17.1) | un día | dos pilares enteros que están escritos y apagados |
+| 5 | Enchufar los tres minijuegos (§17.1) | un día | tres verbos escritos y apagados |
 | 6 | Las cinco vías y sus desbloqueos (§12) | dos o tres días | la progresión entera; no toca ningún servicio existente |
 | 7 | Rivales y triángulos (§13.2) | un día | las historias que el jugador va a contar |
-| 8 | Cortejo del protagonista con rechazo (§14) | dos días | el pilar romántico, apoyado en 3, 6 y 7 |
+| 8 | Cortejo del protagonista con rechazo (§14) | dos días | el pilar romántico, apoyado en 6 y 7 |
 
-**Por qué la Crónica subió al puesto 3.** Al cerrar el punto 2 quedó claro que una boda
-que el jugador no puede percibir no está entregada: los avisos `WeddingAnnounced` y
-`WeddingHeld` se publican y no los escucha nadie. Es el mismo error que este documento
-lleva señalando —código que funciona y no existe en el juego— solo que cometido por
-nosotros. Nada nuevo debería depender de un evento sin lector hasta que la Crónica esté.
+**La regla que salió de hacer los tres primeros.** Al cerrar el punto 2 quedó claro que
+una boda que el jugador no puede percibir no está entregada, y por eso la Crónica subió
+del puesto 7 al 3. Cuatro sistemas de este proyecto estaban escritos, probados y
+apagados: las ampliaciones de casa, las bodas, el módulo de eventos y los minijuegos.
+Ninguno lo delataba un test.
+
+Así que de ahora en adelante, **un sistema no está hecho hasta que hay una prueba que
+carga la isla de verdad y comprueba que el jugador tiene por dónde llegar a él**. Eso es
+`CronicaEnLaIslaTests`: mira que el servicio esté registrado y que el botón exista en la
+barra. Cuesta veinte líneas y es la única clase de prueba que habría cazado los cuatro.
 
 ---
 

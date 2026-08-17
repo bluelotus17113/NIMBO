@@ -208,19 +208,29 @@ namespace Nimbo.Tests
         // 5. Tablón: máximo 20 titulares
         // -------------------------------------------------------------------
 
+        // Estos dos llenaban el tablón publicando **la misma pareja empezando a salir
+        // veinticinco veces**. El tablón lo aceptaba, así que el test pasaba, pero eso
+        // no puede ocurrir en el juego: una pareja empieza a salir una vez. Y desde que
+        // el tablón filtra los repetidos —hacía falta, porque casarse se publica por los
+        // dos lados y cada boda salía contada dos veces— el dato de entrada dejó de
+        // producir titulares. El límite sigue mereciendo prueba; se llena con parejas
+        // distintas, que es como se llena de verdad.
+
+        /// <summary>Apunta a dos vecinos nuevos y los pone a salir. Un titular.</summary>
+        void UnRomanceMas(int n)
+        {
+            _registry.AddIslander($"vecino{n}a", $"Vecin{n}a", 5);
+            _registry.AddIslander($"vecino{n}b", $"Vecin{n}b", 5);
+            EventBus.Publish(new RomanceStageChanged($"vecino{n}a", $"vecino{n}b",
+                                                     RomanceStage.Dating));
+        }
+
         [Test]
         public void NewsBoard_CapsAtMaxHeadlines()
         {
-            _registry.AddIslander("alba", "Alba", 5);
-            _registry.AddIslander("leo", "Leo", 5);
-
             using (var news = new NewsBoard(_config))
             {
-                // Forzar 25 titulares
-                for (int i = 0; i < 25; i++)
-                {
-                    EventBus.Publish(new RomanceStageChanged("alba", "leo", RomanceStage.Dating));
-                }
+                for (int i = 0; i < 25; i++) UnRomanceMas(i);
 
                 Assert.LessOrEqual(news.Headlines.Count, _config.MaxHeadlines,
                     $"el tablón debe tener como mucho {_config.MaxHeadlines} titulares");
@@ -232,23 +242,41 @@ namespace Nimbo.Tests
         [Test]
         public void NewsBoard_OldestHeadlineRemovedFirst()
         {
-            _registry.AddIslander("alba", "Alba", 5);
-            _registry.AddIslander("leo", "Leo", 5);
             _config.MaxHeadlines = 5;
 
             using (var news = new NewsBoard(_config))
             {
-                // Publicar 6 titulares. El primero debería desaparecer.
+                // Seis titulares con el tope en cinco: el primero tiene que caerse.
                 for (int i = 0; i < 6; i++)
                 {
                     EventBus.Publish(new HourPassed(i, 1)); // avanza el reloj
-                    EventBus.Publish(new RomanceStageChanged("alba", "leo", RomanceStage.Dating));
+                    UnRomanceMas(i);
                 }
 
                 Assert.AreEqual(5, news.Headlines.Count);
-                // El primer titular ya no debería estar
+
                 string all = string.Join(" ", news.Headlines.Select(h => h.Text));
-                Assert.IsTrue(all.Contains("Alba"), "los titulares deben contener el nombre del isleño");
+                Assert.IsFalse(all.Contains("Vecin0a"),
+                    "el titular más viejo es el que se va");
+                Assert.IsTrue(all.Contains("Vecin5a"),
+                    "y el más nuevo se queda");
+            }
+        }
+
+        [Test]
+        public void NewsBoard_LaMismaBodaPorLosDosLadosEsUnSoloTitular()
+        {
+            _registry.AddIslander("alba", "Alba", 5);
+            _registry.AddIslander("leo", "Leo", 5);
+
+            using (var news = new NewsBoard(_config))
+            {
+                // Es lo que hace SocialService.Wed: un aviso por cónyuge.
+                EventBus.Publish(new RomanceStageChanged("alba", "leo", RomanceStage.Married));
+                EventBus.Publish(new RomanceStageChanged("leo", "alba", RomanceStage.Married));
+
+                Assert.AreEqual(1, news.Headlines.Count,
+                    "una boda es una noticia, aunque la cuenten los dos novios");
             }
         }
 

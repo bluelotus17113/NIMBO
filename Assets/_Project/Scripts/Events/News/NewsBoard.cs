@@ -4,8 +4,11 @@ using Nimbo.Core.Events;
 using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
 using Nimbo.Core.Util;
+using Nimbo.Core.Time;
 using Nimbo.Events.Scheduling;
+using Nimbo.Data.Save;
 using Nimbo.Data.Social;
+using Nimbo.Data.World;
 
 namespace Nimbo.Events.News
 {
@@ -31,11 +34,35 @@ namespace Nimbo.Events.News
     /// y de progresión y escribe titulares con los nombres reales de los implicados.
     /// Guarda los últimos N y tira los más viejos.
     /// </summary>
-    public class NewsBoard : IDisposable
+    public class NewsBoard : IDisposable, IChronicleService
     {
+        /// <summary>Cuántas líneas de crónica se guardan antes de tirar las viejas. ⚙️</summary>
+        /// <remarks>
+        /// Más que los titulares del tablón, y por eso son dos listas y no una: el tablón
+        /// de la plaza es lo de ahora —caben veinte— y la crónica es la memoria de la
+        /// aldea, que hay que poder leer hacia atrás. Ciento cincuenta son varias semanas
+        /// de juego sin engordar el guardado de forma apreciable.
+        /// </remarks>
+        const int MaxChronicle = 150;
+
         readonly EventsConfig _config;
         readonly List<Headline> _headlines = new List<Headline>();
+        readonly SaveGame _save;
+        readonly GameClock _clock;
         long _currentMinute;
+
+        /// <summary>
+        /// La última etapa contada de cada pareja, para no contarla dos veces.
+        /// </summary>
+        /// <remarks>
+        /// Hace falta porque **casi todos los cambios de relación se publican por los dos
+        /// lados**: <c>SocialService.Wed</c> lanza un <see cref="RomanceStageChanged"/>
+        /// para cada cónyuge, y el evaluador de romance hace lo mismo al empezar a salir
+        /// o al prometerse. Sin esto, el tablón escribía «¡Ana y Leo se han casado!» dos
+        /// veces seguidas, con dos plantillas distintas para más gracia.
+        /// </remarks>
+        readonly Dictionary<string, RomanceStage> _lastRomance = new Dictionary<string, RomanceStage>();
+        readonly Dictionary<string, ConflictStage> _lastConflict = new Dictionary<string, ConflictStage>();
 
         // Delegates para poder desuscribir
         readonly Action<RomanceStageChanged> _onRomance;
@@ -43,19 +70,31 @@ namespace Nimbo.Events.News
         readonly Action<BabyBorn> _onBaby;
         readonly Action<BuildingUnlocked> _onBuilding;
         readonly Action<ConflictStageChanged> _onConflict;
+        readonly Action<WeddingAnnounced> _onWedding;
         readonly Action<HourPassed> _onHour;
 
         public IReadOnlyList<Headline> Headlines => _headlines;
 
-        public NewsBoard(EventsConfig config)
+        /// <summary>La crónica guardada. Vacía si el tablón se montó sin partida.</summary>
+        public IReadOnlyList<ChronicleEntry> Entries =>
+            _save != null ? _save.Chronicle : (IReadOnlyList<ChronicleEntry>)Array.Empty<ChronicleEntry>();
+
+        /// <summary>
+        /// El tablón. Sin <paramref name="save"/> escribe solo en memoria, que es lo que
+        /// quieren los tests del tablón en sí.
+        /// </summary>
+        public NewsBoard(EventsConfig config, SaveGame save = null, GameClock clock = null)
         {
             _config = config;
+            _save = save;
+            _clock = clock;
 
             _onRomance = OnRomanceChanged;
             _onLevelUp = OnLevelUp;
             _onBaby = OnBabyBorn;
             _onBuilding = OnBuildingUnlocked;
             _onConflict = OnConflictChanged;
+            _onWedding = OnWeddingAnnounced;
             _onHour = OnHourPassed;
 
             EventBus.Subscribe(_onRomance);
@@ -63,6 +102,7 @@ namespace Nimbo.Events.News
             EventBus.Subscribe(_onBaby);
             EventBus.Subscribe(_onBuilding);
             EventBus.Subscribe(_onConflict);
+            EventBus.Subscribe(_onWedding);
             EventBus.Subscribe(_onHour);
         }
 
@@ -73,6 +113,7 @@ namespace Nimbo.Events.News
             EventBus.Unsubscribe(_onBaby);
             EventBus.Unsubscribe(_onBuilding);
             EventBus.Unsubscribe(_onConflict);
+            EventBus.Unsubscribe(_onWedding);
             EventBus.Unsubscribe(_onHour);
         }
 
@@ -80,11 +121,36 @@ namespace Nimbo.Events.News
 
         void OnHourPassed(HourPassed evt) => _currentMinute = evt.Day * 24L * 60L + evt.Hour * 60L;
 
+        void OnWeddingAnnounced(WeddingAnnounced evt)
+        {
+            string a = ShortName(evt.AId);
+            string b = ShortName(evt.BId);
+            if (a == null || b == null) return;
+
+            AddHeadline(PickTemplate(new[] {
+                $"¡Boda el día {evt.Day}: {a} y {b} se casan!",
+                $"Que no se te olvide: {a} y {b} se casan el día {evt.Day}.",
+                $"La isla prepara la boda de {a} y {b}, el día {evt.Day}.",
+            }));
+        }
+
         void OnRomanceChanged(RomanceStageChanged evt)
         {
             string a = ShortName(evt.FromId);
             string b = ShortName(evt.ToId);
             if (a == null || b == null) return;
+
+            // Un flechazo es de uno hacia otro y las dos direcciones son noticia: que
+            // Ana esté colada por Leo y que Leo lo esté por Ana son dos titulares, y ahí
+            // está la historia. Salir, prometerse, casarse y romper son estados de la
+            // pareja, y esos se cuentan una vez.
+            bool directional = evt.Stage is RomanceStage.Crush or RomanceStage.Confessed;
+            string key = directional
+                ? $"{evt.FromId}>{evt.ToId}"
+                : PairKey(evt.FromId, evt.ToId);
+
+            if (_lastRomance.TryGetValue(key, out var told) && told == evt.Stage) return;
+            _lastRomance[key] = evt.Stage;
 
             string[] templates = evt.Stage switch
             {
@@ -174,6 +240,12 @@ namespace Nimbo.Events.News
             string b = ShortName(evt.ToId);
             if (a == null || b == null) return;
 
+            // Una riña es de dos, y la afinidad se mueve en los dos sentidos: sin este
+            // filtro, cada discusión salía contada dos veces.
+            string key = PairKey(evt.FromId, evt.ToId);
+            if (_lastConflict.TryGetValue(key, out var told) && told == evt.Stage) return;
+            _lastConflict[key] = evt.Stage;
+
             string[] templates = evt.Stage switch
             {
                 ConflictStage.Tension => new[] {
@@ -203,7 +275,30 @@ namespace Nimbo.Events.News
             _headlines.Add(new Headline(text, _currentMinute));
             while (_headlines.Count > _config.MaxHeadlines)
                 _headlines.RemoveAt(0);
+
+            if (_save == null) return;
+
+            _save.Chronicle.Add(new ChronicleEntry(Today(), text));
+            while (_save.Chronicle.Count > MaxChronicle)
+                _save.Chronicle.RemoveAt(0);
         }
+
+        /// <summary>
+        /// Qué día es. Del reloj si lo hay, y si no de la última hora que pasó.
+        /// </summary>
+        /// <remarks>
+        /// El reloj primero porque la primera línea de una partida puede escribirse antes
+        /// de que haya pasado ninguna hora, y entonces <c>_currentMinute</c> vale cero y
+        /// la crónica empezaría con un «día 0» que no existe.
+        /// </remarks>
+        int Today() => _clock?.Day ?? (int)(_currentMinute / (24L * 60L)) + 1;
+
+        /// <summary>
+        /// La clave de una pareja, sin importar el orden. Es lo que evita contar dos
+        /// veces lo que se publica desde los dos lados.
+        /// </summary>
+        static string PairKey(string one, string other) =>
+            string.CompareOrdinal(one, other) <= 0 ? $"{one}|{other}" : $"{other}|{one}";
 
         static string PickTemplate(string[] templates)
         {

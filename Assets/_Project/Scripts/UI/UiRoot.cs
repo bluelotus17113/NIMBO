@@ -35,6 +35,7 @@ namespace Nimbo.UI
         private Decor.DecorPanel _decor;
         private Achievements.AchievementsPanel _achievements;
         private Achievements.AchievementToast _toast;
+        private Chronicle.ChroniclePanel _chronicle;
         private Player.HotbarView _hotbar;
         private Player.BagPanel _bag;
         private Player.CraftPanel _craft;
@@ -124,6 +125,9 @@ namespace Nimbo.UI
 
             _achievements = new Achievements.AchievementsPanel();
             body.Add(_achievements.Root);
+
+            _chronicle = new Chronicle.ChroniclePanel();
+            body.Add(_chronicle.Root);
 
             _bag = new Player.BagPanel();
             body.Add(_bag.Root);
@@ -230,6 +234,13 @@ namespace Nimbo.UI
             Add("Hacer", () =>
             {
                 if (_craft.IsShowing) _craft.Hide(); else _craft.Show();
+            });
+            // La crónica va justo antes de los logros y no al final de la fila: es lo
+            // que se abre al entrar para ver qué pasó anoche, y lo que se abre primero
+            // no puede estar en el último sitio donde se busca.
+            Add("Crónica", () =>
+            {
+                if (_chronicle.IsShowing) _chronicle.Hide(); else _chronicle.Show();
             });
             Add("Logros", () =>
             {
@@ -474,7 +485,7 @@ namespace Nimbo.UI
             _panel.IsShowing || _shop.IsShowing || _decor.IsShowing ||
             _achievements.IsShowing || _bag.IsShowing || _craft.IsShowing ||
             _shipping.IsShowing || _map.IsShowing || _build.IsShowing ||
-            _furnish.IsShowing || _creator.IsShowing;
+            _furnish.IsShowing || _creator.IsShowing || _chronicle.IsShowing;
 
         private bool _pointerWasNeeded;
 

@@ -28,14 +28,24 @@ namespace Nimbo.Events
 
         public EventsService() : this(LoadConfig()) { }
 
-        public EventsService(EventsConfig config)
+        /// <summary>
+        /// Enciende el módulo. Con <paramref name="save"/> y <paramref name="clock"/> la
+        /// crónica se guarda y sobrevive a cerrar el juego; sin ellos el tablón solo
+        /// vive en memoria, que es lo que necesitan los tests.
+        /// </summary>
+        public EventsService(EventsConfig config,
+                             Nimbo.Data.Save.SaveGame save = null,
+                             Nimbo.Core.Time.GameClock clock = null)
         {
-            _config = config ? config : ScriptableObject.CreateInstance<EventsConfig>();
+            // Sin configuración se busca el asset, y si tampoco está, valores por defecto.
+            // Antes se saltaba el asset y se iba directo a los defaults, así que ajustar
+            // el EventsConfig del proyecto no servía de nada por este camino.
+            _config = config ? config : LoadConfig();
 
             _scheduler = new EventScheduler(_config);
             _concert = new ConcertEvent(_config, _scheduler);
             _dreams = new DreamEvent(_config);
-            _news = new NewsBoard(_config);
+            _news = new NewsBoard(_config, save, clock);
 
             // El scheduler avisa al concierto cuando un evento de espectáculo
             // arranca o termina. El concierto ya se suscribió en su constructor.

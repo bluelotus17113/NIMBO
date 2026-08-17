@@ -87,6 +87,7 @@ namespace Nimbo.Game.Bootstrap
         private CraftingService _crafting;
         private HomeUpgradeService _homeUpgrades;
         private WeddingPlanner _weddings;
+        private Nimbo.Events.EventsService _events;
 
         private IslanderRegistry _registry;
         private long _lastAutosaveMinute;
@@ -281,6 +282,16 @@ namespace Nimbo.Game.Bootstrap
             // y se suscribe a DayPassed él solo: nadie le llama, se entera del calendario.
             _weddings = new WeddingPlanner(_save, registry, _social, _simulation);
 
+            // El módulo de eventos: sucesos, sueños, conciertos y el tablón de noticias.
+            //
+            // Estaba escrito y probado y **no lo construía nadie**, así que no existía en
+            // el juego. Se enciende aquí, con la partida y el reloj, para que la crónica
+            // se guarde: lo que uno quiere leer al volver es justo lo que pasó mientras
+            // no estaba, y un tablón que solo viva en memoria se vacía en ese momento.
+            // Sin `using` y con el nombre entero: `using Nimbo.Core.Events` ya está
+            // puesto arriba, y con los dos importados «Events» se vuelve ambiguo.
+            _events = new Nimbo.Events.EventsService(null, _save, _clock);
+
             _brain = new IslanderBrain(registry, _island, personalities, _social, _clock);
             _jobs = new JobService(registry, _simulation, _island, _clock);
             _tree = new NimboTree(_save, _clock, registry);
@@ -298,6 +309,7 @@ namespace Nimbo.Game.Bootstrap
             ServiceRegistry.Register<ISocialService>(_social);
             ServiceRegistry.Register<IHousingService>(housing);
             ServiceRegistry.Register<IHomeUpgradeService>(_homeUpgrades);
+            ServiceRegistry.Register<IChronicleService>(_events.News);
             ServiceRegistry.Register<IEconomyService>(_economy);
             ServiceRegistry.Register<IIslandService>(_island);
             ServiceRegistry.Register<IDecorService>(decor);
@@ -521,6 +533,7 @@ namespace Nimbo.Game.Bootstrap
             _jobs?.Dispose();
             _achievements?.Dispose();
             _weddings?.Dispose();
+            _events?.Dispose();
             EventBus.Unsubscribe<DayPassed>(OnDayPassed);
             EventBus.Unsubscribe<AchievementUnlocked>(OnAchievementUnlocked);
             ServiceRegistry.Clear();
