@@ -23,6 +23,7 @@ namespace Nimbo.UI.Hud
         private readonly Label _dayLabel;
         private readonly Label _coinsLabel;
         private readonly Label _requestBadge;
+        private readonly Label _levelLabel;
         private readonly VisualElement _badgeHolder;
 
         public VisualElement Root { get; }
@@ -73,6 +74,23 @@ namespace Nimbo.UI.Hud
             coinBlock.Add(_coinsLabel);
             Root.Add(coinBlock);
 
+            // --- nivel de aldeano ---
+            //
+            // La media de las cinco vías (§12.1). No se gana por su cuenta y no
+            // desbloquea nada: está aquí porque hace falta un número que diga «voy por
+            // aquí» sin abrir ninguna pantalla. Lo que abre cosas son las vías, y esas
+            // se miran a propósito.
+            var levelBlock = new VisualElement();
+            levelBlock.style.flexDirection = FlexDirection.Row;
+            levelBlock.style.alignItems = Align.Center;
+            var levelName = UiTheme.Body("aldeano", soft: true);
+            levelName.style.marginRight = 8;
+            levelBlock.Add(levelName);
+            _levelLabel = UiTheme.Chip("1", UiTheme.Lavender);
+            _levelLabel.style.marginRight = 0;
+            levelBlock.Add(_levelLabel);
+            Root.Add(levelBlock);
+
             // --- peticiones ---
             _badgeHolder = new VisualElement();
             _badgeHolder.style.flexDirection = FlexDirection.Row;
@@ -91,9 +109,11 @@ namespace Nimbo.UI.Hud
             EventBus.Subscribe<RequestRaised>(OnRequestsChanged);
             EventBus.Subscribe<RequestResolved>(OnRequestsChanged);
             EventBus.Subscribe<RequestExpired>(OnRequestsChanged);
+            EventBus.Subscribe<SkillLeveledUp>(OnSkillLeveledUp);
 
             RefreshCoins();
             RefreshBadge();
+            RefreshLevel();
         }
 
         public void Dispose()
@@ -102,6 +122,7 @@ namespace Nimbo.UI.Hud
             EventBus.Unsubscribe<RequestRaised>(OnRequestsChanged);
             EventBus.Unsubscribe<RequestResolved>(OnRequestsChanged);
             EventBus.Unsubscribe<RequestExpired>(OnRequestsChanged);
+            EventBus.Unsubscribe<SkillLeveledUp>(OnSkillLeveledUp);
         }
 
         /// <summary>Solo el reloj: es lo único que cambia sin que pase nada más.</summary>
@@ -127,6 +148,14 @@ namespace Nimbo.UI.Hud
         {
             if (ServiceRegistry.TryGet<IEconomyService>(out var economy))
                 _coinsLabel.text = economy.Wallet.Coins.ToString();
+        }
+
+        private void OnSkillLeveledUp(SkillLeveledUp _) => RefreshLevel();
+
+        private void RefreshLevel()
+        {
+            if (ServiceRegistry.TryGet<IPlayerProgression>(out var progression))
+                _levelLabel.text = progression.VillagerLevel.ToString();
         }
 
         private void RefreshBadge()

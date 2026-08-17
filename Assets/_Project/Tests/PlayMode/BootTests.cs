@@ -640,6 +640,11 @@ namespace Nimbo.PlayTests
         [UnityTest]
         public IEnumerator ElHuertoSePuedeTrabajarDePrincipioAFin()
         {
+            // Una casilla del medio: con Cultivo 1 solo se trabaja el 4×3 central
+            // (§12.3), y la esquina (0,0) pide nivel 8. Esta prueba va del ciclo del
+            // huerto, no de la progresión.
+            const int Cx = 3, Cy = 2;
+
             // El huerto llevaba escrito y probado desde el módulo, pero no había forma
             // de tocarlo desde el juego: era código muerto. Esto recorre el ciclo
             // entero por donde lo recorre el jugador — de pie sobre la casilla, con la
@@ -649,9 +654,9 @@ namespace Nimbo.PlayTests
             var farm = ServiceRegistry.Get<IFarmingService>();
             var bag = ServiceRegistry.Get<IInventoryService>();
 
-            Assert.AreEqual(Data.Farming.TileState.Wild, farm.TileAt(0, 0).State);
-            Assert.AreEqual(FarmError.Ok, farm.Till(0, 0));
-            Assert.AreEqual(Data.Farming.TileState.Tilled, farm.TileAt(0, 0).State);
+            Assert.AreEqual(Data.Farming.TileState.Wild, farm.TileAt(Cx, Cy).State);
+            Assert.AreEqual(FarmError.Ok, farm.Till(Cx, Cy));
+            Assert.AreEqual(Data.Farming.TileState.Tilled, farm.TileAt(Cx, Cy).State);
 
             string seed = null;
             foreach (var crop in farm.Crops)
@@ -659,21 +664,21 @@ namespace Nimbo.PlayTests
             Assert.IsNotNull(seed, "empezó sin semillas que sembrar");
 
             int before = bag.CountOf(seed);
-            Assert.AreEqual(FarmError.Ok, farm.Plant(0, 0, seed));
+            Assert.AreEqual(FarmError.Ok, farm.Plant(Cx, Cy, seed));
             Assert.AreEqual(before - 1, bag.CountOf(seed), "sembrar no gastó la semilla");
 
             // Regar y pasar los días que pida: tiene que acabar listo para recoger.
             farm.TryGetCrop(seed, out var definition);
             for (int day = 0; day < definition.DaysToGrow; day++)
             {
-                Assert.AreEqual(FarmError.Ok, farm.Water(0, 0));
+                Assert.AreEqual(FarmError.Ok, farm.Water(Cx, Cy));
                 farm.AdvanceDay();
             }
 
-            Assert.AreEqual(Data.Farming.TileState.Ready, farm.TileAt(0, 0).State,
+            Assert.AreEqual(Data.Farming.TileState.Ready, farm.TileAt(Cx, Cy).State,
                             "regado todos los días y no creció");
 
-            int got = farm.Harvest(0, 0, out var error);
+            int got = farm.Harvest(Cx, Cy, out var error);
             Assert.AreEqual(FarmError.Ok, error);
             Assert.Greater(got, 0, "recoger no dio nada");
             Assert.Greater(bag.CountOf(definition.CropId), 0, "lo recogido no entró en la mochila");

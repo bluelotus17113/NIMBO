@@ -38,6 +38,7 @@ namespace Nimbo.UI
         private Chronicle.ChroniclePanel _chronicle;
         private Requests.RequestBoardPanel _board;
         private Minigames.MinigamePanel _minigame;
+        private Player.SkillsPanel _skills;
         private Player.HotbarView _hotbar;
         private Player.BagPanel _bag;
         private Player.CraftPanel _craft;
@@ -138,6 +139,9 @@ namespace Nimbo.UI
 
             _minigame = new Minigames.MinigamePanel();
             body.Add(_minigame.Root);
+
+            _skills = new Player.SkillsPanel();
+            body.Add(_skills.Root);
 
             _bag = new Player.BagPanel();
             body.Add(_bag.Root);
@@ -250,6 +254,12 @@ namespace Nimbo.UI
             Add("Hacer", () =>
             {
                 if (_craft.IsShowing) _craft.Hide(); else _craft.Show();
+            });
+            // Las cinco vías, junto a la mochila y el crafteo: es información del
+            // protagonista, no de la aldea, y va con lo suyo.
+            Add("Vías", () =>
+            {
+                if (_skills.IsShowing) _skills.Hide(); else _skills.Show();
             });
             // Los encargos tienen botón **además** del tablón de la plaza, igual que
             // «Hacer» convive con la mesa de trabajo. El tablón es donde uno mira al
@@ -548,7 +558,7 @@ namespace Nimbo.UI
         private bool AnyPanelOpen =>
             _panel.IsShowing || _shop.IsShowing || _decor.IsShowing ||
             _achievements.IsShowing || _bag.IsShowing || _craft.IsShowing || _board.IsShowing ||
-            _minigame.IsShowing ||
+            _minigame.IsShowing || _skills.IsShowing ||
             _shipping.IsShowing || _map.IsShowing || _build.IsShowing ||
             _furnish.IsShowing || _creator.IsShowing || _chronicle.IsShowing;
 

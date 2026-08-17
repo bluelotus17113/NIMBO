@@ -100,6 +100,29 @@ namespace Nimbo.Core.Events
         }
     }
 
+    /// <summary>Una de las cinco vías del protagonista ha subido.</summary>
+    public readonly struct SkillLeveledUp
+    {
+        public readonly Data.Player.SkillKind Skill;
+        public readonly int NewLevel;
+        public SkillLeveledUp(Data.Player.SkillKind skill, int newLevel)
+        {
+            Skill = skill; NewLevel = newLevel;
+        }
+    }
+
+    /// <summary>Se ha ganado algo nuevo que hacer.</summary>
+    /// <remarks>
+    /// Va aparte de <see cref="SkillLeveledUp"/> aunque llegue en el mismo momento:
+    /// subir de nivel pasa siempre y se cuenta con un número, y desbloquear algo pasa
+    /// de vez en cuando y hay que explicarlo con palabras.
+    /// </remarks>
+    public readonly struct UnlockGained
+    {
+        public readonly Services.Contracts.Unlock Unlock;
+        public UnlockGained(Services.Contracts.Unlock unlock) => Unlock = unlock;
+    }
+
     /// <summary>
     /// El jugador quiere ponerse a jugar a uno de los tres.
     /// </summary>

@@ -681,57 +681,77 @@ de isla» de §7.6 junto con los niveles de los habitantes.
 
 ### 12.2 Curva
 
+La curva del diseño da la experiencia **total** de cada nivel como `40·nivel²`. Lo
+que se implementa es el escalón, que es su diferencia:
+
 ```csharp
-int XpForSkill(int level) => 40 * level * level;   // ⚙️
+int XpForLevel(int level) => 40 * (2 * level + 1);      // de este nivel al siguiente
+int TotalXpForLevel(int level) => 40 * level * level - 40;
 ```
 
-| Nivel | XP acumulada | Referencia |
-|---|---|---|
-| 2 | 160 | una tarde |
-| 3 | 360 | dos o tres sesiones |
-| 5 | 1000 | primera semana de juego |
-| 7 | 1960 | segunda semana |
-| 10 | 4000 | tope; unas 4–5 semanas si te dedicas a esa vía |
+| Nivel | Cuesta el escalón | XP total desde cero | Referencia |
+|---|---|---|---|
+| 2 | 120 | 120 | una tarde |
+| 3 | 200 | 320 | dos o tres sesiones |
+| 5 | 360 | 960 | primera semana de juego |
+| 7 | 520 | 1920 | segunda semana |
+| 10 | 760 | 3960 | tope; unas 4–5 semanas si te dedicas a esa vía |
 
-Una acción da entre 2 y 12 XP según lo que cueste (coger una flor 2, talar un roble
-8, atender una petición urgente 12). Los números concretos viven en un
-`PlayerProgressionConfig` ⚙️.
+Una acción da entre 2 y 12 XP según lo que cueste. Lo que paga cada una vive en
+`PlayerProgressionConfig` ⚙️, y la diferencia entre lo más barato —una casilla
+labrada, 2— y lo más caro —pagar la obra de una casa, 12— es de seis veces y no de
+cien: un juego donde una acción rinde cien veces más que otra es un juego donde solo
+se hace esa.
 
 ### 12.3 Qué desbloquea cada nivel
 
 Esta tabla es el contenido de la progresión. Todo lo que aparece aquí es una mejora
 que el jugador **nota al usarla**, no un porcentaje invisible.
 
+**Estado.** El motor está hecho y funcionando: las cinco vías suben con lo que ya
+publicaba la isla, se guardan con la partida, avisan al subir y tienen pantalla
+propia. De la tabla de abajo está hecho lo marcado `[x]`; lo demás sigue en pie.
+Lo que falta se agrupa en tres bolsas y conviene saber por qué:
+
+- **Lo que necesita contenido nuevo** (bancal de nube, invernadero, muebles
+  legendarios, nodos raros): no es progresión, son cosas que todavía no existen en
+  ningún catálogo.
+- **Lo que necesita las herramientas de nivel 2** (§12.4): azada y regadera de tres
+  casillas, guadaña en arco. Es un bloque entero por sí solo.
+- **Lo que necesita un menú de interacciones sociales** que hoy no existe: pulsar E
+  junto a un vecino siempre es «charlar», así que casi toda la vía de Convivencia no
+  tiene dónde ponerle puerta. Eso llega con §14 (el cortejo).
+
 **Cultivo** — la parcela arranca con 4×3 casillas útiles de las 8×6 que hay.
 
 | Nivel | Desbloquea |
 |---|---|
-| 2 | +1 fila de parcela (4×4) |
-| 3 | La regadera moja 3 casillas en línea |
-| 4 | +1 fila y +1 columna (6×5) |
-| 5 | Las cosechas rinden +1 unidad con 25% de probabilidad |
+| 2 | `[x]` +1 fila de parcela (4×4) |
+| 3 | La regadera moja 3 casillas en línea — pide §12.4 |
+| 4 | `[x]` +1 fila y +1 columna (6×5) |
+| 5 | `[x]` Las cosechas rinden +1 unidad con 25% de probabilidad |
 | 6 | Bancal de nube: 4 casillas que no necesitan riego diario |
-| 8 | Parcela completa (8×6) |
+| 8 | `[x]` Parcela completa (8×6) |
 | 10 | Invernadero: 6 casillas que crecen al doble de velocidad |
 
 **Recolección**
 
 | Nivel | Desbloquea |
 |---|---|
-| 2 | Ves el nombre y el material del nodo antes de golpearlo |
+| 2 | `[x]` Ves el nombre y el material del nodo antes de golpearlo |
 | 3 | Los nodos raros (geoda de nube, orquídea etérea) aparecen el doble |
-| 5 | Un golpe menos en árboles y rocas |
-| 6 | Los nodos se reponen un día antes |
-| 8 | Recoges el doble de flores y hierbas |
+| 5 | `[x]` Un golpe menos en árboles y rocas |
+| 6 | `[x]` Los nodos se reponen un día antes |
+| 8 | `[x]` Recoges el doble de flores y hierbas |
 | 10 | Ves los nodos maduros en el mapa (`MapPanel`) |
 
 **Oficio** — sustituye la puerta por nivel de isla que hoy tiene `AvailableAt`.
 
 | Nivel | Desbloquea |
 |---|---|
-| 2 | Recetas de material básico (tablones, sillar) |
-| 4 | Crafteo en lote (×5 de una vez) |
-| 5 | Muebles del catálogo intermedio |
+| 2 | `[x]` Recetas de nivel medio (las que pedían isla 4 o más) |
+| 4 | `[x]` Crafteo en lote (×5 de una vez), menos en la cocina |
+| 5 | `[x]` Las recetas más finas (las que pedían isla 8 o más) |
 | 6 | **Herramientas de nivel 2** (§12.4) |
 | 8 | **El anillo de compromiso** (§14.4) |
 | 10 | Muebles legendarios y adornos de isla |
@@ -754,8 +774,8 @@ es lo que convierte «ser el alcalde» en algo que se gana.
 | Nivel | Desbloquea |
 |---|---|
 | 1 | Ver la ficha y las necesidades de un habitante |
-| 2 | **Asignar trabajos** (§15.1) |
-| 3 | **Ampliar casas** (§15.2) |
+| 2 | `[x]` **Asignar trabajos** (§15.1) |
+| 3 | `[x]` **Ampliar casas** (§15.2) |
 | 4 | Aprobar ascensos de rango |
 | 5 | Organizar eventos pequeños: merienda en el parque, concierto |
 | 7 | Organizar festivales |
@@ -786,14 +806,33 @@ existen** y no cambia ni una línea de Farming, Gathering, Crafting o Social. Es
 patrón del `EventBus` funcionando como se diseñó: la progresión escucha lo que la
 isla ya cuenta.
 
-- `PlayerState` gana un `SkillSet`: cinco pares (nivel, XP). Se guarda con el resto.
+- `PlayerState` gana un `SkillSet`: cinco pares (nivel, XP). Se guarda con el resto,
+  y se rellena solo al leerlo — una partida de antes no trae la lista, y cargarla no
+  puede dejar al protagonista sin saber hacer nada.
 - Contrato `IPlayerProgression` en `Nimbo.Core.Services.Contracts`:
-  `LevelOf(SkillKind)`, `XpOf(SkillKind)`, `IsUnlocked(UnlockId)`, `Grant(SkillKind, float)`.
+  `LevelOf`, `XpOf`, `XpNeededFor`, `VillagerLevel`, `IsUnlocked`, `RequirementFor`
+  y `Grant`. `RequirementFor` está para poder **explicar** la puerta: nunca se
+  esconde un botón sin decir qué falta, porque un hueco vacío parece un fallo y «te
+  hace falta Aldea 2» es una razón para seguir jugando.
 - Eventos nuevos en `GameEvents`: `SkillLeveledUp(skill, level)` y `UnlockGained(id)`.
-  El aviso en pantalla reutiliza `AchievementToast`, que ya está escrito.
-- Las puertas se preguntan desde la UI (`IsUnlocked(Unlock.AssignJobs)`), no desde
+  Dos y no uno, y salen dos carteles cuando coinciden: subir de nivel pasa a menudo y
+  se lee de un vistazo, desbloquear algo pasa poco y hay que pararse a leerlo. El
+  aviso reutiliza `AchievementToast`, que ahora guarda el texto ya escrito en vez de
+  identificadores de logro.
+- Las puertas se preguntan desde la UI (`Gates.Allows(Unlock.AssignJobs)`), no desde
   la lógica: así una partida vieja sigue cargando y lo único que cambia es qué
-  botones se ven.
+  botones se ven. **La contrapartida hay que tenerla presente:** el servicio de
+  debajo sigue aceptando la llamada, así que el día que algo que no sea la pantalla
+  reparta trabajos, la puerta habrá que ponerla también allí.
+
+**Las tres excepciones a lo de no tocar los servicios.** Tres desbloqueos no se
+pueden preguntar desde arriba porque cambian lo que pasa dentro, y ahí sí hay una
+línea nueva: el huerto comprueba el nivel de Cultivo **solo al labrar** (lo ya
+labrado sigue funcionando pase lo que pase con los niveles, así que ninguna partida
+guardada pierde una planta), la recolección resta el golpe de más y dobla lo que se
+coge agachándose, y la cosecha sortea la unidad extra con la casilla como semilla —
+si no, bastaría con recoger con la mochila llena y volver a intentarlo hasta que
+saliera la buena.
 
 ---
 
@@ -1366,7 +1405,7 @@ cuatro primeras son código que ya existe y solo hay que conectar.
 | ~~3~~ | ~~La Crónica en el menú, y `EventsService` encendido (§13.3)~~ | **hecho** | la aldea deja de vivir a ciegas |
 | ~~4~~ | ~~`Resolve` que consume el payload + `RequestKind.Material` y el tablón (§15.4)~~ | **hecho** | recolectar tiene un porqué social |
 | ~~5~~ | ~~Enchufar los tres minijuegos (§9.2)~~ | **hecho** | tres verbos escritos y apagados |
-| 6 | Las cinco vías y sus desbloqueos (§12) | dos o tres días | la progresión entera; no toca ningún servicio existente |
+| ~~6~~ | ~~Las cinco vías y sus desbloqueos (§12)~~ | **hecho** (el motor y catorce puertas; ver §12.3) | la progresión entera |
 | 7 | Rivales y triángulos (§13.2) | un día | las historias que el jugador va a contar |
 | 8 | Cortejo del protagonista con rechazo (§14) | dos días | el pilar romántico, apoyado en 6 y 7 |
 

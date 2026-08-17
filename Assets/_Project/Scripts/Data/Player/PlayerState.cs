@@ -48,6 +48,9 @@ namespace Nimbo.Data.Player
         /// jugador y las otras del censo.
         /// </remarks>
         public Housing.RoomLayout Home = new Housing.RoomLayout();
+
+        /// <summary>Las cinco vías por las que sube. Ver <see cref="SkillSet"/>.</summary>
+        public SkillSet Skills = new SkillSet();
     }
 
     /// <summary>

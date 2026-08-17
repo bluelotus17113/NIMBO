@@ -50,6 +50,7 @@ namespace Nimbo.Art.PlayerView
         private IGiftService _gifts;
         private IRequestService _requests;
         private IMinigameService _minigames;
+        private IPlayerProgression _progression;
         private World.InteriorView _interior;
         private World.WorldView _world;
 
@@ -81,6 +82,7 @@ namespace Nimbo.Art.PlayerView
             ServiceRegistry.TryGet(out _gifts);
             ServiceRegistry.TryGet(out _requests);
             ServiceRegistry.TryGet(out _minigames);
+            ServiceRegistry.TryGet(out _progression);
             _interior = FindFirstObjectByType<World.InteriorView>();
 
             // Se busca una vez. Estaba dentro del bucle que recorre a los vecinos, así
@@ -653,14 +655,33 @@ namespace Nimbo.Art.PlayerView
         private string PromptFor(in NodeDefinition definition)
         {
             var required = definition.RequiredTool;
-            if (required == ToolKind.None) return $"Coger {definition.DisplayName}";
+            if (required == ToolKind.None)
+                return $"Coger {definition.DisplayName}{Yield(definition)}";
 
             var inHand = _inventory?.ToolInHand ?? ToolKind.None;
-            if (inHand == required) return $"{VerbFor(required)} {definition.DisplayName}";
+            if (inHand == required)
+                return $"{VerbFor(required)} {definition.DisplayName}{Yield(definition)}";
 
             // Decir qué falta, no solo que no se puede. «Hace falta un hacha» es
             // información; «no puedes» es una puerta cerrada sin cartel.
             return $"{definition.DisplayName} — hace falta {NameOf(required)}";
+        }
+
+        /// <summary>
+        /// Qué suelta el nodo, cuando el jugador ya sabe leerlos (Recolección 2).
+        /// </summary>
+        /// <remarks>
+        /// Antes de eso el cartel dice qué es pero no qué da, así que hay que talarlo
+        /// para averiguarlo. Es un desbloqueo pequeño y de los que más se notan: deja de
+        /// hacer falta acordarse de qué árbol daba savia.
+        /// </remarks>
+        private string Yield(in NodeDefinition definition)
+        {
+            if (_progression == null || !_progression.IsUnlocked(Unlock.ReadTheNode)) return "";
+            if (string.IsNullOrEmpty(definition.DropId)) return "";
+
+            var item = _economy?.GetItem(definition.DropId);
+            return item == null ? "" : $" · da {item.DisplayName.ToLowerInvariant()}";
         }
 
         private static string VerbFor(ToolKind tool) => tool switch

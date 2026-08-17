@@ -28,7 +28,15 @@ namespace Nimbo.UI.Achievements
 
         public VisualElement Root { get; }
 
-        private readonly Queue<string> _pending = new();
+        /// <summary>
+        /// Lo que queda por enseñar, ya resuelto en palabras.
+        /// </summary>
+        /// <remarks>
+        /// Guardaba identificadores de logro y buscaba la ficha al sacarlos de la cola.
+        /// Ahora guarda el texto ya hecho, porque el cartel lo comparten los logros y
+        /// las cinco vías del protagonista, y una vía no tiene ficha que buscar.
+        /// </remarks>
+        private readonly Queue<(string Title, string Detail)> _pending = new();
         private readonly Label _title;
         private readonly Label _reward;
 
@@ -62,10 +70,48 @@ namespace Nimbo.UI.Achievements
             Root.Add(_reward);
         }
 
-        public void Subscribe() => EventBus.Subscribe<AchievementUnlocked>(OnUnlocked);
-        public void Unsubscribe() => EventBus.Unsubscribe<AchievementUnlocked>(OnUnlocked);
+        public void Subscribe()
+        {
+            EventBus.Subscribe<AchievementUnlocked>(OnUnlocked);
+            EventBus.Subscribe<SkillLeveledUp>(OnSkillLeveledUp);
+            EventBus.Subscribe<UnlockGained>(OnUnlockGained);
+        }
 
-        private void OnUnlocked(AchievementUnlocked evt) => _pending.Enqueue(evt.AchievementId);
+        public void Unsubscribe()
+        {
+            EventBus.Unsubscribe<AchievementUnlocked>(OnUnlocked);
+            EventBus.Unsubscribe<SkillLeveledUp>(OnSkillLeveledUp);
+            EventBus.Unsubscribe<UnlockGained>(OnUnlockGained);
+        }
+
+        /// <summary>Un cartel a mano. Lo usan las vías y cualquiera que tenga algo que decir.</summary>
+        public void Push(string title, string detail) => _pending.Enqueue((title, detail));
+
+        private void OnUnlocked(AchievementUnlocked evt)
+        {
+            if (_service == null && !ServiceRegistry.TryGet(out _service)) return;
+            if (!_service.TryGetDefinition(evt.AchievementId, out var definition)) return;
+
+            _pending.Enqueue((definition.DisplayName,
+                              definition.Reward > 0
+                                  ? $"{definition.Reward} nimbos"
+                                  : definition.Description));
+        }
+
+        private void OnSkillLeveledUp(SkillLeveledUp evt) =>
+            Push($"{Gates.NameOf(evt.Skill)} {evt.NewLevel}", "Se te da mejor que ayer.");
+
+        /// <summary>
+        /// Lo que se acaba de ganar el derecho a hacer, aparte del número.
+        /// </summary>
+        /// <remarks>
+        /// Dos carteles seguidos cuando coinciden, y está bien que sean dos: subir de
+        /// nivel pasa a menudo y se lee de un vistazo; desbloquear algo pasa poco y hay
+        /// que pararse a leerlo. Metidos en el mismo cartel, lo segundo se perdería
+        /// detrás de lo primero.
+        /// </remarks>
+        private void OnUnlockGained(UnlockGained evt) =>
+            Push("Ya puedes", Player.SkillsPanel.Describe(evt.Unlock));
 
         /// <summary>Lo llama la interfaz cada fotograma, con el tiempo sin escalar.</summary>
         public void Tick(float unscaledDelta)
@@ -108,15 +154,10 @@ namespace Nimbo.UI.Achievements
             Root.style.display = DisplayStyle.None;
         }
 
-        private void Begin(string achievementId)
+        private void Begin((string Title, string Detail) card)
         {
-            if (_service == null && !ServiceRegistry.TryGet(out _service)) return;
-            if (!_service.TryGetDefinition(achievementId, out var definition)) return;
-
-            _title.text = definition.DisplayName;
-            _reward.text = definition.Reward > 0
-                ? $"{definition.Reward} nimbos"
-                : definition.Description;
+            _title.text = card.Title;
+            _reward.text = card.Detail;
 
             _elapsed = 0f;
             _showing = true;

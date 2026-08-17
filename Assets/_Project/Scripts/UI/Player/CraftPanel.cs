@@ -148,19 +148,79 @@ namespace Nimbo.UI.Player
             text.Add(BuildIngredients(recipe));
             row.Add(text);
 
-            var error = _crafting.CanCraft(recipe.RecipeId, _station);
-            if (error == CraftError.Ok)
+            // Lo que pide más Oficio del que hay se enseña igual, con lo que falta
+            // escrito. Un catálogo que se rellena solo con los niveles es de las pocas
+            // formas de que subir de vía se vea sin abrir una pantalla de números.
+            var rank = RankOf(recipe);
+            if (rank.HasValue && !Gates.Allows(rank.Value, out string falta))
             {
-                row.Add(UiTheme.Action("Hacer", () => Craft(recipe)));
+                var locked = UiTheme.Chip(Gates.Short(rank.Value), UiTheme.InkFaint);
+                locked.tooltip = falta;
+                row.Add(locked);
+                return row;
             }
-            else
+
+            var error = _crafting.CanCraft(recipe.RecipeId, _station);
+            if (error != CraftError.Ok)
             {
                 var disabled = UiTheme.Disabled(ShortExcuse(error));
                 disabled.style.fontSize = 12;
                 row.Add(disabled);
+                return row;
             }
 
+            var make = UiTheme.Action("Hacer", () => Craft(recipe));
+            make.style.marginRight = 6;
+            row.Add(make);
+
+            // Hacer cinco de una vez (Oficio 4). Solo donde tiene sentido: cocinar en
+            // lote abriría cinco minijuegos seguidos, que es exactamente lo contrario
+            // de una comodidad.
+            if (recipe.Station != CraftStation.Kitchen && Gates.Allows(Unlock.BatchCrafting))
+                row.Add(UiTheme.Secondary("×5", () => CraftMany(recipe, 5)));
+
             return row;
+        }
+
+        /// <summary>
+        /// El escalón de Oficio que pide una receta, o nada si es de las de siempre.
+        /// </summary>
+        /// <remarks>
+        /// Sale del nivel de desbloqueo que la receta ya traía, así que no hay una
+        /// segunda tabla que mantener al día: lo caro de conseguir es también lo que
+        /// pide más oficio, y eso ya estaba escrito en el catálogo.
+        ///
+        /// Las básicas no piden nada, y eso importa: las cinco herramientas y la caña
+        /// salen de aquí, así que ponerles cualquier puerta dejaría al jugador nuevo sin
+        /// azada y sin forma de subir Oficio para conseguirla.
+        /// </remarks>
+        private static Unlock? RankOf(Recipe recipe) =>
+            recipe.UnlockLevel >= 8 ? Unlock.FineRecipes :
+            recipe.UnlockLevel >= 4 ? Unlock.MiddlingRecipes :
+                                      (Unlock?)null;
+
+        /// <summary>
+        /// Hace varias seguidas, y para en cuanto una falla.
+        /// </summary>
+        /// <remarks>
+        /// Parar al primer fallo y no seguir intentándolo: si se acaban los materiales
+        /// a la tercera, lo que el jugador quiere ver es «has hecho tres», no cinco
+        /// mensajes de error encima del mismo botón.
+        /// </remarks>
+        private void CraftMany(Recipe recipe, int times)
+        {
+            int done = 0;
+            for (int i = 0; i < times; i++)
+            {
+                if (_crafting.Craft(recipe.RecipeId, _station) != CraftError.Ok) break;
+                done++;
+            }
+
+            _hint.text = done == 0
+                ? Excuse(_crafting.CanCraft(recipe.RecipeId, _station))
+                : $"Hechos: {done} × {recipe.DisplayName}.";
+
+            Rebuild();
         }
 
         /// <summary>

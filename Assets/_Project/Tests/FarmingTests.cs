@@ -55,6 +55,19 @@ namespace Nimbo.Tests
 
         // ── helpers ─────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// La casilla con la que se prueba todo.
+        /// </summary>
+        /// <remarks>
+        /// Era la (0,0), y dejó de valer al ponerle nivel a la parcela (§12.3): con
+        /// Cultivo 1 solo se puede trabajar el 4×3 del medio, y la esquina de arriba a
+        /// la izquierda pide nivel 8. Esta está dentro desde el primer día y sigue
+        /// dentro en todos los escalones, así que estas pruebas hablan del huerto y no
+        /// de la progresión — para eso está <c>ProgresionTests</c>.
+        /// </remarks>
+        const int Cx = 3;
+        const int Cy = 2;
+
         /// <summary>Avanza N días, regando la casilla cada día.</summary>
         void WaterAndAdvance(int x, int y, int days)
         {
@@ -90,19 +103,19 @@ namespace Nimbo.Tests
         [Test]
         public void Till_FromWild_BecomesTilled()
         {
-            var error = _service.Till(0, 0);
+            var error = _service.Till(Cx, Cy);
             Assert.AreEqual(FarmError.Ok, error);
-            Assert.AreEqual(TileState.Tilled, _service.TileAt(0, 0).State);
+            Assert.AreEqual(TileState.Tilled, _service.TileAt(Cx, Cy).State);
         }
 
         [Test]
         public void Till_Twice_DoesNotBreak()
         {
-            _service.Till(0, 0);
-            var error = _service.Till(0, 0);
+            _service.Till(Cx, Cy);
+            var error = _service.Till(Cx, Cy);
             Assert.AreEqual(FarmError.Ok, error,
                 "labrar dos veces no debe ser un error");
-            Assert.AreEqual(TileState.Tilled, _service.TileAt(0, 0).State);
+            Assert.AreEqual(TileState.Tilled, _service.TileAt(Cx, Cy).State);
         }
 
         // ── 3. Sembrar sin labrar devuelve NotTilled ────────────────────────
@@ -111,9 +124,9 @@ namespace Nimbo.Tests
         public void Plant_OnWild_ReturnsNotTilled()
         {
             _inventory.Add("seed_prueba", 5);
-            var error = _service.Plant(0, 0, "seed_prueba");
+            var error = _service.Plant(Cx, Cy, "seed_prueba");
             Assert.AreEqual(FarmError.NotTilled, error);
-            Assert.AreEqual(TileState.Wild, _service.TileAt(0, 0).State,
+            Assert.AreEqual(TileState.Wild, _service.TileAt(Cx, Cy).State,
                 "la casilla no debe cambiar");
         }
 
@@ -122,15 +135,15 @@ namespace Nimbo.Tests
         [Test]
         public void Plant_ConsumesOneSeed()
         {
-            _service.Till(0, 0);
+            _service.Till(Cx, Cy);
             _inventory.Add("seed_prueba", 3);
 
-            var error = _service.Plant(0, 0, "seed_prueba");
+            var error = _service.Plant(Cx, Cy, "seed_prueba");
             Assert.AreEqual(FarmError.Ok, error);
             Assert.AreEqual(2, _inventory.CountOf("seed_prueba"),
                 "debería quedar una semilla menos");
-            Assert.AreEqual(TileState.Planted, _service.TileAt(0, 0).State);
-            Assert.AreEqual("seed_prueba", _service.TileAt(0, 0).SeedId);
+            Assert.AreEqual(TileState.Planted, _service.TileAt(Cx, Cy).State);
+            Assert.AreEqual("seed_prueba", _service.TileAt(Cx, Cy).SeedId);
         }
 
         // ── 5. Sembrar sin llevar semillas devuelve NoSeed ──────────────────
@@ -138,12 +151,12 @@ namespace Nimbo.Tests
         [Test]
         public void Plant_WithoutSeed_ReturnsNoSeed()
         {
-            _service.Till(0, 0);
+            _service.Till(Cx, Cy);
             // No añadimos nada al inventario.
 
-            var error = _service.Plant(0, 0, "seed_prueba");
+            var error = _service.Plant(Cx, Cy, "seed_prueba");
             Assert.AreEqual(FarmError.NoSeed, error);
-            Assert.AreEqual(TileState.Tilled, _service.TileAt(0, 0).State,
+            Assert.AreEqual(TileState.Tilled, _service.TileAt(Cx, Cy).State,
                 "la casilla debe seguir Tilled, sin cambiar");
         }
 
@@ -152,14 +165,14 @@ namespace Nimbo.Tests
         [Test]
         public void PlantWaterAdvance_BecomesReady()
         {
-            _service.Till(0, 0);
+            _service.Till(Cx, Cy);
             _inventory.Add("seed_prueba", 1);
-            _service.Plant(0, 0, "seed_prueba");
+            _service.Plant(Cx, Cy, "seed_prueba");
 
             // seed_prueba tarda 3 días. Regamos y avanzamos 3 veces.
-            WaterAndAdvance(0, 0, 3);
+            WaterAndAdvance(Cx, Cy, 3);
 
-            Assert.AreEqual(TileState.Ready, _service.TileAt(0, 0).State,
+            Assert.AreEqual(TileState.Ready, _service.TileAt(Cx, Cy).State,
                 "tras 3 días de riego debería estar Ready");
         }
 
@@ -168,9 +181,9 @@ namespace Nimbo.Tests
         [Test]
         public void PlantNoWater_StaysPlanted_DoesNotDie()
         {
-            _service.Till(0, 0);
+            _service.Till(Cx, Cy);
             _inventory.Add("seed_prueba", 1);
-            _service.Plant(0, 0, "seed_prueba");
+            _service.Plant(Cx, Cy, "seed_prueba");
 
             // Avanzamos 5 días sin regar.
             for (int i = 0; i < 5; i++)
@@ -178,9 +191,9 @@ namespace Nimbo.Tests
                 _service.AdvanceDay();
             }
 
-            Assert.AreEqual(TileState.Planted, _service.TileAt(0, 0).State,
+            Assert.AreEqual(TileState.Planted, _service.TileAt(Cx, Cy).State,
                 "sin regar la planta no crece pero sigue viva");
-            Assert.AreEqual(0, _service.TileAt(0, 0).GrowthDays,
+            Assert.AreEqual(0, _service.TileAt(Cx, Cy).GrowthDays,
                 "sin riego GrowthDays no avanza");
         }
 
@@ -189,30 +202,30 @@ namespace Nimbo.Tests
         [Test]
         public void WaterEveryOtherDay_TakesTwiceAsLong()
         {
-            _service.Till(0, 0);
+            _service.Till(Cx, Cy);
             _inventory.Add("seed_prueba", 1);
-            _service.Plant(0, 0, "seed_prueba");
+            _service.Plant(Cx, Cy, "seed_prueba");
 
             // Día 1: riego + avance → GrowthDays=1
-            _service.Water(0, 0);
+            _service.Water(Cx, Cy);
             _service.AdvanceDay();
 
             // Día 2: sin regar → no avanza
             _service.AdvanceDay();
-            Assert.AreEqual(1, _service.TileAt(0, 0).GrowthDays);
+            Assert.AreEqual(1, _service.TileAt(Cx, Cy).GrowthDays);
 
             // Día 3: riego + avance → GrowthDays=2
-            _service.Water(0, 0);
+            _service.Water(Cx, Cy);
             _service.AdvanceDay();
 
             // Día 4: sin regar → no avanza
             _service.AdvanceDay();
 
             // Día 5: riego + avance → GrowthDays=3 → Ready
-            _service.Water(0, 0);
+            _service.Water(Cx, Cy);
             _service.AdvanceDay();
 
-            Assert.AreEqual(TileState.Ready, _service.TileAt(0, 0).State,
+            Assert.AreEqual(TileState.Ready, _service.TileAt(Cx, Cy).State,
                 "regando días alternos, tarda 5 días reales en llegar a Ready (3 de riego)");
         }
 
@@ -221,12 +234,12 @@ namespace Nimbo.Tests
         [Test]
         public void Harvest_StoresCropInInventory()
         {
-            _service.Till(0, 0);
+            _service.Till(Cx, Cy);
             _inventory.Add("seed_prueba", 1);
-            _service.Plant(0, 0, "seed_prueba");
-            WaterAndAdvance(0, 0, 3);
+            _service.Plant(Cx, Cy, "seed_prueba");
+            WaterAndAdvance(Cx, Cy, 3);
 
-            int harvested = _service.Harvest(0, 0, out var error);
+            int harvested = _service.Harvest(Cx, Cy, out var error);
 
             Assert.AreEqual(FarmError.Ok, error);
             Assert.AreEqual(2, harvested,
@@ -240,36 +253,36 @@ namespace Nimbo.Tests
         [Test]
         public void Harvest_Regrows_BackToPlanted()
         {
-            _service.Till(0, 0);
+            _service.Till(Cx, Cy);
             _inventory.Add("seed_regrows", 1);
-            _service.Plant(0, 0, "seed_regrows");
-            WaterAndAdvance(0, 0, 5); // 5 días para seed_regrows
+            _service.Plant(Cx, Cy, "seed_regrows");
+            WaterAndAdvance(Cx, Cy, 5); // 5 días para seed_regrows
 
-            _service.Harvest(0, 0, out var error);
+            _service.Harvest(Cx, Cy, out var error);
 
             Assert.AreEqual(FarmError.Ok, error);
-            Assert.AreEqual(TileState.Planted, _service.TileAt(0, 0).State,
+            Assert.AreEqual(TileState.Planted, _service.TileAt(Cx, Cy).State,
                 "con regrows, tras recoger vuelve a Planted");
-            Assert.AreEqual(2, _service.TileAt(0, 0).GrowthDays,
+            Assert.AreEqual(2, _service.TileAt(Cx, Cy).GrowthDays,
                 "GrowthDays debería ser la mitad de 5 → 2");
-            Assert.AreEqual("seed_regrows", _service.TileAt(0, 0).SeedId,
+            Assert.AreEqual("seed_regrows", _service.TileAt(Cx, Cy).SeedId,
                 "el SeedId se mantiene para que siga dando");
         }
 
         [Test]
         public void Harvest_NoRegrows_LeavesTilled()
         {
-            _service.Till(0, 0);
+            _service.Till(Cx, Cy);
             _inventory.Add("seed_prueba", 1);
-            _service.Plant(0, 0, "seed_prueba");
-            WaterAndAdvance(0, 0, 3);
+            _service.Plant(Cx, Cy, "seed_prueba");
+            WaterAndAdvance(Cx, Cy, 3);
 
-            _service.Harvest(0, 0, out var error);
+            _service.Harvest(Cx, Cy, out var error);
 
             Assert.AreEqual(FarmError.Ok, error);
-            Assert.AreEqual(TileState.Tilled, _service.TileAt(0, 0).State,
+            Assert.AreEqual(TileState.Tilled, _service.TileAt(Cx, Cy).State,
                 "sin regrows, tras recoger la casilla queda Tilled");
-            Assert.AreEqual("", _service.TileAt(0, 0).SeedId,
+            Assert.AreEqual("", _service.TileAt(Cx, Cy).SeedId,
                 "el SeedId se vacía al no tener regrows");
         }
 
@@ -278,12 +291,12 @@ namespace Nimbo.Tests
         [Test]
         public void AdvanceDay_TenTimes_DoesNotBreak()
         {
-            _service.Till(0, 0);
+            _service.Till(Cx, Cy);
             _inventory.Add("seed_prueba", 1);
-            _service.Plant(0, 0, "seed_prueba");
+            _service.Plant(Cx, Cy, "seed_prueba");
 
             // Regamos una sola vez y avanzamos 10 días.
-            _service.Water(0, 0);
+            _service.Water(Cx, Cy);
             for (int i = 0; i < 10; i++)
             {
                 _service.AdvanceDay();
@@ -291,12 +304,12 @@ namespace Nimbo.Tests
 
             // Solo el primer día avanza (Watered se seca tras AdvanceDay).
             // Así que GrowthDays = 1 y sigue Planted.
-            Assert.AreEqual(TileState.Planted, _service.TileAt(0, 0).State,
+            Assert.AreEqual(TileState.Planted, _service.TileAt(Cx, Cy).State,
                 "10 avances no rompen la casilla");
 
             // Probemos ahora con Ready: llevamos a Ready y avanzamos más.
-            WaterAndAdvance(0, 0, 2); // con esto ya son 3 días de riego → Ready
-            Assert.AreEqual(TileState.Ready, _service.TileAt(0, 0).State);
+            WaterAndAdvance(Cx, Cy, 2); // con esto ya son 3 días de riego → Ready
+            Assert.AreEqual(TileState.Ready, _service.TileAt(Cx, Cy).State);
 
             // Avanzar más días no la saca de Ready.
             for (int i = 0; i < 10; i++)
@@ -304,7 +317,7 @@ namespace Nimbo.Tests
                 _service.AdvanceDay();
             }
 
-            Assert.AreEqual(TileState.Ready, _service.TileAt(0, 0).State,
+            Assert.AreEqual(TileState.Ready, _service.TileAt(Cx, Cy).State,
                 "una casilla Ready no debe cambiar con más avances");
         }
 
@@ -337,22 +350,22 @@ namespace Nimbo.Tests
         [Test]
         public void Harvest_InventoryFull_PlantStaysReady()
         {
-            _service.Till(0, 0);
+            _service.Till(Cx, Cy);
             _inventory.Add("seed_prueba", 1);
-            _service.Plant(0, 0, "seed_prueba");
-            WaterAndAdvance(0, 0, 3);
+            _service.Plant(Cx, Cy, "seed_prueba");
+            WaterAndAdvance(Cx, Cy, 3);
 
             // Bloqueamos la mochila para que rechace cualquier intento.
             _inventory.RejectEverything = true;
 
-            int harvested = _service.Harvest(0, 0, out var error);
+            int harvested = _service.Harvest(Cx, Cy, out var error);
 
             Assert.AreEqual(FarmError.InventoryFull, error);
             Assert.AreEqual(0, harvested,
                 "con la mochila llena no se recoge nada");
-            Assert.AreEqual(TileState.Ready, _service.TileAt(0, 0).State,
+            Assert.AreEqual(TileState.Ready, _service.TileAt(Cx, Cy).State,
                 "la planta debe seguir Ready para que el jugador vuelva a por ella");
-            Assert.AreEqual("seed_prueba", _service.TileAt(0, 0).SeedId,
+            Assert.AreEqual("seed_prueba", _service.TileAt(Cx, Cy).SeedId,
                 "el SeedId no debe perderse");
         }
     }

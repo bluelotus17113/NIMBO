@@ -85,6 +85,43 @@ namespace Nimbo.Data.Farming
 
             return tileX >= 0 && tileY >= 0 && tileX < width && tileY < height;
         }
+
+        /// <summary>
+        /// Cuánta parcela se puede trabajar con ese nivel de Cultivo.
+        /// </summary>
+        /// <remarks>
+        /// La tierra está toda ahí desde el primer día —ocho por seis— y lo que crece
+        /// es cuánta se sabe trabajar. Se roturan las del medio hacia fuera, así que la
+        /// parcela se ensancha alrededor de lo que ya tienes plantado en vez de
+        /// aparecer una franja suelta en una esquina.
+        ///
+        /// Lo que decide es el nivel y no un sí o un no, porque son tres escalones:
+        /// una fila al 2, una fila y una columna al 4, y el huerto entero al 8.
+        /// </remarks>
+        public static void UsableSize(int farmingLevel, out int width, out int height)
+        {
+            if (farmingLevel >= 8) { width = 8; height = 6; return; }
+            if (farmingLevel >= 4) { width = 6; height = 5; return; }
+            if (farmingLevel >= 2) { width = 4; height = 4; return; }
+
+            width = 4; height = 3;
+        }
+
+        /// <summary>¿Se puede trabajar esa casilla con ese nivel de Cultivo?</summary>
+        public static bool IsUsable(int tileX, int tileY, int farmingLevel,
+                                    int width = 8, int height = 6)
+        {
+            UsableSize(farmingLevel, out int usableW, out int usableH);
+
+            // Centrado, y con la mitad sobrante hacia el mismo lado siempre: si el
+            // redondeo cambiara de lado al crecer, una casilla ya labrada podría quedar
+            // fuera al subir de nivel, que es lo contrario de lo que promete subir.
+            int x0 = (width - usableW) / 2;
+            int y0 = (height - usableH) / 2;
+
+            return tileX >= x0 && tileX < x0 + usableW
+                && tileY >= y0 && tileY < y0 + usableH;
+        }
     }
 
     /// <summary>El huerto entero, tal y como se guarda.</summary>

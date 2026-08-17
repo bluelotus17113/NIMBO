@@ -75,6 +75,15 @@ namespace Nimbo.UI.Islander
             _cost.text = $"Ampliar a {next}×{next}: {upgrades.PriceOf(level)} nimbos " +
                          $"y {CostText(upgrades.MaterialsFor(level))}.";
 
+            // Pagar la obra de la casa de otro es de las cosas que hace quien lleva la
+            // aldea, y se gana (Aldea 3, §12.3). El coste se sigue enseñando: saber a
+            // dónde vas es la mitad de la razón para llegar.
+            if (!Gates.Allows(Unlock.UpgradeHomes, out string falta))
+            {
+                _action.Add(UiTheme.Body(falta, soft: true));
+                return;
+            }
+
             _action.Add(BuildRow(upgrades, islanderId, verdict));
         }
 

@@ -68,6 +68,15 @@ namespace Nimbo.UI.Islander
 
         private void BuildOptions(IJobService jobs, JobKind current)
         {
+            // Repartir los trabajos de la aldea se gana (Aldea 2, §12.3). Hasta
+            // entonces la ficha dice en qué trabaja cada uno pero no deja tocarlo: ser
+            // el que manda tiene que costar algo, o no significa nada.
+            if (!Gates.Allows(Unlock.AssignJobs, out string falta))
+            {
+                _options.Add(UiTheme.Body(falta, soft: true));
+                return;
+            }
+
             var available = jobs.AvailableJobs;
             if (available.Count == 0)
             {

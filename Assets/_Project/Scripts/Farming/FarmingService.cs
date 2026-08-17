@@ -28,6 +28,24 @@ namespace Nimbo.Farming
         public int Width => _state.Width;
         public int Height => _state.Height;
 
+        /// <summary>
+        /// El nivel de Cultivo, o el primero si todavía no hay progresión montada.
+        /// </summary>
+        /// <remarks>
+        /// Se pide al registro y no por el constructor a propósito: así el huerto sigue
+        /// construyéndose igual que siempre —y las pruebas que lo montan a mano no
+        /// cambian— y quien no tenga progresión juega con la parcela de salida en vez
+        /// de quedarse sin huerto.
+        /// </remarks>
+        int FarmingLevel() =>
+            Core.Services.ServiceRegistry.TryGet<IPlayerProgression>(out var progression)
+                ? progression.LevelOf(Data.Player.SkillKind.Farming)
+                : 1;
+
+        bool IsUnlocked(Unlock unlock) =>
+            Core.Services.ServiceRegistry.TryGet<IPlayerProgression>(out var progression)
+            && progression.IsUnlocked(unlock);
+
         public IReadOnlyList<CropDefinition> Crops => _catalog.Crops;
 
         public FarmingService(CropCatalog catalog, FarmState state, IInventoryService inventory)
@@ -75,6 +93,13 @@ namespace Nimbo.Farming
         {
             var idx = IndexOf(x, y);
             if (idx < 0) return FarmError.OutOfBounds;
+
+            // La tierra está toda ahí desde el primer día; lo que crece con el nivel de
+            // Cultivo es cuánta se sabe trabajar (§12.3). Se comprueba **solo al
+            // labrar**: lo que ya esté labrado sigue funcionando pase lo que pase con
+            // los niveles, así que ninguna partida guardada pierde una planta.
+            if (!FarmPlot.IsUsable(x, y, FarmingLevel(), _state.Width, _state.Height))
+                return FarmError.NotYourLandYet;
 
             var tile = _state.Tiles[idx];
 
@@ -195,8 +220,19 @@ namespace Nimbo.Farming
                 return 0;
             }
 
+            // Una de cada cuatro cosechas rinde una de más con Cultivo 5. Se sortea con
+            // la casilla y el día de semilla para que no cambie si se vuelve a intentar
+            // con la mochila llena: si no, bastaría con recoger, hacer sitio y volver a
+            // recoger hasta que saliera la buena.
+            int yield = crop.Yield;
+            if (IsUnlocked(Unlock.GenerousHarvest))
+            {
+                var rng = Core.Util.Rng.FromSeed($"cosecha_{x}_{y}_{tile.SeedId}_{tile.GrowthDays}");
+                if (rng.Chance(0.25f)) yield++;
+            }
+
             // Intentar meterlo en la mochila. Si no cabe, no se recoge.
-            var result = _inventory.TryStore(crop.CropId, crop.Yield, out int leftover);
+            var result = _inventory.TryStore(crop.CropId, yield, out int leftover);
 
             if (result == StoreResult.Full || leftover > 0)
             {
@@ -206,7 +242,7 @@ namespace Nimbo.Farming
                 return 0;
             }
 
-            int harvested = crop.Yield;
+            int harvested = yield;
 
             if (crop.Regrows)
             {

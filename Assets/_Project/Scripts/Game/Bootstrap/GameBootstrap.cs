@@ -47,6 +47,7 @@ namespace Nimbo.Game.Bootstrap
         [Header("Configuración (si se deja vacío se usan los valores por defecto)")]
         [SerializeField] private NeedsConfig _needsConfig;
         [SerializeField] private RequestConfig _requestConfig;
+        [SerializeField] private PlayerProgressionConfig _progressionConfig;
         [SerializeField] private SocialConfig _socialConfig;
 
         [Header("Partida nueva")]
@@ -89,6 +90,7 @@ namespace Nimbo.Game.Bootstrap
         private WeddingPlanner _weddings;
         private Nimbo.Events.EventsService _events;
         private Nimbo.Events.Minigames.MinigameService _minigames;
+        private PlayerProgressionService _progression;
 
         private IslanderRegistry _registry;
         private long _lastAutosaveMinute;
@@ -253,6 +255,12 @@ namespace Nimbo.Game.Bootstrap
             // ahí ya hay a quien seguir.
             _player = new PlayerService(_save.Player, _clock);
 
+            // Las cinco vías. Va antes que el huerto, la recolección y el crafteo
+            // porque se suscribe a lo que publican y tiene que estar escuchando desde
+            // el primer hachazo. No llama a nadie: solo cuenta lo que la isla ya
+            // contaba.
+            _progression = new PlayerProgressionService(_save.Player, _progressionConfig);
+
             // El orden aquí sí manda: la mochila la necesitan los otros tres, y el
             // crafteo necesita además la isla para saber de qué nivel va.
             _inventory = new InventoryService(_save.Player, _economy);
@@ -330,6 +338,7 @@ namespace Nimbo.Game.Bootstrap
             ServiceRegistry.Register<IBuildService>(_build);
             ServiceRegistry.Register<IAchievementService>(_achievements);
             ServiceRegistry.Register<PlayerService>(_player);
+            ServiceRegistry.Register<IPlayerProgression>(_progression);
             ServiceRegistry.Register<IInventoryService>(_inventory);
             ServiceRegistry.Register<IFarmingService>(_farming);
             ServiceRegistry.Register<IGatheringService>(_gathering);
@@ -548,6 +557,7 @@ namespace Nimbo.Game.Bootstrap
             _achievements?.Dispose();
             _weddings?.Dispose();
             _events?.Dispose();
+            _progression?.Dispose();
             EventBus.Unsubscribe<DayPassed>(OnDayPassed);
             EventBus.Unsubscribe<AchievementUnlocked>(OnAchievementUnlocked);
             ServiceRegistry.Clear();

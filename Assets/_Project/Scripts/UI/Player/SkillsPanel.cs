@@ -1,0 +1,195 @@
+using System.Collections.Generic;
+using Nimbo.Core.Services;
+using Nimbo.Core.Services.Contracts;
+using Nimbo.Data.Player;
+using UnityEngine;
+using UnityEngine.UIElements;
+
+namespace Nimbo.UI.Player
+{
+    /// <summary>
+    /// Las cinco vías del protagonista: por dónde va y qué le abre lo siguiente.
+    /// </summary>
+    /// <remarks>
+    /// Cada vía enseña **lo próximo que desbloquea**, no solo la barra. Una barra sola
+    /// dice cuánto falta pero no para qué, y entonces subir de nivel es leer un número
+    /// más grande. Con lo que viene escrito debajo, la pantalla contesta la única
+    /// pregunta que se viene a hacer aquí: qué gano si sigo por este lado.
+    ///
+    /// Y no hay ranking ni comparación con los vecinos. Las vías son cinco para que
+    /// nadie tenga que subirlas todas; una tabla las volvería una lista de deberes.
+    /// </remarks>
+    public sealed class SkillsPanel
+    {
+        public VisualElement Root { get; }
+        public bool IsShowing => Root.style.display == DisplayStyle.Flex;
+
+        private readonly Label _headline;
+        private readonly VisualElement _lines;
+
+        /// <summary>Lo que abre cada vía, en orden. Para poder decir qué viene después.</summary>
+        private static readonly Dictionary<SkillKind, Unlock[]> Ladder = new()
+        {
+            [SkillKind.Farming] = new[] { Unlock.BiggerPlot, Unlock.GenerousHarvest },
+            [SkillKind.Gathering] = new[] { Unlock.ReadTheNode, Unlock.StrongArms,
+                                            Unlock.FastRegrowth, Unlock.DeftHands },
+            [SkillKind.Crafting] = new[] { Unlock.MiddlingRecipes, Unlock.BatchCrafting,
+                                           Unlock.FineRecipes },
+            [SkillKind.Social] = new[] { Unlock.ExtraGift, Unlock.Courtship },
+            [SkillKind.Village] = new[] { Unlock.AssignJobs, Unlock.UpgradeHomes },
+        };
+
+        public SkillsPanel()
+        {
+            Root = UiTheme.Card("vias");
+            Root.style.display = DisplayStyle.None;
+            Root.style.width = 460;
+
+            var head = new VisualElement();
+            head.style.flexDirection = FlexDirection.Row;
+            head.style.justifyContent = Justify.SpaceBetween;
+            head.style.alignItems = Align.Center;
+            head.Add(UiTheme.Title("Lo que sabes hacer"));
+            head.Add(UiTheme.Secondary("Cerrar", Hide));
+            Root.Add(head);
+
+            _headline = UiTheme.Body("", soft: true);
+            _headline.style.marginBottom = 10;
+            Root.Add(_headline);
+
+            _lines = new VisualElement();
+            Root.Add(_lines);
+        }
+
+        public void Show()
+        {
+            Root.style.display = DisplayStyle.Flex;
+            Rebuild();
+        }
+
+        public void Hide() => Root.style.display = DisplayStyle.None;
+
+        public void Rebuild()
+        {
+            _lines.Clear();
+
+            if (!ServiceRegistry.TryGet<IPlayerProgression>(out var progression))
+            {
+                _headline.text = "";
+                _lines.Add(UiTheme.Body("Esto no está disponible.", soft: true));
+                return;
+            }
+
+            _headline.text = $"Nivel de aldeano {progression.VillagerLevel} — " +
+                             "la media de las cinco, que no se gana por su cuenta";
+
+            foreach (SkillKind skill in System.Enum.GetValues(typeof(SkillKind)))
+                _lines.Add(Line(progression, skill));
+        }
+
+        private static VisualElement Line(IPlayerProgression progression, SkillKind skill)
+        {
+            var card = new VisualElement();
+            card.style.paddingLeft = card.style.paddingRight = 12;
+            card.style.paddingTop = card.style.paddingBottom = 10;
+            card.style.marginBottom = 6;
+            card.style.backgroundColor = UiTheme.CreamDeep;
+            UiTheme.SetRadius(card, UiTheme.Radius);
+
+            int level = progression.LevelOf(skill);
+
+            var header = new VisualElement();
+            header.style.flexDirection = FlexDirection.Row;
+            header.style.alignItems = Align.Center;
+            header.style.marginBottom = 6;
+
+            var name = UiTheme.Body(Gates.NameOf(skill));
+            name.style.unityFontStyleAndWeight = FontStyle.Bold;
+            name.style.flexGrow = 1;
+            header.Add(name);
+            header.Add(UiTheme.Chip($"nivel {level}", ColourOf(skill)));
+            card.Add(header);
+
+            card.Add(Bar(progression, skill, level));
+            card.Add(NextStep(progression, skill, level));
+            return card;
+        }
+
+        private static VisualElement Bar(IPlayerProgression progression, SkillKind skill, int level)
+        {
+            var track = new VisualElement();
+            track.style.height = 8;
+            track.style.marginBottom = 6;
+            track.style.backgroundColor = UiTheme.Cream;
+            UiTheme.SetRadius(track, UiTheme.RadiusPill);
+
+            float needed = progression.XpNeededFor(skill);
+
+            var fill = new VisualElement();
+            fill.style.height = 8;
+            fill.style.backgroundColor = ColourOf(skill);
+            // Al tope la barra se pinta llena en vez de vacía: dividir entre cero daría
+            // cero, y la vía terminada se leería como si estuviera empezando.
+            fill.style.width = Length.Percent(
+                needed <= 0f ? 100f : Mathf.Clamp01(progression.XpOf(skill) / needed) * 100f);
+            UiTheme.SetRadius(fill, UiTheme.RadiusPill);
+            track.Add(fill);
+
+            return track;
+        }
+
+        /// <summary>Lo próximo que abre esta vía, que es la razón para seguirla.</summary>
+        private static VisualElement NextStep(IPlayerProgression progression, SkillKind skill,
+                                              int level)
+        {
+            if (level >= SkillSet.MaxLevel)
+                return UiTheme.Body("Al tope. Ya no hay más que aprender por aquí.", soft: true);
+
+            if (Ladder.TryGetValue(skill, out var ladder))
+            {
+                for (int i = 0; i < ladder.Length; i++)
+                {
+                    if (progression.IsUnlocked(ladder[i])) continue;
+
+                    progression.RequirementFor(ladder[i], out _, out int at);
+                    return UiTheme.Body($"En el {at}: {Describe(ladder[i])}", soft: true);
+                }
+            }
+
+            return UiTheme.Body("Nada nuevo por delante; sube por el gusto de subir.", soft: true);
+        }
+
+        /// <summary>
+        /// Qué es cada desbloqueo, en una frase.
+        /// </summary>
+        /// <remarks>
+        /// En cristiano y no con el nombre del enum: lo que el jugador necesita saber es
+        /// qué va a poder hacer, no cómo se llama por dentro.
+        /// </remarks>
+        public static string Describe(Unlock unlock) => unlock switch
+        {
+            Unlock.BiggerPlot => "el huerto se hace más grande",
+            Unlock.GenerousHarvest => "una de cada cuatro cosechas rinde de más",
+            Unlock.ReadTheNode => "sabrás qué da cada árbol antes de talarlo",
+            Unlock.StrongArms => "un golpe menos en árboles y rocas",
+            Unlock.FastRegrowth => "los nodos vuelven un día antes",
+            Unlock.DeftHands => "flores y hierbas rinden el doble",
+            Unlock.MiddlingRecipes => "recetas de nivel medio",
+            Unlock.BatchCrafting => "hacer cinco cosas de una vez",
+            Unlock.FineRecipes => "las recetas más finas del catálogo",
+            Unlock.ExtraGift => "un regalo más al día",
+            Unlock.Courtship => "declararte a un vecino",
+            Unlock.AssignJobs => "repartir los trabajos de la aldea",
+            _ => "pagar la obra de las casas de los vecinos",
+        };
+
+        private static Color ColourOf(SkillKind skill) => skill switch
+        {
+            SkillKind.Farming => UiTheme.Sage,
+            SkillKind.Gathering => UiTheme.Mint,
+            SkillKind.Crafting => UiTheme.Butter,
+            SkillKind.Social => UiTheme.Rose,
+            _ => UiTheme.Lavender,
+        };
+    }
+}

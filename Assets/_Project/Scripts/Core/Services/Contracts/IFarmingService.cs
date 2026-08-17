@@ -16,6 +16,7 @@ namespace Nimbo.Core.Services.Contracts
         NotReady,       // aún no ha crecido
         WrongTool,
         InventoryFull,  // creció, pero no hay dónde meterlo
+        NotYourLandYet, // esa esquina del huerto pide más nivel de Cultivo (§12.3)
     }
 
     /// <summary>Una semilla del catálogo y en qué se convierte.</summary>

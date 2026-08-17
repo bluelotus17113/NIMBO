@@ -147,6 +147,18 @@ namespace Nimbo.Gathering
             return false;
         }
 
+        /// <summary>
+        /// ¿Se ha ganado ya eso el protagonista?
+        /// </summary>
+        /// <remarks>
+        /// Se pregunta al registro y no se pide por el constructor: la recolección se
+        /// monta igual que siempre, las pruebas que la construyen a mano no cambian, y
+        /// una partida sin progresión juega con los números de salida.
+        /// </remarks>
+        bool IsUnlocked(Unlock unlock) =>
+            Core.Services.ServiceRegistry.TryGet<IPlayerProgression>(out var progression)
+            && progression.IsUnlocked(unlock);
+
         // ── Gather ──────────────────────────────────────────────────────────
 
         public GatherResult Gather(string instanceId, ToolKind tool, out int dropped)
@@ -178,8 +190,11 @@ namespace Nimbo.Gathering
             if (def.RequiredTool != ToolKind.None && tool != def.RequiredTool)
                 return GatherResult.WrongTool;
 
-            // 4. Restar un golpe
-            node.HitsLeft--;
+            // 4. Restar un golpe, o dos con Recolección 5. Solo en lo que aguanta más
+            // de uno: quitarle un golpe a una flor que se coge a mano no significa
+            // nada, y dejaría la mitad de los nodos sin poder tocarse.
+            node.HitsLeft -= IsUnlocked(Unlock.StrongArms) && def.Hits > 1 ? 2 : 1;
+            if (node.HitsLeft < 0) node.HitsLeft = 0;
 
             // 5. Si aún le quedan golpes, solo fue un Hit
             if (node.HitsLeft > 0)
@@ -193,6 +208,12 @@ namespace Nimbo.Gathering
             //    sea estable entre cargas si el jugador recarga sin guardar.
             var dropRng = Rng.FromSeed($"{instanceId}_drop_{node.RespawnOnDay}");
             int quantity = dropRng.Range(def.MinDrop, def.MaxDrop + 1);
+
+            // Manos finas: el doble en lo que se coge agachándose. No en árboles ni en
+            // rocas, que ya tienen su premio en el golpe que se ahorran.
+            if (IsUnlocked(Unlock.DeftHands) &&
+                def.Kind is NodeKind.Flower or NodeKind.Herb or NodeKind.Bush)
+                quantity *= 2;
 
             // 7. Intentar guardar en la mochila
             StoreResult storeResult = _inventory.TryStore(def.DropId, quantity, out int leftover);
@@ -209,10 +230,13 @@ namespace Nimbo.Gathering
             // pero el nodo ya está agotado. Lo que entró es quantity - leftover.
             int stored = quantity - leftover;
 
-            // 8. Anotar respawn y publicar
-            node.RespawnOnDay = def.RespawnDays > 0
-                ? _clock.Day + def.RespawnDays
-                : 0;
+            // 8. Anotar respawn y publicar. Con Recolección 6 vuelve un día antes, pero
+            // nunca el mismo día: un nodo que se repone al instante deja de ser un
+            // sitio al que volver y pasa a ser un botón.
+            int wait = def.RespawnDays;
+            if (wait > 1 && IsUnlocked(Unlock.FastRegrowth)) wait--;
+
+            node.RespawnOnDay = def.RespawnDays > 0 ? _clock.Day + wait : 0;
 
             if (stored > 0)
             {
