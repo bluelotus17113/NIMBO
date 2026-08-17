@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
 using Nimbo.Data.Islanders;
-using Nimbo.Data.Requests;
 using Nimbo.Data.Social;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -153,43 +152,12 @@ namespace Nimbo.UI.Islander
             foreach (var request in service.OpenFor(islander.Id))
             {
                 any = true;
-                _requests.Add(BuildRequestRow(request, service));
+                // La fila la pinta el tablón: es la misma información y las mismas
+                // decisiones, y tenerla escrita dos veces era pedir que se separasen.
+                _requests.Add(Requests.RequestRow.Build(request, service, Refresh));
             }
 
             if (!any) _requests.Add(UiTheme.Body("Ahora mismo, nada. Está a gusto.", soft: true));
-        }
-
-        private VisualElement BuildRequestRow(IslanderRequest request, IRequestService service)
-        {
-            var row = new VisualElement();
-            row.style.marginBottom = 12;
-
-            var header = new VisualElement();
-            header.style.flexDirection = FlexDirection.Row;
-            header.style.alignItems = Align.Center;
-            header.style.marginBottom = 4;
-            header.Add(UiTheme.Chip(KindName(request.Kind), PriorityColor(request.Priority)));
-            header.Add(UiTheme.Body($"+{request.CoinReward} nimbos", soft: true));
-            row.Add(header);
-
-            var line = UiTheme.Body($"«{request.Line}»");
-            line.style.marginBottom = 6;
-            row.Add(line);
-
-            var buttons = new VisualElement();
-            buttons.style.flexDirection = FlexDirection.Row;
-
-            string id = request.RequestId;
-            var accept = UiTheme.Action("Ayudarle", () => { service.Resolve(id); Refresh(); });
-            accept.style.marginRight = 8;
-            buttons.Add(accept);
-
-            var refuse = UiTheme.Action("Ahora no", () => { service.Refuse(id); Refresh(); });
-            refuse.style.backgroundColor = UiTheme.InkSoft;
-            buttons.Add(refuse);
-
-            row.Add(buttons);
-            return row;
         }
 
         private void RefreshRelationships(IslanderData islander, IIslanderRegistry registry)
@@ -270,29 +238,6 @@ namespace Nimbo.UI.Islander
             if (record.Friendship >= FriendshipStage.Friend) return UiTheme.Social;
             return UiTheme.InkSoft;
         }
-
-        private static Color PriorityColor(RequestPriority priority) => priority switch
-        {
-            RequestPriority.Critical => UiTheme.Critical,
-            RequestPriority.High => UiTheme.Low,
-            RequestPriority.Normal => UiTheme.Accent,
-            _ => UiTheme.InkSoft,
-        };
-
-        private static string KindName(RequestKind kind) => kind switch
-        {
-            RequestKind.Food => "comida",
-            RequestKind.Object => "un objeto",
-            RequestKind.Clothes => "ropa",
-            RequestKind.Advice => "consejo",
-            RequestKind.Favor => "un favor",
-            RequestKind.Complaint => "una queja",
-            RequestKind.SocialIntro => "conocer a alguien",
-            RequestKind.Activity => "hacer algo",
-            RequestKind.IslandBuilding => "mejorar la isla",
-            RequestKind.Confession => "declararse",
-            _ => "hacer las paces",
-        };
 
         private static string EmotionName(Emotion emotion) => emotion switch
         {

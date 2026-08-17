@@ -23,18 +23,45 @@ namespace Nimbo.Simulation.Requests
         private readonly IIslanderRegistry _registry;
         private readonly IPersonalityService _personalities;
         private readonly RequestConfig _config;
+        private readonly IGatheringService _gathering;
+        private readonly IEconomyService _economy;
 
         private readonly List<float> _weights = new List<float>(RequestKindCount);
         private readonly List<RequestKind> _kinds = new List<RequestKind>(RequestKindCount);
 
-        private const int RequestKindCount = 11;
+        private const int RequestKindCount = 12;
 
+        /// <summary>Cuántas unidades pide un encargo de material, de menos a más.</summary>
+        private const int MinMaterialAmount = 3;
+        private const int MaxMaterialAmount = 7;   // exclusivo
+
+        /// <summary>
+        /// Lo que se paga por el material del encargo, sobre su precio de venta.
+        /// </summary>
+        /// <remarks>
+        /// Por encima de uno a propósito: **dárselo a un vecino tiene que rentar más que
+        /// venderlo en el cajón**. Si rentase menos, el encargo sería un impuesto al que
+        /// se molesta en atenderlo, y nadie volvería a leer el tablón después de hacer
+        /// la cuenta una vez. Es el enganche entre la recolección y la vida social, y un
+        /// enganche que sale a perder no engancha nada.
+        /// </remarks>
+        private const float MaterialPayoutFactor = 1.35f;
+
+        /// <param name="gathering">
+        /// De dónde salen los materiales que se pueden pedir. Sin él no se generan
+        /// encargos: pedir algo que ningún árbol ni ninguna roca de la isla suelta es
+        /// mandar al jugador a por una cosa que no existe.
+        /// </param>
+        /// <param name="economy">Para saber lo que vale lo que piden. Sin él, la paga es la base.</param>
         public RequestGenerator(IIslanderRegistry registry, IPersonalityService personalities,
-                                RequestConfig config)
+                                RequestConfig config, IGatheringService gathering = null,
+                                IEconomyService economy = null)
         {
             _registry = registry;
             _personalities = personalities;
             _config = config;
+            _gathering = gathering;
+            _economy = economy;
         }
 
         /// <summary>¿Le toca pedir algo? Se pregunta cada media hora de juego.</summary>
@@ -77,6 +104,11 @@ namespace Nimbo.Simulation.Requests
             Add(RequestKind.Confession, HasCrush(islander) ? 14f : 0f);
             Add(RequestKind.Reconcile, HasConflict(islander) ? 12f : 0f);
 
+            // Los encargos de material solo existen si hay de dónde sacarlo. Sin
+            // servicio de recolección la isla no tiene nodos, y un encargo que no se
+            // puede cumplir solo sirve para restar ánimo cuando caduca.
+            Add(RequestKind.Material, _gathering != null ? 14f : 0f);
+
             int index = rng.PickWeighted(_weights);
             if (index < 0) { kind = RequestKind.Favor; return false; }
 
@@ -105,6 +137,11 @@ namespace Nimbo.Simulation.Requests
             var priority = PriorityFor(islander, kind);
             var behaviour = _personalities.For(islander.Personality);
 
+            string target = PickTarget(islander, kind, ref rng);
+            int amount = kind == RequestKind.Material
+                ? rng.Range(MinMaterialAmount, MaxMaterialAmount)
+                : 0;
+
             return new IslanderRequest
             {
                 RequestId = Guid.NewGuid().ToString("N"),
@@ -112,13 +149,30 @@ namespace Nimbo.Simulation.Requests
                 Kind = kind,
                 Priority = priority,
                 Resolution = RequestResolution.Pending,
-                TargetId = PickTarget(islander, kind, ref rng),
+                TargetId = target,
+                Amount = amount,
                 Line = behaviour.PickLine(LineMoodFor(kind), ref rng),
                 CreatedMinute = nowMinute,
                 ExpiresMinute = nowMinute + _config.LifetimeMinutes(priority),
                 ExperienceReward = _config.ExperienceFor(kind, priority),
-                CoinReward = _config.CoinsFor(kind, priority),
+                CoinReward = _config.CoinsFor(kind, priority) + PayloadBonus(target, amount),
             };
+        }
+
+        /// <summary>Lo que se paga aparte por el material que hay que traer.</summary>
+        /// <remarks>
+        /// Se suma a la recompensa base en vez de sustituirla: la base paga el favor y
+        /// esto paga la caminata. Sin esto, un encargo de seis conchas —a catorce
+        /// nimbos la unidad— se atendería a cambio de perder sesenta.
+        /// </remarks>
+        private int PayloadBonus(string catalogId, int amount)
+        {
+            if (amount <= 0 || _economy == null || string.IsNullOrEmpty(catalogId)) return 0;
+
+            var item = _economy.GetItem(catalogId);
+            if (item == null) return 0;
+
+            return Mathf.RoundToInt(item.Price * amount * MaterialPayoutFactor);
         }
 
         private static LineMood LineMoodFor(RequestKind kind) => kind switch
@@ -145,7 +199,14 @@ namespace Nimbo.Simulation.Requests
             return kind switch
             {
                 RequestKind.Complaint or RequestKind.Reconcile => RequestPriority.High,
-                RequestKind.Object or RequestKind.Clothes => RequestPriority.Low,
+
+                // El encargo de material va con la prioridad más baja **por la
+                // caducidad**, no por lo poco que importe: es la que da un día entero
+                // de juego para cumplirlo. Con doce horas habría que salir corriendo, y
+                // un recado que hay que hacer corriendo deja de ser un recado.
+                RequestKind.Object or RequestKind.Clothes or RequestKind.Material
+                    => RequestPriority.Low,
+
                 _ => RequestPriority.Normal,
             };
         }
@@ -172,9 +233,42 @@ namespace Nimbo.Simulation.Requests
                 case RequestKind.Activity:
                     return PickWhere(islander, r => r.Friendship >= FriendshipStage.Friend, ref rng);
 
+                case RequestKind.Material:
+                    return PickMaterial(ref rng);
+
                 default:
                     return null;
             }
+        }
+
+        /// <summary>
+        /// Un material de los que suelta la isla.
+        /// </summary>
+        /// <remarks>
+        /// Sale del catálogo de nodos y **no** del de objetos, y esa es toda la gracia:
+        /// el catálogo de materiales tiene treinta entradas y la isla solo suelta unas
+        /// pocas. Pidiendo del catálogo de objetos, la mitad de los encargos serían de
+        /// cosas que no hay forma de conseguir.
+        ///
+        /// Sortea por nodos y no por materiales, así que lo que sueltan muchos árboles
+        /// —la madera— se pide más que lo que suelta un solo sitio. Sale gratis y es lo
+        /// que uno querría de todas formas: los recados corrientes son de cosas
+        /// corrientes.
+        /// </remarks>
+        private string PickMaterial(ref Rng rng)
+        {
+            var nodes = _gathering?.Catalog;
+            if (nodes == null || nodes.Count == 0) return null;
+
+            string chosen = null;
+            int seen = 0;
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                if (string.IsNullOrEmpty(nodes[i].DropId)) continue;
+                seen++;
+                if (rng.Range(0, seen) == 0) chosen = nodes[i].DropId;
+            }
+            return chosen;
         }
 
         private string PickWhere(IslanderData islander, Func<RelationshipRecord, bool> predicate,

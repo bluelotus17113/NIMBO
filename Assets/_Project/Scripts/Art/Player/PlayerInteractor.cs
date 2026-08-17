@@ -8,7 +8,7 @@ namespace Nimbo.Art.PlayerView
     /// <summary>Con qué está a punto de interactuar el jugador.</summary>
     public enum TargetKind { None = 0, Islander = 1, Node = 2, FarmTile = 3,
                              Hammock = 4, Bench = 5, ShippingBox = 6,
-                             Door = 7, Exit = 8, Food = 9 }
+                             Door = 7, Exit = 8, Food = 9, Board = 10 }
 
     /// <summary>
     /// Lo que el jugador tiene delante y qué pasa si pulsa.
@@ -44,6 +44,7 @@ namespace Nimbo.Art.PlayerView
         private IBuildService _build;
         private ISocialService _social;
         private IGiftService _gifts;
+        private IRequestService _requests;
         private World.InteriorView _interior;
         private World.WorldView _world;
 
@@ -73,6 +74,7 @@ namespace Nimbo.Art.PlayerView
             ServiceRegistry.TryGet(out _build);
             ServiceRegistry.TryGet(out _social);
             ServiceRegistry.TryGet(out _gifts);
+            ServiceRegistry.TryGet(out _requests);
             _interior = FindFirstObjectByType<World.InteriorView>();
 
             // Se busca una vez. Estaba dentro del bucle que recorre a los vecinos, así
@@ -144,6 +146,8 @@ namespace Nimbo.Art.PlayerView
             // hasta cerca del porche, y estando delante de tu propia mesa lo que
             // quieres es usarla, no labrar la casilla que tengas bajo los pies.
             if (TryTargetHome()) return;
+
+            if (TryTargetBoard()) return;
 
             if (TryTargetFarmTile()) return;
 
@@ -339,6 +343,34 @@ namespace Nimbo.Art.PlayerView
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// ¿Está delante del tablón de encargos de la plaza?
+        /// </summary>
+        /// <remarks>
+        /// El cartel dice cuántas cosas hay pendientes antes de abrirlo. Es la
+        /// diferencia entre un tablón y una puerta: se lee de lejos si hay algo que
+        /// leer, y si no lo hay uno sigue andando sin haber abierto una pantalla para
+        /// nada.
+        /// </remarks>
+        private bool TryTargetBoard()
+        {
+            if (!Near(transform.position, Data.World.Archipelago.RequestBoard,
+                      Data.World.Archipelago.RequestBoardRange))
+                return false;
+
+            Kind = TargetKind.Board;
+            TargetId = "";
+
+            int pending = _requests?.OpenCount ?? 0;
+            Prompt = pending switch
+            {
+                0 => "Tablón de encargos — hoy no hay nada",
+                1 => "Tablón de encargos — hay una cosa",
+                _ => $"Tablón de encargos — hay {pending} cosas",
+            };
+            return true;
         }
 
         private static bool Near(Vector3 from, Vector3 to, float range)
@@ -615,6 +647,10 @@ namespace Nimbo.Art.PlayerView
 
                 case TargetKind.ShippingBox:
                     EventBus.Publish(new StationUsed(CraftStationKind.Shipping));
+                    break;
+
+                case TargetKind.Board:
+                    EventBus.Publish(new RequestBoardRead());
                     break;
 
                 case TargetKind.Door:

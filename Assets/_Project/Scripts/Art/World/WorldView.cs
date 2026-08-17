@@ -118,7 +118,50 @@ namespace Nimbo.Art.World
             AddMesh(tree, "tronco", trunk, ToonPalette.Solid(ToonPalette.TrunkBrown), solid: true);
             AddMesh(tree, "copa", crown, ToonPalette.Solid(ToonPalette.LeafGreen));
 
+            BuildRequestBoard(island);
             BuildClouds(island);
+        }
+
+        /// <summary>
+        /// El tablón de encargos: dos postes y una tabla, en el borde sur de la plaza.
+        /// </summary>
+        /// <remarks>
+        /// Se levanta con la isla y no con las zonas porque la plaza está abierta desde
+        /// el primer día: el tablón es de lo poco que hay que hacer al empezar, y
+        /// esconderlo detrás de un desbloqueo dejaría al jugador sin nada que leer justo
+        /// cuando más falta le hace saber qué se espera de él.
+        ///
+        /// La tabla va inclinada hacia atrás y mirando al sur, que es por donde se llega
+        /// del puente. Un cartel de canto no se ve venir.
+        /// </remarks>
+        private void BuildRequestBoard(Transform island)
+        {
+            var at = Data.World.Archipelago.RequestBoard;
+            _obstacles.Add(new Obstacle(at, 1.2f));
+
+            var board = new GameObject("Tablón de encargos").transform;
+            board.SetParent(island, worldPositionStays: false);
+            board.localPosition = at;
+
+            var post = ToonPalette.Solid(ToonPalette.TrunkBrown);
+            var plank = ToonPalette.Solid(new Color32(0xC9, 0xA6, 0x77, 255));
+            var paper = ToonPalette.Solid(new Color32(0xFF, 0xF6, 0xE6, 255));
+
+            for (int side = -1; side <= 1; side += 2)
+                AddMesh(board, "poste", MeshShapes.Box(new Vector3(0.16f, 1.9f, 0.16f)),
+                        post, new Vector3(side * 0.62f, 0.95f, 0f));
+
+            var leaning = Quaternion.Euler(-12f, 0f, 0f);
+            AddMesh(board, "tabla", MeshShapes.Box(new Vector3(1.6f, 1.1f, 0.12f)),
+                    plank, new Vector3(0f, 1.55f, 0f), leaning);
+
+            // Tres papeles clavados. Son adorno fijo: los encargos de verdad se leen
+            // dentro, y hacer que el número de hojas siga a la cola obligaría a
+            // reconstruir esto cada vez que un vecino pide algo.
+            for (int i = 0; i < 3; i++)
+                AddMesh(board, "papel", MeshShapes.Box(new Vector3(0.34f, 0.42f, 0.02f)),
+                        paper, new Vector3(-0.44f + i * 0.44f, 1.62f - (i % 2) * 0.16f, -0.09f),
+                        leaning);
         }
 
         /// <summary>

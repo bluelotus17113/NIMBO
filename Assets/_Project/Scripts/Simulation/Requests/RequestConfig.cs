@@ -52,6 +52,11 @@ namespace Nimbo.Simulation.Requests
             new Reward { Kind = RequestKind.IslandBuilding, Coins = 50, Experience = 100f },
             new Reward { Kind = RequestKind.Confession,     Coins = 20, Experience = 60f },
             new Reward { Kind = RequestKind.Reconcile,      Coins = 20, Experience = 45f },
+
+            // El encargo de material paga poco de base **porque encima paga el
+            // material**: el generador le suma aparte lo que valga lo que pide. Esta
+            // cifra es solo el favor de haber ido.
+            new Reward { Kind = RequestKind.Material,       Coins = 12, Experience = 35f },
         };
 
         [Header("Multiplicadores")]

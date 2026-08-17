@@ -1104,18 +1104,58 @@ pille mal.
 
 ### 15.4 Atender necesidades
 
-Las peticiones son hoy un botón gratis: `Resolve(requestId)` se llama sin payload
-desde un botón «Ayudarle» y no consume nada. Reparte felicidad y experiencia a cambio
-de un clic.
+**Hecho.** Las peticiones eran un botón gratis: `Resolve(requestId)` repartía ánimo,
+experiencia y monedas a cambio de un clic, sin mirar si el jugador tenía lo que le
+estaban pidiendo. Con doce vecinos pidiendo cosas todo el día eso no es un bucle: es
+una máquina de nimbos con forma de conversación.
 
-- **`RequestKind.Material`**: «tráeme 5 maderas». Con eso la recolección tiene un
-  porqué social y no solo económico.
-- **`Resolve` consume el payload** de la mochila. La firma ya lo admite
-  (`string payloadId = null`) y nadie lo usa.
-- **Tablón de encargos en la plaza**, para verlas todas sin ir habitante por
-  habitante.
-- Negarse ya cuesta ánimo (`Refuse`), y eso se queda: es lo que hace que decir sí
-  signifique algo.
+Hay **tres formas de pedir**, y `RequestDemand` las distingue:
+
+| Forma | Quién la usa | Qué cuesta |
+|---|---|---|
+| No cuesta objetos | consejo, favor, queja, presentación, plan, obra, confesión, paces | tu rato — y el rato ya lo pagas yendo hasta allí |
+| Pide esto exacto, y tantas | `RequestKind.Material` | «tráeme 5 maderas», y solo se paga con cinco maderas |
+| Vale cualquiera de su familia | comida, ropa, un mueble | uno cualquiera, y **elige el jugador** |
+
+Lo exacto se reserva al material a propósito: la ropa y los muebles se compran en
+tiendas cuyo surtido rota cada día, así que pedir una prenda concreta sería pedir algo
+que la mayoría de los días no se puede conseguir. El material lo sueltan los nodos de
+la isla y siempre hay dónde ir a por él — y por eso el generador elige del **catálogo
+de nodos** y no del de objetos: de los treinta materiales del catálogo, la isla solo
+suelta unos pocos.
+
+Las cuatro decisiones que sostienen esto:
+
+- **El pago sale de la mochila y de la despensa.** El jugador guarda en dos sitios sin
+  haberlo decidido —lo que recoge cae en la mochila, lo que compra en la despensa— y
+  mirando solo uno el vecino rechazaría la comida que acabas de comprarle. La pregunta
+  «¿tengo con qué?» se contesta en un solo sitio (`OptionsFor`), o la pantalla acaba
+  enseñando un botón que el servicio rechaza.
+- **Nunca se elige por el jugador.** Coger «lo primero que valga» de la mochila gasta
+  el plato que guardaba para otro, y eso no se deshace. Sin elección, `Resolve`
+  devuelve falso.
+- **Dárselo a un vecino renta más que venderlo en el cajón** (×1,35 sobre el precio,
+  más la paga del favor). Si rentase menos, el encargo sería un impuesto al que se
+  molesta en atenderlo y nadie volvería a leer el tablón después de hacer la cuenta
+  una vez.
+- **Traer algo alegra más que solo escuchar**, y acertar con lo que le encanta alegra
+  más todavía. Es lo que hace que saber los gustos de cada uno sirva para algo fuera
+  de los regalos.
+
+El **tablón de la plaza** es un poste con una tabla en el borde sur, que es por donde
+se entra viniendo del puente; dice de lejos cuántas cosas hay pendientes antes de
+abrirlo. Y hay un botón «Encargos» en la barra **además** del tablón, igual que
+«Hacer» convive con la mesa de trabajo: el tablón es donde uno mira al pasar, el botón
+es para no cruzar el puente solo para comprobar que no hay nada.
+
+No es una lista de tareas: no hay contador de completadas ni recompensa por vaciarlo,
+y se enseña también lo que no puedes atender —con el aviso de qué te falta— en vez de
+esconderlo. Negarse sigue costando ánimo (`Refuse`), que es lo que hace que decir sí
+signifique algo.
+
+**Lo que queda:** `RequestKind.IslandBuilding` sigue sin costar nada. Pide una mejora
+para la isla, así que su precio natural es material y obra, y eso vive en
+`IBuildService`.
 
 ---
 
@@ -1288,7 +1328,7 @@ cuatro primeras son código que ya existe y solo hay que conectar.
 | ~~1~~ | ~~Enchufar `HomeUpgradeService` y cobrarlo en material (§15.2)~~ | **hecho** | el puente entre la granja y la aldea |
 | ~~2~~ | ~~Bodas y bebés por el calendario: `WeddingPlanner` (§13.1)~~ | **hecho** | prometidos deja de ser un callejón; la aldea crece sola |
 | ~~3~~ | ~~La Crónica en el menú, y `EventsService` encendido (§13.3)~~ | **hecho** | la aldea deja de vivir a ciegas |
-| 4 | `Resolve` que consume el payload + `RequestKind.Material` (§15.4) | una tarde | recolectar tiene un porqué social |
+| ~~4~~ | ~~`Resolve` que consume el payload + `RequestKind.Material` y el tablón (§15.4)~~ | **hecho** | recolectar tiene un porqué social |
 | 5 | Enchufar los tres minijuegos (§17.1) | un día | tres verbos escritos y apagados |
 | 6 | Las cinco vías y sus desbloqueos (§12) | dos o tres días | la progresión entera; no toca ningún servicio existente |
 | 7 | Rivales y triángulos (§13.2) | un día | las historias que el jugador va a contar |
@@ -1304,6 +1344,13 @@ Así que de ahora en adelante, **un sistema no está hecho hasta que hay una pru
 carga la isla de verdad y comprueba que el jugador tiene por dónde llegar a él**. Eso es
 `CronicaEnLaIslaTests`: mira que el servicio esté registrado y que el botón exista en la
 barra. Cuesta veinte líneas y es la única clase de prueba que habría cazado los cuatro.
+
+El punto 4 añadió una variante de la misma enfermedad, y conviene tenerla escrita:
+**las peticiones no estaban apagadas, estaban enterradas.** Funcionaban, se generaban,
+caducaban y restaban ánimo — y solo se podían leer entrando en la ficha de cada vecino,
+de uno en uno. Con doce vecinos eso son doce pantallas para averiguar si hay algo que
+hacer, y ese recorrido no lo hace nadie dos veces. Un sistema encendido con una forma de
+mirarlo que nadie usaría está tan apagado como el que no arranca.
 
 ---
 

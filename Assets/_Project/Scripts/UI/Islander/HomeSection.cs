@@ -142,20 +142,10 @@ namespace Nimbo.UI.Islander
         }
 
         /// <summary>
-        /// El nombre corto del material. Se pregunta al catálogo si está, y si no, se
-        /// recorta el identificador — así una obra que pida un material nuevo no sale
-        /// escrita como <c>mat_lo_que_sea</c> en la ficha.
+        /// El nombre corto del material. Vive en <see cref="ItemNames"/> desde que el
+        /// tablón de encargos necesitó escribir lo mismo.
         /// </summary>
-        private static string NameOf(string catalogId)
-        {
-            if (ServiceRegistry.TryGet<IEconomyService>(out var economy))
-            {
-                var item = economy.GetItem(catalogId);
-                if (item != null && !string.IsNullOrEmpty(item.DisplayName))
-                    return item.DisplayName.ToLowerInvariant();
-            }
-            return catalogId.StartsWith("mat_") ? catalogId.Substring(4) : catalogId;
-        }
+        private static string NameOf(string catalogId) => ItemNames.Of(catalogId);
 
         private static string ReasonLabel(UpgradeRejection verdict) => verdict switch
         {

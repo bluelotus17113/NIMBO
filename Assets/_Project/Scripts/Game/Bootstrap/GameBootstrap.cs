@@ -274,8 +274,14 @@ namespace Nimbo.Game.Bootstrap
             // logros hechos y las monedas intactas.
             EventBus.Subscribe<AchievementUnlocked>(OnAchievementUnlocked);
 
-            var generator = new RequestGenerator(registry, personalities, _requestConfig);
-            _requests = new RequestService(registry, _simulation, generator, _requestConfig, _clock);
+            // Las peticiones van después de la mochila y la recolección, y ahora sí es
+            // un orden con motivo: el generador pregunta a los nodos qué materiales
+            // suelta la isla para no encargar nada imposible, y el servicio cobra de la
+            // mochila y de la despensa lo que el vecino haya pedido.
+            var generator = new RequestGenerator(registry, personalities, _requestConfig,
+                                                 _gathering, _economy);
+            _requests = new RequestService(registry, _simulation, generator, _requestConfig,
+                                           _clock, _inventory, _economy);
             _requests.LoadFrom(_save.Requests);
 
             // El planificador de bodas. Va después del social porque necesita casarlos,

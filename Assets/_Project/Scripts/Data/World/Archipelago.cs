@@ -64,6 +64,24 @@ namespace Nimbo.Data.World
         public static float RadiusOf(IslandSide side) =>
             side == IslandSide.Home ? HomeRadius : VillageRadius;
 
+        /// <summary>
+        /// El tablón de encargos, en el borde sur de la plaza.
+        /// </summary>
+        /// <remarks>
+        /// Ahí y no en el centro por dos razones. La primera es que el centro lo ocupa
+        /// el Árbol Nimbo. La segunda es el sitio por donde se llega: se vive en la isla
+        /// de abajo y se entra a la aldea por el puente, que desemboca al sur, así que
+        /// el borde sur de la plaza es lo primero que se cruza al venir de casa. Un
+        /// tablón que hay que buscar no lo lee nadie.
+        ///
+        /// Desplazado en x para no quedar plantado en mitad del paso, igual que hubo que
+        /// mover el cajón de envíos del porche.
+        /// </remarks>
+        public static readonly Vector3 RequestBoard = new(7f, 0f, -13f);
+
+        /// <summary>A cuánto hay que estar para poder leerlo.</summary>
+        public const float RequestBoardRange = 3f;
+
         /// <summary>Está sobre el puente, entre las dos islas.</summary>
         public static bool OnBridge(Vector3 position) =>
             position.z <= BridgeFromVillage.z && position.z >= BridgeToHome.z &&

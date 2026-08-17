@@ -36,6 +36,7 @@ namespace Nimbo.UI
         private Achievements.AchievementsPanel _achievements;
         private Achievements.AchievementToast _toast;
         private Chronicle.ChroniclePanel _chronicle;
+        private Requests.RequestBoardPanel _board;
         private Player.HotbarView _hotbar;
         private Player.BagPanel _bag;
         private Player.CraftPanel _craft;
@@ -62,6 +63,7 @@ namespace Nimbo.UI
             EventBus.Unsubscribe<IslanderCreated>(OnRosterChanged);
             EventBus.Unsubscribe<IslanderLeft>(OnRosterChanged);
             EventBus.Unsubscribe<StationUsed>(OnStationUsed);
+            EventBus.Unsubscribe<RequestBoardRead>(OnRequestBoardRead);
             EventBus.Unsubscribe<BuildModeChanged>(OnBuildModeChanged);
             EventBus.Unsubscribe<FurnishModeChanged>(OnFurnishModeChanged);
             EventBus.Unsubscribe<InteriorEntered>(OnInteriorEntered);
@@ -129,6 +131,9 @@ namespace Nimbo.UI
             _chronicle = new Chronicle.ChroniclePanel();
             body.Add(_chronicle.Root);
 
+            _board = new Requests.RequestBoardPanel();
+            body.Add(_board.Root);
+
             _bag = new Player.BagPanel();
             body.Add(_bag.Root);
 
@@ -184,6 +189,7 @@ namespace Nimbo.UI
             EventBus.Subscribe<IslanderCreated>(OnRosterChanged);
             EventBus.Subscribe<IslanderLeft>(OnRosterChanged);
             EventBus.Subscribe<StationUsed>(OnStationUsed);
+            EventBus.Subscribe<RequestBoardRead>(OnRequestBoardRead);
             EventBus.Subscribe<BuildModeChanged>(OnBuildModeChanged);
             EventBus.Subscribe<FurnishModeChanged>(OnFurnishModeChanged);
             EventBus.Subscribe<InteriorEntered>(OnInteriorEntered);
@@ -234,6 +240,14 @@ namespace Nimbo.UI
             Add("Hacer", () =>
             {
                 if (_craft.IsShowing) _craft.Hide(); else _craft.Show();
+            });
+            // Los encargos tienen botón **además** del tablón de la plaza, igual que
+            // «Hacer» convive con la mesa de trabajo. El tablón es donde uno mira al
+            // pasar y dice de lejos cuántas cosas hay; el botón es para no cruzar el
+            // puente solo para comprobar que no hay ninguna.
+            Add("Encargos", () =>
+            {
+                if (_board.IsShowing) _board.Hide(); else _board.Show();
             });
             // La crónica va justo antes de los logros y no al final de la fila: es lo
             // que se abre al entrar para ver qué pasó anoche, y lo que se abre primero
@@ -294,6 +308,13 @@ namespace Nimbo.UI
                     if (_craft.IsShowing) _craft.Hide(); else _craft.Show();
                     break;
             }
+        }
+
+        /// <summary>Ha leído el tablón de la plaza: se abre la misma pantalla que el botón.</summary>
+        private void OnRequestBoardRead(RequestBoardRead _)
+        {
+            if (_board == null) return;
+            if (_board.IsShowing) _board.Hide(); else _board.Show();
         }
 
         private bool _buildMode;
@@ -483,7 +504,7 @@ namespace Nimbo.UI
         /// <summary>¿Hay algo abierto que se maneje con el ratón?</summary>
         private bool AnyPanelOpen =>
             _panel.IsShowing || _shop.IsShowing || _decor.IsShowing ||
-            _achievements.IsShowing || _bag.IsShowing || _craft.IsShowing ||
+            _achievements.IsShowing || _bag.IsShowing || _craft.IsShowing || _board.IsShowing ||
             _shipping.IsShowing || _map.IsShowing || _build.IsShowing ||
             _furnish.IsShowing || _creator.IsShowing || _chronicle.IsShowing;
 

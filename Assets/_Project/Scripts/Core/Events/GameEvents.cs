@@ -100,6 +100,14 @@ namespace Nimbo.Core.Events
         }
     }
 
+    /// <summary>El jugador se ha puesto delante del tablón de la plaza y ha pulsado.</summary>
+    /// <remarks>
+    /// Un aviso propio en vez de colarlo por <see cref="StationUsed"/>: el tablón no es
+    /// una mesa de trabajo, y meterlo en ese enum obliga a quien lo lea a preguntarse
+    /// qué se craftea ahí.
+    /// </remarks>
+    public readonly struct RequestBoardRead { }
+
     // --- progresión ---------------------------------------------------------
 
     public readonly struct IslanderLeveledUp
