@@ -28,6 +28,7 @@ using Nimbo.Simulation.Gifts;
 using Nimbo.Simulation.Wardrobe;
 using Nimbo.Simulation.Requests;
 using Nimbo.Social;
+using Nimbo.Social.Romance;
 using UnityEngine;
 
 namespace Nimbo.Game.Bootstrap
@@ -84,6 +85,8 @@ namespace Nimbo.Game.Bootstrap
         private FarmingService _farming;
         private GatheringService _gathering;
         private CraftingService _crafting;
+        private HomeUpgradeService _homeUpgrades;
+        private WeddingPlanner _weddings;
 
         private IslanderRegistry _registry;
         private long _lastAutosaveMinute;
@@ -257,6 +260,11 @@ namespace Nimbo.Game.Bootstrap
                                               _inventory, _clock, _build);
             _crafting = new CraftingService(new RecipeCatalog(), _inventory, _island);
 
+            // Las ampliaciones de casa van aquí abajo y no con el resto de vivienda
+            // porque cobran la obra de la mochila: hasta que no existe el inventario no
+            // se pueden construir.
+            _homeUpgrades = new HomeUpgradeService(_save, registry, _economy, _inventory);
+
             // La paga se engancha aquí y no al encender la partida, y no es un
             // detalle: poblar una isla nueva ya desbloquea logros —el primer
             // edificio, el primer amigo— y esos avisos salen dentro de este mismo
@@ -268,6 +276,10 @@ namespace Nimbo.Game.Bootstrap
             var generator = new RequestGenerator(registry, personalities, _requestConfig);
             _requests = new RequestService(registry, _simulation, generator, _requestConfig, _clock);
             _requests.LoadFrom(_save.Requests);
+
+            // El planificador de bodas. Va después del social porque necesita casarlos,
+            // y se suscribe a DayPassed él solo: nadie le llama, se entera del calendario.
+            _weddings = new WeddingPlanner(_save, registry, _social, _simulation);
 
             _brain = new IslanderBrain(registry, _island, personalities, _social, _clock);
             _jobs = new JobService(registry, _simulation, _island, _clock);
@@ -285,6 +297,7 @@ namespace Nimbo.Game.Bootstrap
             ServiceRegistry.Register<IRequestService>(_requests);
             ServiceRegistry.Register<ISocialService>(_social);
             ServiceRegistry.Register<IHousingService>(housing);
+            ServiceRegistry.Register<IHomeUpgradeService>(_homeUpgrades);
             ServiceRegistry.Register<IEconomyService>(_economy);
             ServiceRegistry.Register<IIslandService>(_island);
             ServiceRegistry.Register<IDecorService>(decor);
@@ -507,6 +520,7 @@ namespace Nimbo.Game.Bootstrap
             _economy?.Dispose();
             _jobs?.Dispose();
             _achievements?.Dispose();
+            _weddings?.Dispose();
             EventBus.Unsubscribe<DayPassed>(OnDayPassed);
             EventBus.Unsubscribe<AchievementUnlocked>(OnAchievementUnlocked);
             ServiceRegistry.Clear();

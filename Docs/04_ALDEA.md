@@ -6,6 +6,16 @@
 
 Decidido el 9 de agosto de 2026.
 
+> **Al día, 17 de agosto de 2026.** El GDD v2.0 ya incorpora este giro: su §1 es la
+> visión de aldea y sus §12–§16 desarrollan la progresión del protagonista, el
+> romance autónomo, el cortejo y la gestión. Este documento se queda porque explica
+> **el razonamiento de la decisión** —y sobre todo la regla del §2, que sigue siendo
+> contrato— pero para saber qué hay que construir, el sitio es el GDD.
+>
+> Un matiz de género que se ha precisado desde entonces: la referencia no es Stardew
+> sino **Rune Factory**, porque el protagonista sube de nivel y tiene romance. La
+> gestión de la aldea se parece a Tomodachi, no a un juego de granja.
+
 ---
 
 ## 1. Qué es el juego ahora

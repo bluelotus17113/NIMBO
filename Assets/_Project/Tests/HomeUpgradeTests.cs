@@ -18,11 +18,29 @@ namespace Nimbo.Tests
         IslanderData _islander;
         TestIslanderRegistry _registry;
         TestEconomyService _economy;
+        FakeInventoryForCrafting _bag;
         HomeUpgradeService _service;
 
         const string IslanderId = "test_islander";
         const string BuildingId = "test_building";
         const int UnitIndex = 0;
+
+        /// <summary>
+        /// Una mochila con obra de sobra para las dos ampliaciones.
+        /// </summary>
+        /// <remarks>
+        /// La mayoría de estos tests van del remapeo del suelo y de los muebles, no de
+        /// la obra, y no tienen por qué enterarse de que existe. Se les da material
+        /// sobrado y siguen probando lo suyo.
+        /// </remarks>
+        static FakeInventoryForCrafting FullBag()
+        {
+            var bag = new FakeInventoryForCrafting();
+            bag.Add("mat_madera", 500);
+            bag.Add("mat_piedra", 500);
+            bag.Add("mat_savia", 500);
+            return bag;
+        }
 
         [SetUp]
         public void SetUp()
@@ -44,7 +62,8 @@ namespace Nimbo.Tests
 
             _registry = new TestIslanderRegistry(_islander);
             _economy = new TestEconomyService(10000);
-            _service = new HomeUpgradeService(_save, _registry, _economy);
+            _bag = FullBag();
+            _service = new HomeUpgradeService(_save, _registry, _economy, _bag);
         }
 
         // ── 1. Una casa nueva está en nivel 0 y mide 8×8 ─────────────────────────
@@ -82,7 +101,7 @@ namespace Nimbo.Tests
         public void Upgrade_WithoutEnoughCoins_ReturnsFalse_DoesNotCharge_LeavesHouseIntact()
         {
             _economy = new TestEconomyService(100); // no llega a 1.200
-            _service = new HomeUpgradeService(_save, _registry, _economy);
+            _service = new HomeUpgradeService(_save, _registry, _economy, _bag);
 
             var rejection = _service.CanUpgrade(IslanderId);
             Assert.AreEqual(UpgradeRejection.NotEnoughCoins, rejection);
@@ -101,7 +120,7 @@ namespace Nimbo.Tests
         public void TwoUpgrades_Reach14x14_ThirdReturnsMaxedOut()
         {
             _economy = new TestEconomyService(10000);
-            _service = new HomeUpgradeService(_save, _registry, _economy);
+            _service = new HomeUpgradeService(_save, _registry, _economy, _bag);
 
             // primera
             Assert.IsTrue(_service.Upgrade(IslanderId));
@@ -129,7 +148,7 @@ namespace Nimbo.Tests
             homeless.Home = default(HomeAssignment); // sin casa
 
             var registry = new TestIslanderRegistry(homeless);
-            var service = new HomeUpgradeService(_save, registry, _economy);
+            var service = new HomeUpgradeService(_save, registry, _economy, _bag);
 
             Assert.AreEqual(UpgradeRejection.NoHome, service.CanUpgrade("homeless"));
             Assert.IsFalse(service.Upgrade("homeless"));
@@ -238,6 +257,102 @@ namespace Nimbo.Tests
             {
                 EventBus.Unsubscribe(handler);
             }
+        }
+
+        // ── 11 a 16. La obra: lo que engancha la recolección con la aldea ──────────
+        //
+        // Estos seis son los que vigilan que ampliar cueste material. Si alguien
+        // vuelve a dejar la ampliación en solo monedas, aquí se ve.
+
+        [Test]
+        public void Ampliar_GastaLaObraDeLaMochila()
+        {
+            Assert.IsTrue(_service.Upgrade(IslanderId));
+
+            Assert.AreEqual(470, _bag.CountOf("mat_madera"), "el primer nivel pide 30 de madera");
+            Assert.AreEqual(480, _bag.CountOf("mat_piedra"), "el primer nivel pide 20 de piedra");
+            Assert.AreEqual(500, _bag.CountOf("mat_savia"), "el primer nivel no pide savia");
+        }
+
+        [Test]
+        public void SinObra_NoSeAmplia_AunqueHayaDineroDeSobra()
+        {
+            var vacia = new FakeInventoryForCrafting();
+            var service = new HomeUpgradeService(_save, _registry, _economy, vacia);
+
+            Assert.AreEqual(UpgradeRejection.NotEnoughMaterials, service.CanUpgrade(IslanderId));
+            Assert.IsFalse(service.Upgrade(IslanderId));
+
+            Assert.AreEqual(0, service.LevelOf(IslanderId));
+            Assert.AreEqual(8, _home.Layout.Width);
+            Assert.AreEqual(10000, _economy.Wallet.Coins, "no se cobra si no hay obra");
+        }
+
+        [Test]
+        public void ConLaObraJusta_SeAmpliaYSeQuedaANada()
+        {
+            var justa = new FakeInventoryForCrafting();
+            justa.Add("mat_madera", 30);
+            justa.Add("mat_piedra", 20);
+            var service = new HomeUpgradeService(_save, _registry, _economy, justa);
+
+            Assert.AreEqual(UpgradeRejection.Ok, service.CanUpgrade(IslanderId));
+            Assert.IsTrue(service.Upgrade(IslanderId));
+
+            Assert.AreEqual(0, justa.CountOf("mat_madera"));
+            Assert.AreEqual(0, justa.CountOf("mat_piedra"));
+        }
+
+        [Test]
+        public void FaltandoUnSoloMaterial_NoSeGastaNingunOtro()
+        {
+            // Madera de sobra, un pedrusco de menos. Lo que no puede pasar es que se
+            // quede sin la madera y sin la ampliación.
+            var casi = new FakeInventoryForCrafting();
+            casi.Add("mat_madera", 30);
+            casi.Add("mat_piedra", 19);
+            var service = new HomeUpgradeService(_save, _registry, _economy, casi);
+
+            Assert.IsFalse(service.Upgrade(IslanderId));
+
+            Assert.AreEqual(30, casi.CountOf("mat_madera"), "la madera sigue en la mochila");
+            Assert.AreEqual(19, casi.CountOf("mat_piedra"));
+            Assert.AreEqual(10000, _economy.Wallet.Coins);
+        }
+
+        [Test]
+        public void ElSegundoNivelPideSavia_QueElPrimeroNo()
+        {
+            var costeNivel0 = _service.MaterialsFor(0);
+            var costeNivel1 = _service.MaterialsFor(1);
+
+            Assert.IsFalse(Pide(costeNivel0, "mat_savia"), "el primer nivel no pide savia");
+            Assert.IsTrue(Pide(costeNivel1, "mat_savia"), "el segundo sí");
+
+            // Y sin savia, el segundo nivel no sale aunque el primero haya salido.
+            var conMaderaYPiedra = new FakeInventoryForCrafting();
+            conMaderaYPiedra.Add("mat_madera", 500);
+            conMaderaYPiedra.Add("mat_piedra", 500);
+            var service = new HomeUpgradeService(_save, _registry, _economy, conMaderaYPiedra);
+
+            Assert.IsTrue(service.Upgrade(IslanderId), "el primero sale");
+            Assert.AreEqual(UpgradeRejection.NotEnoughMaterials, service.CanUpgrade(IslanderId));
+        }
+
+        [Test]
+        public void MaterialsFor_FueraDeRango_DevuelveVacio()
+        {
+            Assert.AreEqual(0, _service.MaterialsFor(-1).Count);
+            Assert.AreEqual(0, _service.MaterialsFor(99).Count);
+            Assert.AreEqual(0, _service.MaterialsFor(_service.MaxLevel).Count,
+                "el último nivel no tiene siguiente, así que no pide obra");
+        }
+
+        static bool Pide(System.Collections.Generic.IReadOnlyList<MaterialCost> costes, string id)
+        {
+            for (int i = 0; i < costes.Count; i++)
+                if (costes[i].CatalogId == id) return true;
+            return false;
         }
 
         // ── 10. LevelOf lee del HomeRecord, no del tamaño de la rejilla ────────────

@@ -66,6 +66,18 @@ namespace Nimbo.Data.Save
         /// <summary>Solo los logros que se han tocado alguna vez; el resto son cero.</summary>
         public List<AchievementRecord> Achievements = new List<AchievementRecord>();
 
+        /// <summary>
+        /// Las parejas que van camino de casarse, y las casadas que aún no han tenido
+        /// hijos. Las lleva el planificador de bodas.
+        /// </summary>
+        /// <remarks>
+        /// Hace falta guardarlo porque el compromiso se cuenta en días, y los días
+        /// pasan con el juego cerrado. Sin esto, cada vez que se carga la partida las
+        /// parejas volverían a empezar la cuenta y no se casarían nunca — que es
+        /// exactamente lo que pasaba antes de que existiera esta lista.
+        /// </remarks>
+        public List<Social.WeddingBooking> Weddings = new List<Social.WeddingBooking>();
+
         // ── La aldea ────────────────────────────────────────────────────────
         //
         // Lo que trajo el giro a aldea que se recorre. Va aquí y no en IslandState

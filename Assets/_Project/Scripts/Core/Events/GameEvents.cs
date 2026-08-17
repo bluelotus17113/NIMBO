@@ -159,6 +159,37 @@ namespace Nimbo.Core.Events
         }
     }
 
+    /// <summary>
+    /// Hay boda, y falta tal día. Lo publica el planificador con antelación.
+    /// </summary>
+    /// <remarks>
+    /// Va con días de aviso a propósito: la boda de dos vecinos ocurre sin el jugador
+    /// —es su historia, no la suya— pero enterarse a toro pasado no tiene ninguna
+    /// gracia. Con el aviso se puede ir, y no ir también significa algo.
+    /// </remarks>
+    public readonly struct WeddingAnnounced
+    {
+        public readonly string AId;
+        public readonly string BId;
+        /// <summary>Día de juego en que se celebra.</summary>
+        public readonly int Day;
+        public WeddingAnnounced(string aId, string bId, int day)
+        {
+            AId = aId; BId = bId; Day = day;
+        }
+    }
+
+    /// <summary>Se han casado. Ya está hecho cuando esto se publica.</summary>
+    public readonly struct WeddingHeld
+    {
+        public readonly string AId;
+        public readonly string BId;
+        public WeddingHeld(string aId, string bId)
+        {
+            AId = aId; BId = bId;
+        }
+    }
+
     public readonly struct BabyBorn
     {
         public readonly string ParentAId;

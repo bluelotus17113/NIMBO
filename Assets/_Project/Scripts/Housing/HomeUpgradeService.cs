@@ -17,15 +17,36 @@ namespace Nimbo.Housing
         // Lo que cuesta pasar de este nivel al siguiente
         static readonly long[] Prices = { 1200, 3500 };
 
+        /// <summary>La obra, por nivel. Es lo que hay que traer de la isla. ⚙️</summary>
+        /// <remarks>
+        /// Las cantidades salen de lo que rinde un nodo: un roble da 3 de madera y una
+        /// roca 2 de piedra, así que la primera ampliación son unas diez talas y diez
+        /// picadas — una tarde larga o tres cortas, y sin que haga falta entrar a
+        /// diario. La segunda pide savia, que solo dan el cedro ámbar y el musgo
+        /// flotante, para que el segundo nivel obligue a mirar dónde crece qué en vez
+        /// de a repetir lo mismo más veces.
+        /// </remarks>
+        static readonly MaterialCost[][] Materials =
+        {
+            new[] { new MaterialCost("mat_madera", 30), new MaterialCost("mat_piedra", 20) },
+            new[] { new MaterialCost("mat_madera", 80), new MaterialCost("mat_piedra", 60),
+                    new MaterialCost("mat_savia", 10) },
+        };
+
+        static readonly MaterialCost[] NoMaterials = new MaterialCost[0];
+
         readonly SaveGame _save;
         readonly IIslanderRegistry _registry;
         readonly IEconomyService _economy;
+        readonly IInventoryService _bag;
 
-        public HomeUpgradeService(SaveGame save, IIslanderRegistry registry, IEconomyService economy)
+        public HomeUpgradeService(SaveGame save, IIslanderRegistry registry,
+                                  IEconomyService economy, IInventoryService bag)
         {
             _save = save;
             _registry = registry;
             _economy = economy;
+            _bag = bag;
         }
 
         // ---------------------------------------------------------------- IHomeUpgradeService
@@ -42,6 +63,12 @@ namespace Nimbo.Housing
         {
             if (level < 0 || level >= Prices.Length) return 0;
             return Prices[level];
+        }
+
+        public IReadOnlyList<MaterialCost> MaterialsFor(int level)
+        {
+            if (level < 0 || level >= Materials.Length) return NoMaterials;
+            return Materials[level];
         }
 
         public int SizeOfLevel(int level)
@@ -70,6 +97,9 @@ namespace Nimbo.Housing
             if (_economy.Wallet.Coins < price)
                 return UpgradeRejection.NotEnoughCoins;
 
+            if (!HasMaterials(record.UpgradeLevel))
+                return UpgradeRejection.NotEnoughMaterials;
+
             return UpgradeRejection.Ok;
         }
 
@@ -90,6 +120,16 @@ namespace Nimbo.Housing
             // Si el cobro falla no se toca nada: ni el suelo, ni los muebles, ni el nivel
             if (!_economy.TrySpend(price, "ampliación de casa")) return false;
 
+            // Y si falla la obra se devuelven las monedas. Pasar por aquí con material
+            // de menos no debería ocurrir —CanUpgrade acaba de contarlo—, pero quedarse
+            // sin monedas y sin ampliación es el único fallo de esta operación que el
+            // jugador no podría deshacer, así que se cubre igual.
+            if (!TryTakeMaterials(record.UpgradeLevel))
+            {
+                _economy.AddCoins(price, "ampliación de casa cancelada");
+                return false;
+            }
+
             int oldLevel = record.UpgradeLevel;
             int newLevel = oldLevel + 1;
             int newSize = Sizes[newLevel];
@@ -109,6 +149,52 @@ namespace Nimbo.Housing
         }
 
         // -------------------------------------------------------------------------- internals
+
+        /// <summary>¿Lleva encima toda la obra de ese nivel?</summary>
+        bool HasMaterials(int level)
+        {
+            var costs = MaterialsFor(level);
+            if (costs.Count == 0) return true;
+
+            // Sin mochila no se puede pedir obra, así que se deja pasar. Es el caso de
+            // los tests que montan el servicio sin inventario.
+            if (_bag == null) return true;
+
+            for (int i = 0; i < costs.Count; i++)
+                if (_bag.CountOf(costs[i].CatalogId) < costs[i].Quantity) return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Gasta la obra. Todo o nada: si a mitad de la lista falta algo, devuelve lo
+        /// que ya había sacado.
+        /// </summary>
+        /// <remarks>
+        /// Cuenta primero y saca después, en dos pasadas. Sacar mientras cuentas deja
+        /// media obra pagada cuando el último material no llega, y de ahí no se vuelve
+        /// sin escribir el mismo bucle al revés.
+        /// </remarks>
+        bool TryTakeMaterials(int level)
+        {
+            var costs = MaterialsFor(level);
+            if (costs.Count == 0 || _bag == null) return true;
+
+            if (!HasMaterials(level)) return false;
+
+            for (int i = 0; i < costs.Count; i++)
+            {
+                if (_bag.TryTake(costs[i].CatalogId, costs[i].Quantity)) continue;
+
+                // Alguien tocó la mochila entre el recuento y ahora. Se devuelve lo
+                // sacado hasta aquí y se sale sin ampliar.
+                for (int back = 0; back < i; back++)
+                    _bag.TryStore(costs[back].CatalogId, costs[back].Quantity, out _);
+                return false;
+            }
+
+            return true;
+        }
 
         /// <summary>
         /// Reconstruye <see cref="RoomLayout.FloorTiles"/> para el nuevo tamaño.

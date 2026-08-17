@@ -1,23 +1,54 @@
 # Isla Nimbo — Documento de Diseño de Juego (GDD)
 
-> **Versión:** 1.0 — 2026-08-08
+> **Versión:** 2.0 — 2026-08-17
 > **Motor:** Unity 6000.5.5f1, URP
 > **Arquitectura:** `Docs/00_ARQUITECTURA.md` manda sobre este documento.
+> **Giro:** `Docs/04_ALDEA.md` manda sobre este en lo que se contradigan. La v2.0
+> incorpora ese giro en vez de dejarlo en un documento aparte.
+
+**Qué cambió de la v1.0 a la v2.0.** La v1.0 describía un juego de observación: el
+jugador era una entidad externa que no tenía cuerpo, no se enamoraba de nadie y no
+subía de nivel. Eso se decidió cambiar el 9 de agosto (`04_ALDEA.md`) y el código
+lleva desde entonces yendo por otro lado, pero el GDD seguía midiendo el juego
+viejo: su lista de alcance no mencionaba ni una vez huerto, recolección, crafteo,
+inventario ni protagonista. La v2.0 arregla eso. Secciones nuevas: §12 a §16.
+Secciones reescritas: §1, §8.4 y el alcance (ahora §17).
 
 ---
 
 ## 1. Visión
 
-**Frase:** *Isla Nimbo* es un simulador social de islas flotantes donde creas
-habitantes, los observas vivir sus vidas y moldeas su mundo sin controlarlos
-directamente.
+**Frase:** *Isla Nimbo* es un **Rune Factory en el cielo**: una granja, un oficio y
+una vida en una aldea de islas flotantes cuyos habitantes viven por su cuenta —se
+hacen amigos, se enamoran y se casan entre ellos sin que tú intervengas— y a la que
+tú acabas gobernando.
 
-**Pilar de fantasía:** Tus habitantes tienen voluntad propia. Tú construyes el
-escenario —la isla, sus casas, las reglas— pero ellos deciden a quién quieren, de
-qué se ríen y qué sueñan. Eres el arquitecto de un mundo que respira sin ti.
+**Los tres pilares, y en este orden de peso:**
+
+1. **Simulación de vida (Tomodachi).** Los habitantes tienen voluntad propia. Sus
+   romances, sus riñas y sus bodas ocurren **sin el jugador**, por personalidad y
+   convivencia. Es lo que hace que la isla merezca la pena mirarla.
+2. **Gestión de la aldea.** Tú asignas los trabajos, amplías las casas, organizas
+   los eventos y atiendes lo que piden. No mandas sobre las personas: mandas sobre
+   el escenario en el que viven, y ellas responden.
+3. **Granja y oficio (RPG).** Huerto, recolección, herramientas, crafteo y venta.
+   El protagonista tiene cuerpo, sube de nivel y desbloquea cosas al subir.
+
+**Pilar de fantasía:** Eres uno más de la aldea, no un dios. Puedes cortejar a
+alguien y que te diga que no porque quiere a otro. Puedes organizar la fiesta donde
+dos vecinos se conocen y no enterarte hasta que te lo cuentan. Sueltas piedras en el
+estanque; el tamaño de las ondas lo decide el sistema.
+
+**La tensión y cómo se resuelve.** Tomodachi va de mirar y que te sorprenda; Rune
+Factory va de hacer y optimizar. Tiran en direcciones opuestas, y la regla que lo
+resuelve es de `04_ALDEA.md` §2 y sigue siendo contrato: **lo que hace el
+protagonista es riqueza opcional, no trabajo obligatorio.** La aldea progresa aunque
+hoy no juegues a nada; no hay castigo por el reloj; el vigor no mata; no hay
+estaciones. Si una mecánica nueva obliga a entrar a diario, está mal aunque sea
+divertida.
 
 **Público objetivo:** Jugadores de 16 a 40 años que disfrutan los simuladores
-sociales, la gestión relajada y las narrativas emergentes. No requiere reflejos,
+sociales, la granja relajada y las narrativas emergentes. No requiere reflejos,
 inglés ni experiencia previa con el género.
 
 **Plataforma:** PC (Steam), mando y teclado/ratón. Una sola pantalla, sin online.
@@ -26,24 +57,27 @@ inglés ni experiencia previa con el género.
 
 ## 2. Bucle de juego
 
-### 2.1 Bucle de sesión (2–5 minutos)
+### 2.1 Bucle de sesión (10–25 minutos)
 
-Cada sesión corta es una "visita a la isla":
+Cada sesión es un día en la aldea, y **el jugador lo camina**. La sesión corta de
+2–5 minutos de la v1.0 era de un juego sin cuerpo; ahora hay una casa de la que se
+sale y un puente que se cruza, y eso lleva su tiempo.
 
-1. **Llegada (15 s):** la cámara vuela desde las nubes hasta la isla. Ves a tus
-   habitantes en sus cosas. Si algo urgente pasó mientras no estabas, un globo de
-   aviso lo indica.
-2. **Observar e intervenir (1–3 min):** recorres la isla, pinchas en habitantes
-   para ver sus pensamientos, sus necesidades (hambre 23%, energía 78%) y sus
-   relaciones. Puedes:
-   - Dar un objeto del inventario (comida, regalo, herramienta).
-   - Resolver un "suceso" — un habitante te pide consejo, dos discuten, alguien
-     encontró algo raro.
-   - Editar una vivienda (modo construcción).
-   - Visitar una tienda y comprar.
-   - Jugar un minijuego (cocina, pesca, música).
-3. **Salida (15 s):** resumen de lo que cambió desde la última visita. Ni
-   obligatorio ni largo: dos frases y un botón de "volver".
+1. **Amanecer en tu casa (1 min):** despiertas donde te acostaste. La Crónica (§13.3)
+   te espera con lo que pasó anoche: quién empezó a salir con quién, quién dejó de
+   hablarse, si hay boda esta semana.
+2. **Tu parcela (2–4 min):** riegas, recoges lo que ha crecido, siembras lo que
+   quieras. Es pequeño a propósito.
+3. **Salir a por material (5–10 min):** la isla y la aldea del otro lado del puente
+   tienen nodos que se reponen solos. Madera, piedra, hierbas, flores.
+4. **La aldea (5–10 min):** hablas con quien te cruces, regalas, atiendes lo que
+   piden. Y **gobiernas**: repartes los trabajos, amplías una casa con lo que has
+   traído, pones una fiesta en el calendario. Nada de esto tiene fecha límite.
+5. **A dormir cuando quieras.** No hay hora de cierre y no te desmayas. Dormir pasa
+   al día siguiente; no dormir tampoco te castiga.
+
+**Ninguno de los cinco pasos es obligatorio.** Se puede jugar una sesión entera
+sentado en un banco viendo pasar a la gente, y la aldea progresa igual.
 
 ### 2.2 Bucle diario (24 minutos de juego = 1 día)
 
@@ -116,13 +150,16 @@ Cada isleño se compone de los bloques definidos en `00_ARQUITECTURA.md §5`:
 ### 3.3 Qué NO controla el jugador
 
 - El jugador **no mueve** a los isleños. No hay "ve a la cocina".
-- **No elige** de quién se enamoran, aunque puede influir con regalos y eventos.
-- **No fuerza** amistades ni reconcilia peleas directamente.
-- **No decide** la profesión ni la rutina. Sugiere, no ordena.
+- **No elige** de quién se enamoran. Puede influir con regalos y montando los
+  eventos donde se conocen (§15.3), y puede cortejar él mismo y que le digan que no
+  (§14), pero el romance entre habitantes lo deciden ellos (§13).
+- **No fuerza** amistades ni reconcilia peleas directamente. Con Convivencia 9 puede
+  mediar, que baja un escalón de conflicto — no lo borra.
+- **No decide** la profesión ni la rutina. Ofrece el puesto; el habitante lo acepta
+  si le pega o si le tienes aprecio ganado, y si no, dice que no (§15.1).
 
-El jugador es el arquitecto de la isla y un observador privilegiado que puede
-**soltar piedras en el estanque** — el dónde y el tamaño de las ondas lo decide
-el sistema.
+El jugador es el arquitecto de la isla y un vecino más, no un dios: puede **soltar
+piedras en el estanque** — el dónde y el tamaño de las ondas lo decide el sistema.
 
 ---
 
@@ -333,6 +370,9 @@ juego real si juega a diario.
 
 ### 7.5 Niveles del isleño
 
+> Esto es el nivel de un **habitante**, que sube solo mientras vive su vida. El
+> protagonista sube por otro sitio y con otra curva: **§12**.
+
 Cada isleño tiene nivel independiente (1 a 50). La experiencia se gana con
 acciones cotidianas:
 
@@ -434,8 +474,14 @@ saludo (–2), rechazar regalo (–10), no asistir a evento importante (–20).
 - No hay poliamor (un isleño solo puede tener una pareja a la vez).
 - No hay muerte de isleños. Si dos se odian a –100, simplemente se evitan.
 - No hay rupturas forzadas por el jugador. Puedes influir, no decidir.
-- No hay relaciones jugador-isleño románticas. El jugador es una entidad
-  externa, no un isleño.
+- **No hay romance por acumulación.** Nadie se enamora de ti por hablarle todos los
+  días. El cortejo es un acto declarado con un coste y una respuesta que puede ser
+  no (§14).
+
+> **Cambio en la v2.0.** La v1.0 decía aquí «no hay relaciones jugador-isleño
+> románticas; el jugador es una entidad externa». Ya no: el protagonista tiene
+> cuerpo y puede cortejar. Lo que se conserva de aquella regla es lo que la hacía
+> valiosa —que no puedes comprar a nadie con constancia— y eso está ahora en §14.
 
 ---
 
@@ -570,13 +616,555 @@ forma, color y densidad según el evento del día.
 
 ---
 
-## 12. Alcance v1
+## 12. Progresión del protagonista
+
+### 12.1 Cinco vías, no una barra
+
+El protagonista sube por **cinco vías independientes**, cada una de nivel 1 a 10.
+No hay un único número de nivel que lo resuma todo.
+
+**Por qué cinco y no una.** Con una sola barra de experiencia, una tarde de hachazos
+paga los desbloqueos sociales, y al revés. Eso convierte el juego en «haz lo que más
+XP dé», que es justo la optimización que `04_ALDEA.md` §2 prohíbe. Con vías
+separadas, quien solo quiere convivir sube Convivencia y desbloquea lo social sin
+tocar una azada, y quien solo quiere granja no se queda sin progresar por no hablar
+con nadie. Nadie se queda fuera y nadie puede saltarse una vía comprándola con otra.
+
+| Vía | Sube haciendo | Evento que ya se publica |
+|---|---|---|
+| **Cultivo** | labrar, sembrar, regar, cosechar | `TileChanged`, `CropHarvested` |
+| **Recolección** | golpear y recoger nodos | `NodeHit`, `NodeGathered` |
+| **Oficio** | craftear en cualquier mesa | `ItemCrafted` |
+| **Convivencia** | hablar, regalar, atender peticiones | `AffinityChanged`, `ItemGifted`, `RequestResolved` |
+| **Aldea** | asignar trabajos, ampliar casas, organizar eventos | `HomeUpgraded`, `RequestResolved` |
+
+**Nivel de aldeano** (el número que se ve en el HUD) es la media de las cinco vías,
+redondeada hacia abajo. No se gana directamente: es un resumen. Alimenta el «nivel
+de isla» de §7.6 junto con los niveles de los habitantes.
+
+### 12.2 Curva
+
+```csharp
+int XpForSkill(int level) => 40 * level * level;   // ⚙️
+```
+
+| Nivel | XP acumulada | Referencia |
+|---|---|---|
+| 2 | 160 | una tarde |
+| 3 | 360 | dos o tres sesiones |
+| 5 | 1000 | primera semana de juego |
+| 7 | 1960 | segunda semana |
+| 10 | 4000 | tope; unas 4–5 semanas si te dedicas a esa vía |
+
+Una acción da entre 2 y 12 XP según lo que cueste (coger una flor 2, talar un roble
+8, atender una petición urgente 12). Los números concretos viven en un
+`PlayerProgressionConfig` ⚙️.
+
+### 12.3 Qué desbloquea cada nivel
+
+Esta tabla es el contenido de la progresión. Todo lo que aparece aquí es una mejora
+que el jugador **nota al usarla**, no un porcentaje invisible.
+
+**Cultivo** — la parcela arranca con 4×3 casillas útiles de las 8×6 que hay.
+
+| Nivel | Desbloquea |
+|---|---|
+| 2 | +1 fila de parcela (4×4) |
+| 3 | La regadera moja 3 casillas en línea |
+| 4 | +1 fila y +1 columna (6×5) |
+| 5 | Las cosechas rinden +1 unidad con 25% de probabilidad |
+| 6 | Bancal de nube: 4 casillas que no necesitan riego diario |
+| 8 | Parcela completa (8×6) |
+| 10 | Invernadero: 6 casillas que crecen al doble de velocidad |
+
+**Recolección**
+
+| Nivel | Desbloquea |
+|---|---|
+| 2 | Ves el nombre y el material del nodo antes de golpearlo |
+| 3 | Los nodos raros (geoda de nube, orquídea etérea) aparecen el doble |
+| 5 | Un golpe menos en árboles y rocas |
+| 6 | Los nodos se reponen un día antes |
+| 8 | Recoges el doble de flores y hierbas |
+| 10 | Ves los nodos maduros en el mapa (`MapPanel`) |
+
+**Oficio** — sustituye la puerta por nivel de isla que hoy tiene `AvailableAt`.
+
+| Nivel | Desbloquea |
+|---|---|
+| 2 | Recetas de material básico (tablones, sillar) |
+| 4 | Crafteo en lote (×5 de una vez) |
+| 5 | Muebles del catálogo intermedio |
+| 6 | **Herramientas de nivel 2** (§12.4) |
+| 8 | **El anillo de compromiso** (§14.4) |
+| 10 | Muebles legendarios y adornos de isla |
+
+**Convivencia**
+
+| Nivel | Desbloquea |
+|---|---|
+| 1 | Hablar, contar un chiste (`Chat`, `Joke`) |
+| 2 | Halagar (`Compliment`) |
+| 3 | Un regalo más al día |
+| 4 | Abrazar y confiar un secreto (`Hug`, `PlayTogether`) |
+| 5 | **Cortejar** (`Confess` — §14) |
+| 7 | Pedir un favor: un vecino te trae material que necesitas |
+| 9 | Mediar en una riña: baja un escalón de `ConflictStage` |
+
+**Aldea** — hoy todo esto está abierto desde el minuto uno. Ponerlo detrás de la vía
+es lo que convierte «ser el alcalde» en algo que se gana.
+
+| Nivel | Desbloquea |
+|---|---|
+| 1 | Ver la ficha y las necesidades de un habitante |
+| 2 | **Asignar trabajos** (§15.1) |
+| 3 | **Ampliar casas** (§15.2) |
+| 4 | Aprobar ascensos de rango |
+| 5 | Organizar eventos pequeños: merienda en el parque, concierto |
+| 7 | Organizar festivales |
+| 8 | Invitar a un habitante nuevo por encima del cupo de la zona |
+| 10 | Alcalde: la aldea entera gana +10% de ánimo base |
+
+### 12.4 Herramientas de nivel 2
+
+Las cinco herramientas de hoy son todas de nivel 1 y cuestan monedas. El nivel 2 se
+**craftea** (Oficio 6) con material recogido, y es el sumidero que le da sentido a
+acumular madera y piedra.
+
+| Herramienta | Nivel 1 | Nivel 2 (crafteada) |
+|---|---|---|
+| Azada | 1 casilla | 3 casillas en línea |
+| Regadera | 1 casilla | 3 casillas, y aguanta el doble de agua |
+| Hacha | 3 golpes por árbol | 2 golpes |
+| Pico | 3 golpes por roca | 2 golpes |
+| Guadaña | 1 mata | un arco de 3 matas |
+
+No hay nivel 3. Dos escalones bastan para que se note la mejora y no obligan a
+rehacer el equilibrio de todos los nodos.
+
+### 12.5 Cómo se implementa
+
+Un servicio nuevo, `PlayerProgressionService`, que **se suscribe a eventos que ya
+existen** y no cambia ni una línea de Farming, Gathering, Crafting o Social. Es el
+patrón del `EventBus` funcionando como se diseñó: la progresión escucha lo que la
+isla ya cuenta.
+
+- `PlayerState` gana un `SkillSet`: cinco pares (nivel, XP). Se guarda con el resto.
+- Contrato `IPlayerProgression` en `Nimbo.Core.Services.Contracts`:
+  `LevelOf(SkillKind)`, `XpOf(SkillKind)`, `IsUnlocked(UnlockId)`, `Grant(SkillKind, float)`.
+- Eventos nuevos en `GameEvents`: `SkillLeveledUp(skill, level)` y `UnlockGained(id)`.
+  El aviso en pantalla reutiliza `AchievementToast`, que ya está escrito.
+- Las puertas se preguntan desde la UI (`IsUnlocked(Unlock.AssignJobs)`), no desde
+  la lógica: así una partida vieja sigue cargando y lo único que cambia es qué
+  botones se ven.
+
+---
+
+## 13. Romance autónomo entre habitantes
+
+**Esto es el corazón del pilar Tomodachi y ya funciona casi entero.** `RomanceEvaluator`
+lleva la rama del flechazo a la boda sin que nadie la empuje: un flechazo nace si hay
+amistad hecha, afinidad y compatibilidad; si es correspondido pasan a salir; si el
+otro ni le aprecia, se le pasa y duele (`HeartbreakAffinity`). Salir sube a
+prometidos, y la afinidad a la baja rompe en cualquier punto. Todo por su cuenta.
+
+Faltan tres cosas, y las tres son la diferencia entre un grafo que se mueve y una
+aldea que te cuenta historias.
+
+### 13.1 Las bodas no llegan a ocurrir
+
+`RomanceStage.Engaged` es hoy un callejón sin salida: `TryMarry` y `TryHaveBaby`
+están escritos y **nadie los llama nunca**. Una pareja se promete y se queda ahí para
+siempre.
+
+**Solución — la boda es un evento del calendario, no un botón.** Un `WeddingPlanner`
+mira las parejas prometidas una vez al día; a los 5 días de prometidos con los dos
+por encima del umbral, mete una boda en el `EventCalendar` (que ya existe) para 3
+días después. El evento la celebra y llama a `TryMarry`.
+
+Esto resuelve la tensión de golpe: la boda ocurre **sin ti** —es su historia, no
+tuya— pero te avisan con antelación, puedes ir, y si vas ganas afinidad con los dos.
+Si no vas, te lo cuentan en la crónica. Nadie te espera.
+
+**Bebés:** a los 10 días de casados, si la casa está ampliada al menos un nivel y hay
+sitio, `TryHaveBaby` por su cuenta. Que haga falta casa grande es lo que engancha la
+gestión con la vida de la aldea: **tú no decides que nazca nadie, pero si nunca
+amplías casas, la aldea no crece.**
+
+### 13.2 No hay rivales
+
+Hoy dos habitantes pueden tener un flechazo por la misma persona y no pasa nada: no
+se enteran el uno del otro. Es la historia más jugosa que el sistema podría dar y se
+está tirando.
+
+**Solución — detección de triángulo.** Cuando nace un flechazo de A hacia B, se mira
+si B ya recibe otro de C. Si lo hay:
+
+- `ConflictStage` gana un valor: `Rivalry`, entre `Tension` y `Quarrel`.
+- A y C pierden afinidad entre ellos cada día que dure el triángulo.
+- Los dos suben su ritmo de interacción con B (van a buscarle más).
+- A los 6 días se resuelve: gana quien tenga más `afinidad + compatibilidad × 20`.
+  El que gana pasa a salir con B; el que pierde vuelve a `None` con el golpe de
+  desamor y 5 días en los que no le puede nacer otro flechazo.
+- La rivalidad no se cura sola. Queda `Rivalry` hasta que uno se disculpa
+  (`Apologize`, que ya existe) o el jugador media (Convivencia 9).
+
+Cuesta un bucle sobre las fichas dentro de `DevelopCrushes`. Es la mecánica con mejor
+relación entre líneas de código e historias generadas de todo el documento.
+
+### 13.3 Nadie se entera de nada
+
+`RomanceStageChanged`, `BabyBorn` y `ConflictStageChanged` se publican y no los lee
+nadie que se lo cuente al jugador.
+
+**Solución — la Crónica, en el menú.** Una página que lista lo que ha pasado en la
+aldea por días: «Alba y Leo empezaron a salir», «Mia le retiró la palabra a Alba»,
+«Boda el jueves: Leo y Alba». Va **en el menú y no en el mundo**: leer la vida social
+es un gesto de sentarse a mirar, no un cartel que te interrumpe mientras riegas. El
+mundo lo refuerza con burbujas y caras, pero el canal principal es la Crónica.
+Reutiliza `NewsBoard`, que ya está escrito.
+
+---
+
+## 14. El romance del protagonista
+
+### 14.1 La regla
+
+El protagonista puede cortejar a un habitante, **y puede fallar**. No es una barra
+que se llena: es una declaración que se hace una vez y tiene respuesta.
+
+Hoy el protagonista está deliberadamente fuera del grafo romántico —`DevelopCrushes`
+pide el otro al censo y el protagonista no está— y el motivo era bueno: en un juego
+donde puedes hablar con la misma persona todos los días, el romance por acumulación
+es inevitable y aburrido. **Eso se conserva.** Lo que se añade es una puerta distinta.
+
+### 14.2 El cortejo
+
+Hacen falten tres cosas a la vez:
+
+1. Convivencia ≥ 5.
+2. Que el habitante te tenga afinidad de **Amigo** (nivel 3) o más.
+3. **Un ramo**, crafteado con flores que hayas recogido. Se consume.
+
+Con eso, `Confess` pone `RomanceStage.Confessed` en la ficha que ese habitante tiene
+de ti. La respuesta no es inmediata: se resuelve **al día siguiente**, y ese día de
+espera es a propósito.
+
+### 14.3 La conducta del protagonista
+
+Con la misma `Compatibility` que se usa entre habitantes, cruzando los cuatro ejes.
+Pero el protagonista no tiene `PersonalityProfile` —y no debe tenerlo, porque su
+personalidad «la pone quien juega con lo que hace»—.
+
+**Solución: los cuatro ejes se deducen de su conducta.** Y hay cuatro decisiones de
+diseño en cómo se deducen; cada una arregla un modo de fallar.
+
+#### 14.3.1 Proporciones, nunca cantidades
+
+Ninguna medida puede ser un total. Si «metros corridos al día» fuera el eje de
+Energía, con 3000 m = +1, entonces **quien juega tres horas es enérgico y quien juega
+veinte minutos es calmado**, y lo que estaríamos midiendo es la duración de la sesión,
+no el carácter. Es el fallo que invalida la idea entera si no se ve a tiempo.
+
+Cada eje es la **proporción entre dos conductas que compiten por el mismo momento** —
+cosas que se hacen *en vez de* la otra. Así la sesión larga y la corta dan el mismo
+perfil, que es lo único correcto.
+
+| Eje | −1 | +1 | La proporción |
+|---|---|---|---|
+| **Energía** | calmado | enérgico | segundos corriendo / segundos en movimiento. Es Shift o no Shift, y `PlayerBody` ya lo distingue |
+| **Expresión** | reservado | expresivo | interacciones expresivas (`Joke`, `Hug`, `Compliment`, `PlayTogether`) / total de interacciones |
+| **Actitud** | independiente | sociable | tiempo con un vecino a menos de 8 m / tiempo a la intemperie |
+| **Perspectiva** | práctico | soñador | gestos gratuitos / gestos de renta |
+
+Los «gestos» de Perspectiva, que es el eje que menos se deduce solo:
+
+- **Soñador:** colocar un adorno, craftear algo decorativo, sembrar una flor, hablar
+  con el Árbol Nimbo, sentarse en un banco.
+- **Práctico:** vender material en crudo por el cajón, ampliar una casa, craftear
+  herramientas y muebles funcionales.
+
+Los dos lados tienen que estar al alcance en la misma sesión, y lo están.
+
+#### 14.3.2 El arranque: confianza, no valor
+
+El primer día no hay muestras. Y cero **no es neutro**: `PersonalityProfile.TypeIndex`
+resuelve con `> 0f`, así que un perfil de cuatro ceros sale del tipo 0 —calmado,
+reservado, independiente y práctico—, que es un arquetipo concreto y no «promedio».
+
+Dos reglas:
+
+1. **El perfil del protagonista no pasa nunca por `Compatibility.Full` ni por nada que
+   lea su `TypeIndex`.** Solo por `Compatibility.Between`, que trabaja con los ejes. El
+   protagonista tiene ejes; no tiene tipo.
+2. **Encogimiento por número de muestras**, para que un eje con poca información tire a
+   cero él solo, sin casos especiales:
+
+```csharp
+float axis = raw * n / (n + K);      // K = 40 muestras ⚙️
+```
+
+Mientras `n < K/2` la pantalla dice «todavía no está claro» en vez de un número, que
+además es verdad.
+
+#### 14.3.3 La ventana: decaimiento, no historial
+
+Una media de los últimos 7 días obliga a guardar siete días de contadores y hace que
+el perfil **salte** cuando un día se cae de la ventana. Peor: convierte la identidad en
+«lo que hiciste esta semana», y un fin de semana picando piedra te reescribe.
+
+Mejor una media exponencial con vida media larga: dos floats por eje, decaídos una vez
+al día en `DayPassed`.
+
+```csharp
+const float Halflife = 14f;                     // días de juego ⚙️
+float decay = Mathf.Pow(0.5f, 1f / Halflife);   // ≈ 0.952
+positive *= decay;
+total    *= decay;
+```
+
+- **Ocho floats en el guardado**, no un historial.
+- La personalidad **deriva** en vez de dar saltos, que es lo que se quiere sentir.
+- Y es la defensa contra el farmeo, sin una sola regla anti-farmeo: mover un eje a
+  propósito cuesta unas dos semanas de juego, más que los 10 días de espera tras un
+  rechazo. **Farmear el eje sale estrictamente peor que cortejar a alguien
+  compatible.** No hay que prohibirlo, basta con que sea el camino lento.
+
+#### 14.3.4 La compatibilidad pone el precio, no el veredicto
+
+Un umbral de «compatibilidad ≥ 0.55 o no» es un muro, y un muro en un juego cuyo
+contrato es no castigar. Además el jugador no ve el número, así que un «no» seco se lee
+como arbitrario.
+
+**La compatibilidad mueve la afinidad que hace falta, no la respuesta.**
+
+```csharp
+float required = Mathf.Lerp(90f, 62f, Mathf.InverseLerp(-0.2f, 0.8f, compat));  // ⚙️
+```
+
+| Compatibilidad | Afinidad necesaria | Qué se siente |
+|---|---|---|
+| 0.8 — os parecéis | 62 | sale casi solo |
+| 0.5 | 74 | hay que trabajarlo |
+| 0.2 | 85 | cuesta, pero se puede |
+| −0.2 — opuestos | 90 | una historia larga |
+
+**Nadie es imposible.** Los opuestos pueden quererse; solo cuesta el doble de
+convivencia. Y los números caen dentro del tramo que ya existe en §8.2: Íntimo en +65,
+Alma afín en +80.
+
+#### 14.3.5 El «no» tiene que enseñar
+
+Si te rechaza, la frase **nombra el eje que más lejos quedó**, tomando el de mayor
+distancia ponderada:
+
+- Energía → «Eres de los que no paran quietos, y yo necesito calma.»
+- Actitud → «Siempre estás rodeado de gente. Yo no sé estar así.»
+- Expresión → «No sé nunca lo que estás pensando.»
+- Perspectiva → «Tú tienes los pies en el suelo. Yo estoy en las nubes.»
+
+Con eso el jugador aprende el sistema sin tutorial y sin ver un número. Se queda en
+Amigo, con −5 de afinidad y 10 días antes de poder volver a intentarlo. Y aquí está la
+respuesta buena al farmeo: **puedes cambiar, y cambiar de verdad lleva semanas**, que
+es justo lo que hace que signifique algo.
+
+#### 14.3.6 Cómo se implementa
+
+El nombre lleva la intención: es **conducta observada**, no personalidad elegida.
+
+```csharp
+[Serializable]
+public class ConductRecord            // Nimbo.Data.Player
+{
+    public float[] Positive = new float[4];
+    public float[] Total    = new float[4];
+    public PersonalityProfile AsProfile(float k = 40f);   // proporción + encogimiento
+}
+```
+
+`PersonalityProfile` ya vive en `Nimbo.Data.Islanders`, así que esto no toca ningún
+ensamblado: `PlayerState` gana un campo y ya está.
+
+Contrato `IConductService` en Core: `Note(axis, towardPositive, weight)`,
+`Profile { get; }`, `ConfidenceOf(axis)`. Se suscribe a `DayPassed` para el
+decaimiento, y a `ItemCrafted`, `DecorPlaced` y `AffinityChanged` para lo que ya llega
+por evento. Lo continuo lo empujan dos sitios que **ya están haciendo ese trabajo**:
+
+- `PlayerBody` ya distingue Shift para elegir la velocidad: acumula dos segundos y los
+  suelta en `HourPassed`.
+- `PlayerInteractor.FindTarget()` ya recorre a todos los vecinos con sus posiciones en
+  su cadencia lenta: contar si había alguien a menos de 8 m no añade ni una iteración.
+
+A diferencia de la progresión de §12.5, esto **sí toca unos cinco sitios**, de una
+línea cada uno. No es gratis, pero es poco y no cambia ninguna firma existente.
+
+#### 14.3.7 Si hay que hacerlo en una tarde
+
+**Dos ejes en vez de cuatro: Actitud y Energía.** Actitud pesa 0.35 en
+`Compatibility`, casi el doble que los demás, y Energía sale gratis del Shift. Los
+otros dos se quedan a cero con confianza cero, y el encogimiento de §14.3.2 los
+neutraliza solo: la fórmula funciona igual. Añadir Expresión y Perspectiva después no
+cambia ni una firma.
+
+#### 14.3.8 Cómo se comprueba que está bien
+
+1. **Dos partidas, una de 20 min/día y otra de 3 h/día haciendo lo mismo, dan el mismo
+   perfil (±0.05).** Es el test que caza la vuelta a los contadores absolutos.
+2. Un eje sin muestras da exactamente 0 y confianza 0.
+3. Cambiar de conducta a propósito tarda ≥ 10 días de juego en mover un eje 0.5.
+4. `Compatibility.Between` con el perfil del jugador nunca sale de [−1, +1].
+5. Ningún camino del código pasa el perfil del protagonista por `Compatibility.Full`
+   ni lee su `TypeIndex`.
+
+#### 14.3.9 Y de regalo, una pantalla
+
+En el menú, junto a la Crónica: **cómo te ve la aldea**. Cuatro rasgos en palabras, no
+en números, con su confianza. Nadie la ha escrito a mano y describe al jugador de
+verdad. Va en el menú y no en el mundo, por lo mismo que la Crónica (§13.3).
+
+### 14.4 Los rivales, y por qué puede no funcionar
+
+Si al declararte ese habitante ya tiene un flechazo o está saliendo con otro
+habitante, tu confesión **entra en el triángulo de §13.2** como un vértice más:
+
+- Compites con el rival por las mismas reglas: `afinidad + compatibilidad × 20`.
+- El rival reacciona: pierde afinidad contigo y acelera su propio cortejo.
+- **Si la pareja de habitantes llega a prometerse antes de que tú ganes, se acabó.**
+  Quedan fuera de tu alcance mientras sigan juntos.
+- Si ganas, el rival te queda en `Rivalry`. Se le pasa con disculpas o mediación,
+  pero mientras dure te cuesta afinidad con quien sea amigo suyo.
+
+Esto es lo que el jugador pidió y es lo que hace que el romance importe: **hay alguien
+más queriendo lo mismo, y no está esperando su turno.**
+
+### 14.5 La boda con el protagonista
+
+Tres requisitos, uno de cada mitad del juego:
+
+| Requisito | De qué mitad viene |
+|---|---|
+| Salir contigo 10 días con afinidad ≥ 85 | social |
+| **Anillo** crafteado (Oficio 8, material raro) | granja y oficio |
+| Tu cabaña ampliada al nivel 1 | gestión |
+
+Después, la pareja se muda a tu cabaña, hace **una acción del huerto al día** por su
+cuenta (riega lo que esté seco), y sus necesidades pasan a estar parcialmente a tu
+cargo. Nada de esto es obligatorio y nada caduca si no entras.
+
+---
+
+## 15. Gestión de la aldea
+
+### 15.1 Trabajos
+
+Ya está escrito y funciona: ocho oficios con afinidad por personalidad, rangos,
+ascensos por turnos trabajados, sueldos, y oficios que solo existen si su zona está
+abierta. El jugador asigna desde la ficha (`JobSection`).
+
+Lo que falta para que sea gestión y no una lista desplegable:
+
+- **El habitante puede negarse.** Si la afinidad del oficio es menor de 0.3 y no te
+  tiene aprecio (por debajo de Amigo), dice que no. Con eso, §3.3 sigue en pie
+  —sugieres, no ordenas— y el trabajo social pasa a tener una recompensa concreta:
+  para colocar a la gente donde rinde, primero hay que caerle bien.
+- **Estrellas en vez de números.** La afinidad del oficio se ve como 1 a 5 estrellas
+  al elegir, para poder decidir sin abrir una hoja de cálculo.
+- **Los ascensos los apruebas tú** (Aldea 4) y cuestan monedas de la isla. Un ascenso
+  sube el sueldo del habitante y también lo que rinde.
+
+### 15.2 Casas
+
+`HomeUpgradeService` **está entero y no está enchufado**: dos niveles (8×8 → 11×11 →
+14×14), remapeo del suelo sin tocar los muebles, cobro atómico. No lo registra
+`GameBootstrap` ni lo llama ninguna UI.
+
+- **Enchufarlo** es media hora: registrarlo y un botón en la ficha (Aldea 3).
+- **Cambiar el precio de monedas a monedas + material.** Nivel 1: 1200 N◉ + 30 madera
+  + 20 piedra. Nivel 2: 3500 N◉ + 80 madera + 60 piedra + 10 savia. Esto es **el
+  puente más importante del juego**: es la razón por la que talar un árbol le importa
+  a la aldea.
+- **La comodidad ya se mide** (`ComfortScore`) y el ánimo ya afecta al trabajo: quien
+  llega al turno sin energía pierde el día. Así que ampliar una casa tiene un efecto
+  medible en lo que la aldea produce, sin inventar ninguna fórmula nueva.
+
+### 15.3 Eventos
+
+`EventScheduler` y `EventCalendar` existen y disparan solos. Lo que falta es que el
+jugador pueda **poner uno en el calendario**: `Propose(eventId, day)`, pagando
+monedas y material, con Aldea 5 para los pequeños y Aldea 7 para los festivales.
+
+**Y lo que hace que organizar un evento valga la pena:** en un evento, cada pareja de
+asistentes tira una vez su compatibilidad. Es donde nacen los flechazos. El jugador
+no puede emparejar a nadie, pero **puede montar la fiesta donde se conozcan** — que
+es exactamente la piedra en el estanque de §3.3, y la mejor herramienta social que se
+le puede dar sin romper la autonomía de nadie.
+
+La asistencia depende de la agenda y de la afinidad: quien te aprecia va aunque le
+pille mal.
+
+### 15.4 Atender necesidades
+
+Las peticiones son hoy un botón gratis: `Resolve(requestId)` se llama sin payload
+desde un botón «Ayudarle» y no consume nada. Reparte felicidad y experiencia a cambio
+de un clic.
+
+- **`RequestKind.Material`**: «tráeme 5 maderas». Con eso la recolección tiene un
+  porqué social y no solo económico.
+- **`Resolve` consume el payload** de la mochila. La firma ya lo admite
+  (`string payloadId = null`) y nadie lo usa.
+- **Tablón de encargos en la plaza**, para verlas todas sin ir habitante por
+  habitante.
+- Negarse ya cuesta ánimo (`Refuse`), y eso se queda: es lo que hace que decir sí
+  signifique algo.
+
+---
+
+## 16. Cómo se enganchan las tres mitades
+
+El problema de hoy no es que falten sistemas: es que **las mitades no se tocan**. Ni
+`Simulation`, ni `Social`, ni `Events` mencionan recolección, huerto ni crafteo. Son
+dos juegos corriendo en la misma isla.
+
+Estos son los enganches, y cada uno es la salida de una mitad usada como entrada de
+otra:
+
+| De | A | Por dónde |
+|---|---|---|
+| Granja y recolección | Gestión | material para ampliar casas (§15.2) |
+| Granja y recolección | Social | regalos, ramos y encargos de material (§15.4) |
+| Granja y oficio | Romance | el ramo y el anillo (§14) |
+| Social | Gestión | te aceptan el trabajo si te aprecian (§15.1) |
+| Gestión | Simulación de vida | casa mejor → más ánimo → mejor turno; casa grande → bebés (§13.1) |
+| Gestión | Romance ajeno | los eventos son donde nacen los flechazos (§15.3) |
+| Vida de la aldea | Gestión | cada boda y cada bebé son un vecino más al que dar trabajo |
+| Todo | Protagonista | las cinco vías suben haciendo cualquiera de estas cosas (§12) |
+
+**La regla que evita que esto se vuelva una lista de tareas:** ninguno de estos
+enganches es obligatorio ni caduca. Si no amplías ninguna casa, la aldea sigue
+viviendo, solo crece más despacio. Si no organizas ninguna fiesta, los flechazos
+nacen igual, solo más lento. `04_ALDEA.md` §2 sigue mandando: **riqueza opcional, no
+trabajo obligatorio.**
+
+---
+
+## 17. Alcance v1
 
 La v1 es el juego completo que se publica. No hay "early access": se lanza
 cuando todo lo de `[NÚCLEO]` está pulido y lo de `[IMPORTANTE]` está
 funcional. Lo de `[SI DA TIEMPO]` puede llegar en un parche post-lanzamiento.
 
-### 12.1 `[NÚCLEO]` — Sin esto no hay juego
+**Tres estados, no dos.** La v1.0 solo tenía `[x]` y `[ ]`, y eso escondía la
+categoría más peligrosa del proyecto: sistemas escritos y probados que **no están
+enchufados a nada**. Un servicio que nadie registra y una clase que nadie instancia
+pasan los tests y no existen en el juego.
+
+| Marca | Significa |
+|---|---|
+| `[x]` | Hecho y jugable |
+| `[~]` | Escrito, a medias o sin enchufar. La casilla dice qué falta |
+| `[ ]` | Sin empezar |
+
+### 17.1 `[NÚCLEO]` — Sin esto no hay juego
 
 - [x] Arquitectura base (EventBus, ServiceRegistry, guardado, reloj, RNG).
 - [x] 1 isla flotante (Nimbo) con 10 zonas.
@@ -589,8 +1177,12 @@ funcional. Lo de `[SI DA TIEMPO]` puede llegar en un parche post-lanzamiento.
 - [x] 40 muebles del catálogo base + pool de 200 en tienda rotatoria.
 - [x] Sistema de relaciones con los 10 niveles y 9 estados.
 - [x] Economía con monedas, tiendas, trabajo y balance diario.
-- [x] 3 minijuegos (cocina, pesca, ritmo).
-- [x] Eventos: sucesos diarios, sueños, conciertos, noticias, festivales.
+- [~] 3 minijuegos (cocina, pesca, ritmo). Las tres clases están escritas y con
+      tests, pero **nadie las instancia**: sin servicio, sin UI y sin caña en el
+      catálogo de herramientas. Hoy no se pueden jugar.
+- [~] Eventos: sucesos diarios, sueños, conciertos, noticias, festivales. Están
+      escritos y probados, pero **`EventsService` no lo construye nadie** — ver el
+      bloque de vida y gestión, más abajo.
 - [x] El Árbol Nimbo funcional.
 - [x] Semana de juego estructurada (lunes a domingo con bonos).
 - [x] Guardado y carga de partida (JSON versionado, copia atómica).
@@ -599,20 +1191,74 @@ funcional. Lo de `[SI DA TIEMPO]` puede llegar en un parche post-lanzamiento.
       todavía no cambia con lo que pasa: suena el mismo ambiente en calma y en
       fiesta, y eso es lo que falta para poder marcarlo.
 
-### 12.2 `[IMPORTANTE]` — El juego cojea sin esto
+**La capa de granja y oficio** (§1, pilar 3; `04_ALDEA.md` §5). No estaba en la lista
+de la v1.0 y es la mitad del juego de hoy:
+
+- [x] Protagonista con cuerpo, movimiento, vigor y cámara que le sigue.
+- [x] Mochila con huecos, herramientas y objeto en mano.
+- [x] Recolección: 16 tipos de nodo, 120 en el mundo, herramienta requerida, reposición.
+- [x] Huerto: labrar, sembrar, regar, crecer, recoger. 12 cultivos.
+- [x] Crafteo: 36 recetas y mesas de trabajo.
+- [x] Venta por el cajón de envíos.
+- [x] Casa propia con interior amueblable, y la aldea al otro lado del puente.
+- [ ] **Progresión del protagonista: las cinco vías, la curva y los desbloqueos (§12).**
+- [ ] Herramientas de nivel 2 crafteables (§12.4).
+- [~] Variedad de materiales: 16 nodos distintos dan solo 6 materiales. Roble, pino,
+      abedul y tablón perdido son todos `mat_madera`.
+- [~] Venta: hoy paga el 100% del precio de catálogo, así que comprar y vender es
+      neutro y nada empuja a preferir lo que recoges.
+
+**El pilar de vida y gestión** (§13, §14, §15):
+
+- [x] Romance autónomo entre habitantes: flechazo, correspondido, salir, prometerse,
+      desamor y ruptura, todo sin el jugador.
+- [x] **Bodas y bebés autónomos** (§13.1). `WeddingPlanner` revisa las parejas cada
+      día: a los 5 días de prometidos pone fecha y lo anuncia, 3 días después los casa
+      llamando a `TryMarry`, y a los 10 días de casados llega un bebé si la casa está
+      ampliada. Revisa la lista en vez de escuchar el aviso, y eso es a propósito: así
+      recoge también a las parejas que ya llevaban semanas congeladas en partidas
+      guardadas. 13 tests en `BodasTests`.
+- [~] Que el jugador **se entere** de la boda: `WeddingAnnounced` y `WeddingHeld` se
+      publican y **no los escucha nadie todavía**. Hasta que exista la Crónica, la boda
+      ocurre a ciegas.
+- [ ] Rivales y triángulos amorosos entre habitantes (§13.2).
+- [ ] La Crónica: que el jugador se entere de lo que pasa (§13.3).
+- [ ] Cortejo del protagonista, con rechazo y rivales (§14).
+- [ ] Los cuatro ejes del protagonista deducidos de su conducta (§14.3).
+- [x] Trabajos: 8 oficios, afinidad por personalidad, rangos, sueldos, asignación.
+- [ ] Que un habitante pueda negarse a un trabajo (§15.1).
+- [x] **Ampliación de casas, cobrada en obra** (§15.2). `HomeUpgradeService` registrado
+      en `GameBootstrap` y con su bloque en la ficha del habitante, que dice qué falta
+      cuando falta. Nivel 1: 1200 N◉ + 30 madera + 20 piedra. Nivel 2: 3500 N◉ + 80
+      madera + 60 piedra + 10 savia. Todo o nada: si falta un solo material no se gasta
+      ninguno ni se cobran las monedas.
+- [ ] Que el jugador pueda organizar eventos (§15.3).
+- [~] Peticiones: existen y se generan solas, pero atenderlas es un botón que no
+      consume nada (§15.4).
+- [~] **`EventsService` no lo construye nadie.** Sucesos diarios, sueños, conciertos,
+      noticias y festivales están escritos y con tests, y el juego no los enciende: el
+      `NewsBoard` y el `EventScheduler` solo existen dentro de ese servicio. Es el mismo
+      fallo que tenían las ampliaciones de casa.
+
+### 17.2 `[IMPORTANTE]` — El juego cojea sin esto
 
 - [x] 8 prendas base + pool de 150 en tienda de ropa rotatoria.
 - [x] 40 peinados: 32 de salida y 8 que se ganan subiendo el nivel de isla.
 - [ ] Conjuntos de muebles temáticos (rústico, moderno, japonés).
 - [ ] Eventos de "visita misteriosa" y "expedición".
 - [x] Sistema de logros: 44 logros con recompensa en nimbos, pantalla y aviso.
-- [x] Ampliación de apartamento: 2 niveles (8×8 → 11×11 → 14×14).
+- [x] Ampliación de apartamento: 2 niveles (8×8 → 11×11 → 14×14), pagada en monedas y
+      en material recogido.
 - [ ] El Espejo de introspección (reajuste de personalidad).
 - [ ] Sueños con escenas visuales (no solo texto).
 - [ ] Sala de la fama (isleños nivel 50).
 - [x] Personalización de la isla: 32 adornos con plano cenital por zona.
+- [ ] Tablón de encargos en la plaza (§15.4).
+- [ ] `RequestKind.Material`: peticiones que se pagan con lo recogido (§15.4).
+- [ ] Mediar en una riña (Convivencia 9).
+- [ ] Pedir un favor a un vecino (Convivencia 7).
 
-### 12.3 `[SI DA TIEMPO]` — El juego no lo necesita para ser bueno
+### 17.3 `[SI DA TIEMPO]` — El juego no lo necesita para ser bueno
 
 - [ ] Segunda isla flotante (tropical).
 - [ ] Mascotas (Nimbín).
@@ -626,6 +1272,30 @@ funcional. Lo de `[SI DA TIEMPO]` puede llegar en un parche post-lanzamiento.
 
 ---
 
-> **Fin del GDD v1.0.** Este documento lo escribe el agente de diseño y lo
+## 18. Por dónde empezar
+
+El orden no es por tamaño: es por cuánto juego aparece por cada hora de trabajo. Las
+cuatro primeras son código que ya existe y solo hay que conectar.
+
+| # | Qué | Coste | Qué aparece |
+|---|---|---|---|
+| ~~1~~ | ~~Enchufar `HomeUpgradeService` y cobrarlo en material (§15.2)~~ | **hecho** | el puente entre la granja y la aldea |
+| ~~2~~ | ~~Bodas y bebés por el calendario: `WeddingPlanner` (§13.1)~~ | **hecho** | prometidos deja de ser un callejón; la aldea crece sola |
+| 3 | La Crónica en el menú (§13.3) | un día | **subió de puesto:** sin ella la boda del punto 2 ocurre a ciegas |
+| 4 | `Resolve` que consume el payload + `RequestKind.Material` (§15.4) | una tarde | recolectar tiene un porqué social |
+| 5 | Enchufar `EventsService` y los tres minijuegos (§17.1) | un día | dos pilares enteros que están escritos y apagados |
+| 6 | Las cinco vías y sus desbloqueos (§12) | dos o tres días | la progresión entera; no toca ningún servicio existente |
+| 7 | Rivales y triángulos (§13.2) | un día | las historias que el jugador va a contar |
+| 8 | Cortejo del protagonista con rechazo (§14) | dos días | el pilar romántico, apoyado en 3, 6 y 7 |
+
+**Por qué la Crónica subió al puesto 3.** Al cerrar el punto 2 quedó claro que una boda
+que el jugador no puede percibir no está entregada: los avisos `WeddingAnnounced` y
+`WeddingHeld` se publican y no los escucha nadie. Es el mismo error que este documento
+lleva señalando —código que funciona y no existe en el juego— solo que cometido por
+nosotros. Nada nuevo debería depender de un evento sin lector hasta que la Crónica esté.
+
+---
+
+> **Fin del GDD v2.0.** Este documento lo escribe el agente de diseño y lo
 > aprueba el orquestador. Los números son puntos de partida; se ajustan con
 > datos de playtest.
