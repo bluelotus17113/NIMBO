@@ -1398,8 +1398,10 @@ de la v1.0 y es la mitad del juego de hoy:
 - [x] Crafteo: 36 recetas y mesas de trabajo.
 - [x] Venta por el cajón de envíos.
 - [x] Casa propia con interior amueblable, y la aldea al otro lado del puente.
-- [ ] **Progresión del protagonista: las cinco vías, la curva y los desbloqueos (§12).**
-- [ ] Herramientas de nivel 2 crafteables (§12.4).
+- [x] **Progresión del protagonista: las cinco vías, la curva y los desbloqueos (§12).**
+      El motor entero y diecisiete puertas. Lo que queda de la tabla de §12.3 está
+      marcado allí: pide contenido que no existe, o sistemas de aldea sin escribir.
+- [x] Herramientas de nivel 2 crafteables (§12.4). Cada una se come la de siempre.
 - [~] Variedad de materiales: 16 nodos distintos dan solo 6 materiales. Roble, pino,
       abedul y tablón perdido son todos `mat_madera`.
 - [~] Venta: hoy paga el 100% del precio de catálogo, así que comprar y vender es
@@ -1422,8 +1424,12 @@ de la v1.0 y es la mitad del juego de hoy:
       líneas, y guarda el texto ya escrito y no los identificadores, para que la línea de
       un vecino que se fue no salga en blanco. Lo escribe el `NewsBoard`, que ya tenía
       las plantillas.
-- [ ] Cortejo del protagonista, con rechazo y rivales (§14).
-- [ ] Los cuatro ejes del protagonista deducidos de su conducta (§14.3).
+- [~] Cortejo del protagonista (§14). El rechazo está —ramo, respuesta al día
+      siguiente, frase que nombra el eje, espera de diez días—. **Los rivales no**: tu
+      declaración no entra como vértice en el triángulo de §13.2, solo comprueba si
+      esa persona ya está con alguien.
+- [x] Los cuatro ejes del protagonista deducidos de su conducta (§14.3), con su
+      pantalla de «cómo te ve la aldea».
 - [x] Trabajos: 8 oficios, afinidad por personalidad, rangos, sueldos, asignación.
 - [ ] Que un habitante pueda negarse a un trabajo (§15.1).
 - [x] **Ampliación de casas, cobrada en obra** (§15.2). `HomeUpgradeService` registrado
@@ -1432,8 +1438,8 @@ de la v1.0 y es la mitad del juego de hoy:
       madera + 60 piedra + 10 savia. Todo o nada: si falta un solo material no se gasta
       ninguno ni se cobran las monedas.
 - [ ] Que el jugador pueda organizar eventos (§15.3).
-- [~] Peticiones: existen y se generan solas, pero atenderlas es un botón que no
-      consume nada (§15.4).
+- [x] Peticiones que cuestan lo que piden (§15.4): material exacto, o cualquiera de su
+      familia eligiendo tú. Se cobra de la mochila y de la despensa.
 - [x] **`EventsService` encendido.** Sucesos diarios, sueños, conciertos, noticias y
       festivales estaban escritos, probados y apagados —el juego no los construía— igual
       que las ampliaciones de casa. Ya arranca con la partida y el reloj.
@@ -1457,8 +1463,8 @@ de la v1.0 y es la mitad del juego de hoy:
 - [ ] Sueños con escenas visuales (no solo texto).
 - [ ] Sala de la fama (isleños nivel 50).
 - [x] Personalización de la isla: 32 adornos con plano cenital por zona.
-- [ ] Tablón de encargos en la plaza (§15.4).
-- [ ] `RequestKind.Material`: peticiones que se pagan con lo recogido (§15.4).
+- [x] Tablón de encargos en la plaza (§15.4), y botón «Encargos» en la barra.
+- [x] `RequestKind.Material`: peticiones que se pagan con lo recogido (§15.4).
 - [ ] Mediar en una riña (Convivencia 9).
 - [ ] Pedir un favor a un vecino (Convivencia 7).
 
