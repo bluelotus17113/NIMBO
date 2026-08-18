@@ -74,6 +74,57 @@
       ]
     },
     {
+      "catalogId": "mat_corteza",
+      "displayName": "Corteza de abedul",
+      "description": "Se desprende en laminas finas, casi papel. Huele a lluvia recien pasada.",
+      "price": 7,
+      "unlockLevel": 1,
+      "tags": [
+        "material"
+      ]
+    },
+    {
+      "catalogId": "mat_pedernal",
+      "displayName": "Pedernal",
+      "description": "Salta en lascas con filo. Lo que separa una herramienta de un palo.",
+      "price": 11,
+      "unlockLevel": 1,
+      "tags": [
+        "material"
+      ]
+    },
+    {
+      "catalogId": "mat_baya",
+      "displayName": "Bayas de nube",
+      "description": "Pequenas y agrias. Manchan los dedos de morado durante dos dias.",
+      "price": 5,
+      "unlockLevel": 1,
+      "tags": [
+        "material"
+      ]
+    },
+    {
+      "catalogId": "mat_helecho",
+      "displayName": "Fronda azul",
+      "description": "Una hoja entera del helecho, tan ancha como un brazo. Se usa para envolver.",
+      "price": 9,
+      "unlockLevel": 1,
+      "tags": [
+        "material"
+      ]
+    },
+    {
+      "catalogId": "mat_nectar",
+      "displayName": "Néctar de orquídea",
+      "description": "Una gota espesa y dulce por flor. Hay que juntar muchas para llenar un dedal.",
+      "price": 16,
+      "unlockLevel": 1,
+      "tags": [
+        "material",
+        "raro"
+      ]
+    },
+    {
       "catalogId": "seed_nimbocereza",
       "displayName": "Semillas de nimbocereza",
       "description": "Tardan 3 días en dar. Hay que regarlas.",

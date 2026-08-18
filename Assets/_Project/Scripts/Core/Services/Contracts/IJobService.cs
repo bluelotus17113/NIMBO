@@ -23,7 +23,22 @@ namespace Nimbo.Core.Services.Contracts
         /// <summary>El oficio que mejor le va, entre los disponibles.</summary>
         JobKind BestJobFor(string islanderId);
 
-        /// <summary>Le da el puesto. Falla si el oficio no está abierto todavía.</summary>
+        /// <summary>
+        /// ¿Aceptaría ese puesto si se lo ofreces?
+        /// </summary>
+        /// <remarks>
+        /// Puede decir que no, y ahí está la mitad de la gestión: si el oficio no le
+        /// pega **y además no te tiene aprecio**, se niega. Con eso sigues sugiriendo y
+        /// no ordenando (§3.3), y el trabajo social pasa a tener una recompensa
+        /// concreta: para colocar a la gente donde rinde, primero hay que caerle bien.
+        ///
+        /// Las dos condiciones a la vez y no cualquiera de ellas: a un amigo le pides
+        /// un favor aunque el puesto no le guste, y un puesto que le encanta lo coge
+        /// aunque apenas te conozca.
+        /// </remarks>
+        bool WouldAccept(string islanderId, JobKind job);
+
+        /// <summary>Le da el puesto. Falla si el oficio no está abierto o si dice que no.</summary>
         bool Assign(string islanderId, JobKind job);
 
         void Quit(string islanderId);

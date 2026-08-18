@@ -78,6 +78,12 @@ namespace Nimbo.Core.Services.Contracts
 
         /// <summary>Fabricar el anillo de compromiso (§14.5).</summary>
         EngagementRing = 18,
+
+        /// <summary>Pedirle un favor a un vecino: te trae material (§15.1).</summary>
+        AskFavour = 19,
+
+        /// <summary>Mediar en una riña entre dos vecinos (§13.2).</summary>
+        Mediate = 20,
     }
 
     /// <summary>

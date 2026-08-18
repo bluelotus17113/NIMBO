@@ -12,7 +12,7 @@
           "quantity": 2
         },
         {
-          "catalogId": "mat_piedra",
+          "catalogId": "mat_pedernal",
           "quantity": 1
         }
       ],
@@ -50,7 +50,7 @@
           "quantity": 2
         },
         {
-          "catalogId": "mat_piedra",
+          "catalogId": "mat_pedernal",
           "quantity": 2
         }
       ],
@@ -70,7 +70,11 @@
         },
         {
           "catalogId": "mat_piedra",
-          "quantity": 3
+          "quantity": 1
+        },
+        {
+          "catalogId": "mat_pedernal",
+          "quantity": 2
         }
       ],
       "outputId": "tool_pico",
@@ -88,7 +92,7 @@
           "quantity": 3
         },
         {
-          "catalogId": "mat_piedra",
+          "catalogId": "mat_pedernal",
           "quantity": 2
         },
         {
@@ -107,7 +111,7 @@
       "station": "Hand",
       "ingredients": [
         {
-          "catalogId": "mat_fibra",
+          "catalogId": "mat_corteza",
           "quantity": 2
         },
         {
@@ -146,7 +150,11 @@
       "ingredients": [
         {
           "catalogId": "mat_fibra",
-          "quantity": 3
+          "quantity": 2
+        },
+        {
+          "catalogId": "mat_helecho",
+          "quantity": 2
         },
         {
           "catalogId": "mat_petalo",
@@ -164,11 +172,11 @@
       "station": "Hand",
       "ingredients": [
         {
-          "catalogId": "mat_fibra",
-          "quantity": 2
+          "catalogId": "mat_helecho",
+          "quantity": 3
         },
         {
-          "catalogId": "mat_petalo",
+          "catalogId": "mat_fibra",
           "quantity": 1
         }
       ],
@@ -184,11 +192,11 @@
       "ingredients": [
         {
           "catalogId": "mat_madera",
-          "quantity": 3
+          "quantity": 2
         },
         {
-          "catalogId": "mat_petalo",
-          "quantity": 1
+          "catalogId": "mat_corteza",
+          "quantity": 2
         }
       ],
       "outputId": "deco_cartel_bienvenida",
@@ -241,14 +249,18 @@
       "ingredients": [
         {
           "catalogId": "mat_fibra",
-          "quantity": 3
+          "quantity": 2
+        },
+        {
+          "catalogId": "mat_corteza",
+          "quantity": 1
         },
         {
           "catalogId": "mat_petalo",
           "quantity": 2
         },
         {
-          "catalogId": "mat_concha",
+          "catalogId": "mat_nectar",
           "quantity": 1
         }
       ],
@@ -351,8 +363,8 @@
           "quantity": 2
         },
         {
-          "catalogId": "mat_fibra",
-          "quantity": 1
+          "catalogId": "mat_corteza",
+          "quantity": 2
         },
         {
           "catalogId": "mat_petalo",
@@ -602,7 +614,7 @@
       "station": "Kitchen",
       "ingredients": [
         {
-          "catalogId": "mat_fibra",
+          "catalogId": "mat_baya",
           "quantity": 2
         },
         {
@@ -621,15 +633,15 @@
       "station": "Kitchen",
       "ingredients": [
         {
-          "catalogId": "mat_fibra",
+          "catalogId": "mat_baya",
           "quantity": 2
         },
         {
-          "catalogId": "mat_petalo",
+          "catalogId": "mat_helecho",
           "quantity": 1
         },
         {
-          "catalogId": "mat_savia",
+          "catalogId": "mat_petalo",
           "quantity": 1
         }
       ],
@@ -644,15 +656,15 @@
       "station": "Kitchen",
       "ingredients": [
         {
-          "catalogId": "mat_fibra",
-          "quantity": 2
+          "catalogId": "mat_baya",
+          "quantity": 3
         },
         {
-          "catalogId": "mat_petalo",
+          "catalogId": "mat_nectar",
           "quantity": 1
         },
         {
-          "catalogId": "mat_concha",
+          "catalogId": "mat_savia",
           "quantity": 1
         }
       ],
@@ -667,11 +679,11 @@
       "station": "Kitchen",
       "ingredients": [
         {
-          "catalogId": "mat_fibra",
+          "catalogId": "mat_baya",
           "quantity": 2
         },
         {
-          "catalogId": "mat_concha",
+          "catalogId": "mat_helecho",
           "quantity": 1
         }
       ],
@@ -686,15 +698,15 @@
       "station": "Kitchen",
       "ingredients": [
         {
-          "catalogId": "mat_fibra",
+          "catalogId": "mat_baya",
           "quantity": 3
         },
         {
-          "catalogId": "mat_concha",
+          "catalogId": "mat_savia",
           "quantity": 1
         },
         {
-          "catalogId": "mat_savia",
+          "catalogId": "mat_helecho",
           "quantity": 1
         }
       ],
@@ -709,12 +721,16 @@
       "station": "Kitchen",
       "ingredients": [
         {
-          "catalogId": "mat_fibra",
-          "quantity": 3
+          "catalogId": "mat_helecho",
+          "quantity": 2
         },
         {
-          "catalogId": "mat_petalo",
+          "catalogId": "mat_baya",
           "quantity": 2
+        },
+        {
+          "catalogId": "mat_savia",
+          "quantity": 1
         }
       ],
       "outputId": "food_sopa_de_nube",
@@ -755,8 +771,12 @@
           "quantity": 1
         },
         {
+          "catalogId": "mat_pedernal",
+          "quantity": 4
+        },
+        {
           "catalogId": "mat_piedra",
-          "quantity": 8
+          "quantity": 4
         },
         {
           "catalogId": "mat_savia",
@@ -801,8 +821,12 @@
           "quantity": 1
         },
         {
+          "catalogId": "mat_pedernal",
+          "quantity": 5
+        },
+        {
           "catalogId": "mat_piedra",
-          "quantity": 10
+          "quantity": 5
         },
         {
           "catalogId": "mat_madera",
@@ -824,8 +848,12 @@
           "quantity": 1
         },
         {
+          "catalogId": "mat_pedernal",
+          "quantity": 6
+        },
+        {
           "catalogId": "mat_piedra",
-          "quantity": 12
+          "quantity": 6
         },
         {
           "catalogId": "mat_savia",
@@ -872,6 +900,10 @@
         {
           "catalogId": "mat_fibra",
           "quantity": 2
+        },
+        {
+          "catalogId": "mat_nectar",
+          "quantity": 1
         }
       ],
       "outputId": "gift_ramo",

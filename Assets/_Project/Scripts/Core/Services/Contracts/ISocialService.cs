@@ -3,7 +3,6 @@ using Nimbo.Data.Social;
 
 namespace Nimbo.Core.Services.Contracts
 {
-    /// <summary>Lo que dos habitantes pueden hacer juntos, y que mueve su afinidad.</summary>
     /// <summary>Por qué no se puede pedir la mano todavía (§14.5).</summary>
     /// <remarks>
     /// Tres requisitos, uno de cada mitad del juego: el tiempo y el cariño vienen de lo
@@ -40,6 +39,7 @@ namespace Nimbo.Core.Services.Contracts
         Taken,              // ya está con alguien
     }
 
+    /// <summary>Lo que dos habitantes pueden hacer juntos, y que mueve su afinidad.</summary>
     public enum SocialInteraction
     {
         Chat = 0,
@@ -52,6 +52,9 @@ namespace Nimbo.Core.Services.Contracts
         Hug = 7,
         Ignore = 8,
         PlayTogether = 9,
+
+        /// <summary>«¿Me traes algo?» (Convivencia 7). Uno al día por vecino.</summary>
+        Favour = 10,
     }
 
     /// <summary>
@@ -121,6 +124,29 @@ namespace Nimbo.Core.Services.Contracts
         /// lo que se quiere que sienta.
         /// </remarks>
         bool PlayerConfess(string islanderId);
+
+        /// <summary>
+        /// Media en la riña que ese vecino tenga con otro. Devuelve con quién, o null.
+        /// </summary>
+        /// <remarks>
+        /// Baja un escalón de conflicto, no lo borra: hacer las paces del todo es cosa
+        /// de ellos dos, y un botón que arregla una enemistad de golpe convierte las
+        /// riñas de la aldea en una tarea de mantenimiento.
+        ///
+        /// Se elige la peor que tenga. Si el jugador tuviera que elegir con quién,
+        /// haría falta una lista dentro de otra lista para algo que solo tiene una
+        /// respuesta sensata.
+        /// </remarks>
+        string PlayerMediate(string islanderId);
+
+        /// <summary>
+        /// Le pides un favor: te trae algo de lo que recoge por la isla.
+        /// </summary>
+        /// <remarks>
+        /// Devuelve lo que te ha traído, o null si no estaba por la labor. Uno por
+        /// vecino y día, como cualquier otra interacción: es un favor, no un empleado.
+        /// </remarks>
+        string PlayerAskFavour(string islanderId);
 
         /// <summary>Qué impide pedir la mano, o <c>Ok</c> si nada.</summary>
         ProposalRefusal CanPropose(string islanderId);

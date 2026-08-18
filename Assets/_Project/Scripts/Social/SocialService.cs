@@ -65,7 +65,7 @@ namespace Nimbo.Social
             _stages = new StageEvaluator(config);
             _romance = new RomanceEvaluator(config);
             _triangles = new LoveTriangles(registry, personalities, simulation, config, triangles);
-            _courtship = new Courtship(registry, config);
+            _courtship = new Courtship(registry, config, _triangles);
             _chores = new SpouseChores(registry);
             _weddings = weddings;
 
@@ -472,6 +472,103 @@ namespace Nimbo.Social
 
         public bool PlayerConfess(string islanderId) =>
             _courtship.Confess(islanderId, _clock.Day);
+
+        /// <summary>
+        /// Media en la peor riña que tenga (Convivencia 9).
+        /// </summary>
+        /// <remarks>
+        /// Baja **un** escalón y en los dos lados: una riña es de dos, y arreglarla en
+        /// uno solo dejaría a uno de ellos guardando rencor a alguien que ya no se lo
+        /// guarda. La rivalidad se levanta entera porque no tiene escalones — o quieren
+        /// a la misma persona o no.
+        /// </remarks>
+        public string PlayerMediate(string islanderId)
+        {
+            if (!_registry.TryGet(islanderId, out var islander)) return null;
+
+            string worstId = null;
+            var worst = ConflictStage.None;
+
+            var records = islander.Relationships.Records;
+            for (int i = 0; i < records.Count; i++)
+            {
+                if (records[i].OtherId == SocialIds.Player) continue;
+                if (records[i].Conflict.Severity() <= worst.Severity()) continue;
+
+                worst = records[i].Conflict;
+                worstId = records[i].OtherId;
+            }
+
+            if (worstId == null) return null;
+
+            var calmer = worst switch
+            {
+                ConflictStage.Feud => ConflictStage.Quarrel,
+                ConflictStage.Quarrel => ConflictStage.Tension,
+                _ => ConflictStage.None,
+            };
+
+            Soothe(islanderId, worstId, calmer);
+            Soothe(worstId, islanderId, calmer);
+
+            // Y un empujón de afinidad, o al día siguiente la reevaluación los devuelve
+            // donde estaban: el escalón sale de la afinidad, no al revés.
+            ApplyAffinity(islanderId, worstId, 12f);
+
+            return worstId;
+
+            void Soothe(string fromId, string toId, ConflictStage stage)
+            {
+                if (!_registry.TryGet(fromId, out var who)) return;
+
+                var book = who.Relationships;
+                if (!book.TryGet(toId, out var record)) return;
+                if (record.Conflict == stage) return;
+
+                record.Conflict = stage;
+                book.Set(record);
+                EventBus.Publish(new ConflictStageChanged(fromId, toId, stage));
+            }
+        }
+
+        /// <summary>
+        /// Le pides que te traiga algo (Convivencia 7).
+        /// </summary>
+        /// <remarks>
+        /// Te trae de lo que suelta la isla, y poco: es un favor entre vecinos, no una
+        /// ruta de suministro. Lo que se gana de verdad no es el material sino que la
+        /// vía social tenga una salida que se toca con las manos.
+        ///
+        /// Cuenta como interacción del día, así que no se puede pedir doce veces
+        /// seguidas — y cuesta un poco de aprecio, porque los favores se gastan.
+        /// </remarks>
+        public string PlayerAskFavour(string islanderId)
+        {
+            if (!_registry.TryGet(islanderId, out _)) return null;
+
+            if (!ServiceRegistry.TryGet<IGatheringService>(out var gathering)) return null;
+            if (!ServiceRegistry.TryGet<IInventoryService>(out var bag)) return null;
+
+            var catalog = gathering.Catalog;
+            if (catalog.Count == 0) return null;
+
+            var rng = Core.Util.Rng.FromSeed($"favor:{islanderId}:{_clock.Day}");
+            string dropId = catalog[rng.Range(0, catalog.Count)].DropId;
+            if (string.IsNullOrEmpty(dropId)) return null;
+
+            // El límite del día y el desgaste salen del camino de siempre. Escribir la
+            // afinidad a mano no vale: `ApplyOneWay` pide que los dos estén en el censo
+            // y el protagonista no está, así que el favor salía gratis. Con esto, además,
+            // pedir favores cuenta como una interacción más y no se cuela por detrás de
+            // los límites diarios.
+            if (!PlayerInteract(islanderId, SocialInteraction.Favour)) return null;
+
+            if (bag.TryStore(dropId, rng.Range(2, 5), out int leftover) == StoreResult.UnknownItem
+                || leftover > 0)
+                return null;
+
+            return dropId;
+        }
 
         public ProposalRefusal CanPropose(string islanderId) =>
             _courtship.CanPropose(islanderId, _clock.Day);

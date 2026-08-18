@@ -70,6 +70,9 @@ namespace Nimbo.UI.Islander
 
             for (int i = 0; i < Gestures.Length; i++) _actions.Add(Gesture(social, Gestures[i]));
 
+            _actions.Add(FavourButton(social));
+            _actions.Add(MediateButton(social));
+
             // Declararse y pedir la mano nunca están los dos: son dos escalones de la
             // misma escalera, y enseñar el segundo antes de subir el primero solo sirve
             // para que el jugador pulse y le digan que no.
@@ -140,6 +143,52 @@ namespace Nimbo.UI.Islander
             locked.style.fontSize = 12;
             locked.tooltip = Excuse(refusal);
             return locked;
+        }
+
+        /// <summary>Pedirle que te traiga algo (Convivencia 7).</summary>
+        private VisualElement FavourButton(ISocialService social)
+        {
+            if (!Gates.Allows(Unlock.AskFavour, out string falta)) return Locked("Pedir un favor", falta);
+
+            return Small("Pedir un favor", () =>
+            {
+                string traido = social.PlayerAskFavour(_islanderId);
+                _hint.text = traido == null
+                    ? "Hoy ya te ha hecho uno. Mañana más."
+                    : $"Te ha traído {ItemNames.Of(traido)}.";
+            });
+        }
+
+        /// <summary>Mediar en la peor riña que tenga (Convivencia 9).</summary>
+        private VisualElement MediateButton(ISocialService social)
+        {
+            if (!Gates.Allows(Unlock.Mediate, out string falta)) return Locked("Mediar", falta);
+
+            return Small("Mediar", () =>
+            {
+                string conQuien = social.PlayerMediate(_islanderId);
+                _hint.text = conQuien == null
+                    ? "No está reñido con nadie."
+                    : "Has hablado con los dos. Se les ha bajado un poco el enfado.";
+            });
+        }
+
+        private VisualElement Locked(string label, string why)
+        {
+            var locked = UiTheme.Disabled(label);
+            locked.style.marginRight = 6;
+            locked.style.marginBottom = 4;
+            locked.style.fontSize = 12;
+            locked.tooltip = why;
+            return locked;
+        }
+
+        private static VisualElement Small(string label, System.Action onClick)
+        {
+            var button = UiTheme.Secondary(label, onClick);
+            button.style.marginRight = 6;
+            button.style.marginBottom = 4;
+            return button;
         }
 
         /// <summary>

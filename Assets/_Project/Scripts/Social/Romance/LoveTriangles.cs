@@ -109,6 +109,62 @@ namespace Nimbo.Social.Romance
             return null;
         }
 
+        // ── cuando el que se mete eres tú (§14.4) ────────────────────────────
+
+        /// <summary>
+        /// El pretendiente que mejor lo tiene con esa persona, sin contar al jugador.
+        /// </summary>
+        /// <remarks>
+        /// Sirve para que tu declaración **compita** en vez de solo comprobar si esa
+        /// persona está libre. Sin esto, el rival era decorado: suspiraba por ella
+        /// mientras tú te declarabas y no pasaba nada entre vosotros.
+        /// </remarks>
+        public bool TryBestSuitor(string belovedId, out string suitorId, out float score)
+        {
+            suitorId = null;
+            score = float.MinValue;
+
+            var all = _registry.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                var candidate = all[i];
+                if (candidate.Id == belovedId) continue;
+                if (!StillPining(candidate.Id, belovedId)) continue;
+
+                float theirs = ScoreOf(candidate.Id, belovedId);
+                if (theirs <= score) continue;
+
+                suitorId = candidate.Id;
+                score = theirs;
+            }
+
+            return suitorId != null;
+        }
+
+        /// <summary>
+        /// El protagonista se ha declarado a alguien que ya tenía pretendiente.
+        /// </summary>
+        /// <remarks>
+        /// La rivalidad se escribe **solo en la agenda del vecino**, y no es un descuido:
+        /// el protagonista no está en el censo y no tiene agenda. Lo que importa de
+        /// todas formas es lo que él siente por ti, que es lo que vas a leer en su ficha
+        /// y lo que le va a hacer evitarte.
+        /// </remarks>
+        public void OnPlayerCourts(string belovedId)
+        {
+            var all = _registry.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                var candidate = all[i];
+                if (candidate.Id == belovedId) continue;
+                if (!StillPining(candidate.Id, belovedId)) continue;
+
+                SetRivalry(candidate.Id, SocialIds.Player);
+                Nudge(candidate.Id, SocialIds.Player, _config.RivalryDailyAffinity);
+                _simulation.ShowEmotion(candidate.Id, Emotion.Angry, 5f);
+            }
+        }
+
         // ── durar y resolverse ───────────────────────────────────────────────
 
         /// <summary>Pasa un día en todos los triángulos abiertos.</summary>

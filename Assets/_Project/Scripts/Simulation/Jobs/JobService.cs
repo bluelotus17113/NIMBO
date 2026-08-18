@@ -5,6 +5,7 @@ using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
 using Nimbo.Core.Time;
 using Nimbo.Data.Islanders;
+using Nimbo.Data.Social;
 using Nimbo.Simulation.Progression;
 using UnityEngine;
 
@@ -104,10 +105,43 @@ namespace Nimbo.Simulation.Jobs
             return best;
         }
 
+        /// <summary>Lo que hace falta para que no le dé por negarse (§15.1).</summary>
+        /// <remarks>
+        /// Números bajos a propósito: esto no es un muro, es lo que hace que caerle bien
+        /// a la gente sirva para algo. Con el reparto de afinidades que dan los dieciséis
+        /// tipos, un vecino se niega a dos o tres oficios de los ocho, y solo mientras no
+        /// seáis amigos.
+        /// </remarks>
+        private const float MinJobAffinity = 0.3f;
+
+        public bool WouldAccept(string islanderId, JobKind job)
+        {
+            if (job == JobKind.None) return true;
+            if (!_registry.TryGet(islanderId, out var islander)) return false;
+
+            // Si el oficio le pega, lo coge sin más: nadie rechaza el trabajo de su vida
+            // porque el alcalde le caiga regular.
+            if (AffinityFor(islanderId, job) >= MinJobAffinity) return true;
+
+            // Y si no le pega, lo hace por ti — si te lo has ganado.
+            if (!ServiceRegistry.TryGet<ISocialService>(out var social)) return false;
+
+            return social.PlayerRelationship(islanderId).Friendship >= FriendshipStage.Friend;
+        }
+
         public bool Assign(string islanderId, JobKind job)
         {
             if (!_registry.TryGet(islanderId, out var islander)) return false;
             if (job != JobKind.None && !_available.Contains(job)) return false;
+            if (!WouldAccept(islanderId, job)) return false;
+
+            Place(islander, job);
+            return true;
+        }
+
+        /// <summary>Le pone el puesto sin preguntar. Solo para el reparto de salida.</summary>
+        private static void Place(IslanderData islander, JobKind job)
+        {
 
             // Cambiar de oficio cuesta la veteranía: el rango es de ese puesto, no
             // del habitante. Si no, el jugador rotaría a todos por el mejor pagado.
@@ -119,7 +153,6 @@ namespace Nimbo.Simulation.Jobs
                 LastShiftDay = 0,
                 TotalEarned = islander.Job.TotalEarned,
             };
-            return true;
         }
 
         public void Quit(string islanderId)
@@ -199,8 +232,16 @@ namespace Nimbo.Simulation.Jobs
             for (int i = 0; i < all.Count; i++)
             {
                 if (all[i].Job.HasJob) continue;
+
                 var job = BestJobFor(all[i].Id);
-                if (job != JobKind.None) Assign(all[i].Id, job);
+                if (job == JobKind.None) continue;
+
+                // Sin preguntar, y a propósito: esto es «la aldea ya estaba trabajando
+                // cuando llegaste», no el jugador repartiendo puestos. Pasando por
+                // Assign, a quien no le cuadrara ningún oficio se quedaría en paro para
+                // siempre —nunca te va a coger aprecio si no sales de casa— y la
+                // economía no cierra sin sueldos.
+                Place(all[i], job);
             }
         }
     }

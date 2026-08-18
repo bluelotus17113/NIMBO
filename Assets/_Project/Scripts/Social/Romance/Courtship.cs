@@ -33,6 +33,7 @@ namespace Nimbo.Social.Romance
     {
         private readonly IIslanderRegistry _registry;
         private readonly SocialConfig _config;
+        private readonly LoveTriangles _triangles;
 
         /// <summary>Lo que se gasta al declararse. Vive en los contratos: lo pide también la pantalla.</summary>
         public const string BouquetId = RomanceItems.Bouquet;
@@ -43,14 +44,31 @@ namespace Nimbo.Social.Romance
         private const float WorstCompatibility = -0.2f;
         private const float BestCompatibility = 0.8f;
 
+        /// <summary>
+        /// Lo que pesa parecerse al comparar contigo un pretendiente (§14.4).
+        /// </summary>
+        /// <remarks>
+        /// El mismo veinte con el que compiten dos vecinos entre ellos (§13.2). Tenía
+        /// que ser el mismo: si el jugador jugara con otra tabla, ganar o perder
+        /// dependería de contra quién compites y no de lo que hayas hecho.
+        /// </remarks>
+        private const float RivalWeight = 20f;
+
         /// <summary>Lo que cuesta un «no», y lo que hay que esperar para volver.</summary>
         private const float RefusalAffinity = -5f;
         private const int RefusalCooldownDays = 10;
 
-        public Courtship(IIslanderRegistry registry, SocialConfig config)
+        /// <param name="triangles">
+        /// Para que tu declaración **compita** con quien ya suspiraba por esa persona
+        /// (§14.4). Puede faltar: entonces el cortejo solo mira si está libre, que es
+        /// como funcionaba antes.
+        /// </param>
+        public Courtship(IIslanderRegistry registry, SocialConfig config,
+                         LoveTriangles triangles = null)
         {
             _registry = registry;
             _config = config;
+            _triangles = triangles;
         }
 
         // ── declararse ───────────────────────────────────────────────────────
@@ -97,6 +115,12 @@ namespace Nimbo.Social.Romance
 
             EventBus.Publish(new RomanceStageChanged(islanderId, SocialIds.Player,
                                                      RomanceStage.Confessed));
+
+            // Si alguien ya suspiraba por ella, acabas de meterte de por medio y se
+            // entera (§14.4). Antes de esto el rival era decorado: seguía a lo suyo
+            // mientras tú te declarabas y no pasaba nada entre vosotros.
+            _triangles?.OnPlayerCourts(islanderId);
+
             return true;
         }
 
@@ -135,6 +159,18 @@ namespace Nimbo.Social.Romance
             bool accepted = record.Affinity >= required;
             var book = islander.Relationships;
 
+            // Y aunque llegues al listón, puede haber alguien que le llegue más
+            // (§14.4). Se compara por lo mismo que compiten dos vecinos entre ellos:
+            // cariño más lo que se parecen. No hay premio por haber llegado primero.
+            string rivalId = null;
+            if (accepted && _triangles != null &&
+                _triangles.TryBestSuitor(islander.Id, out rivalId, out float rivalScore))
+            {
+                float mine = record.Affinity + compatibility * RivalWeight;
+                if (rivalScore > mine) accepted = false;
+                else rivalId = null;
+            }
+
             if (accepted)
             {
                 record.Romance = RomanceStage.Dating;
@@ -156,8 +192,17 @@ namespace Nimbo.Social.Romance
 
             EventBus.Publish(new RomanceStageChanged(islander.Id, SocialIds.Player,
                                                      RomanceStage.None));
-            EventBus.Publish(new CourtshipAnswered(islander.Id, false,
-                $"{islander.Identity.ShortName}: «{ReasonFor(player, islander.Personality)}»"));
+
+            // Cuando el «no» es porque hay otro, la frase lo dice. Soltarle el discurso
+            // de los ejes cuando el motivo es que quiere a otra persona sería mentirle
+            // al jugador sobre lo que ha pasado, y encima le haría cambiar de conducta
+            // para arreglar algo que no era el problema.
+            string line = rivalId != null && _registry.TryGet(rivalId, out var rival)
+                ? $"{islander.Identity.ShortName}: «Lo siento. Hay otra persona, " +
+                  $"y es {rival.Identity.ShortName}.»"
+                : $"{islander.Identity.ShortName}: «{ReasonFor(player, islander.Personality)}»";
+
+            EventBus.Publish(new CourtshipAnswered(islander.Id, false, line));
         }
 
         /// <summary>

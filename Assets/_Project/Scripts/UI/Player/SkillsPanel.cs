@@ -37,8 +37,11 @@ namespace Nimbo.UI.Player
                                             Unlock.FastRegrowth, Unlock.DeftHands,
                                             Unlock.NodesOnMap },
             [SkillKind.Crafting] = new[] { Unlock.MiddlingRecipes, Unlock.BatchCrafting,
-                                           Unlock.FineRecipes, Unlock.BetterTools },
-            [SkillKind.Social] = new[] { Unlock.ExtraGift, Unlock.Courtship },
+                                           Unlock.FineRecipes, Unlock.BetterTools,
+                                           Unlock.EngagementRing },
+            [SkillKind.Social] = new[] { Unlock.Compliment, Unlock.ExtraGift,
+                                         Unlock.WarmGestures, Unlock.Courtship,
+                                         Unlock.AskFavour, Unlock.Mediate },
             [SkillKind.Village] = new[] { Unlock.AssignJobs, Unlock.UpgradeHomes },
         };
 
@@ -262,6 +265,11 @@ namespace Nimbo.UI.Player
             Unlock.AssignJobs => "repartir los trabajos de la aldea",
             Unlock.UpgradeHomes => "pagar la obra de las casas de los vecinos",
             Unlock.BetterTools => "fabricar las herramientas buenas",
+            Unlock.Compliment => "halagar a un vecino",
+            Unlock.WarmGestures => "abrazar y jugar con alguien",
+            Unlock.EngagementRing => "fabricar el anillo de compromiso",
+            Unlock.AskFavour => "pedirle un favor a un vecino",
+            Unlock.Mediate => "mediar cuando dos se han enfadado",
             Unlock.WideWatering => "la regadera moja tres casillas de una vez",
             _ => "verás en el mapa lo que está listo para recoger",
         };

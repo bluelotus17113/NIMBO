@@ -107,6 +107,22 @@ namespace Nimbo.UI.Islander
                 row.Add(spacer);
 
                 string islanderId = _islanderId;
+
+                // Puede negarse (§15.1), y entonces el botón no se enseña apagado sin
+                // más: se dice que diría que no y por qué. Un botón que se pulsa y no
+                // hace nada es peor que no tenerlo — el jugador lo intenta tres veces
+                // antes de pensar que está roto.
+                if (!jobs.WouldAccept(islanderId, kind))
+                {
+                    var no = UiTheme.Disabled("diría que no");
+                    no.style.fontSize = 12;
+                    no.tooltip = "No le pega el oficio y todavía no sois amigos. " +
+                                 "Gánatelo y lo hará por ti.";
+                    row.Add(no);
+                    _options.Add(row);
+                    continue;
+                }
+
                 var button = UiTheme.Action("Ponerle aquí", () =>
                 {
                     jobs.Assign(islanderId, kind);

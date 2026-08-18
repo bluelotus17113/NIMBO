@@ -1226,12 +1226,17 @@ a los flechazos.
 
 **Lo que queda de §14:**
 
-- **§14.4 — tu declaración dentro del triángulo.** Hoy el cortejo mira si esa persona
-  ya está con alguien y te dice que no llegas a tiempo, pero **no compite**: no entras
-  como vértice en el triángulo de §13.2 ni el rival reacciona a ti. Es lo que
-  convertiría el romance en una carrera en vez de una comprobación.
-- **Convivencia 7 y 9** (pedir un favor, mediar en una riña): el menú social ya existe,
-  así que ahora sí tienen dónde ir; lo que les falta es la mecánica de cada uno.
+**§14.4 — hecho.** Al declararte a alguien que ya tenía pretendiente, el rival se
+entera: te pone en `Rivalry` y pierde afinidad contigo. Y al contestarte se compara tu
+puntuación con la suya —cariño más lo que os parecéis por veinte, **la misma tabla con
+la que compiten dos vecinos entre ellos**— así que llegar al listón no basta y no hay
+premio por haber llegado primero. Cuando el «no» es por eso, la frase lo dice y nombra
+a la otra persona: soltarle el discurso de los ejes le haría cambiar de conducta
+durante semanas para arreglar algo que no era el problema.
+
+Una asimetría anotada: la rivalidad se escribe **solo en la agenda del vecino**. El
+protagonista no está en el censo y no tiene agenda; lo que importa es lo que él siente
+por ti, que es lo que se lee en su ficha y lo que le hace evitarte.
 
 ---
 
@@ -1245,12 +1250,18 @@ abierta. El jugador asigna desde la ficha (`JobSection`).
 
 Lo que falta para que sea gestión y no una lista desplegable:
 
-- **El habitante puede negarse.** Si la afinidad del oficio es menor de 0.3 y no te
-  tiene aprecio (por debajo de Amigo), dice que no. Con eso, §3.3 sigue en pie
-  —sugieres, no ordenas— y el trabajo social pasa a tener una recompensa concreta:
-  para colocar a la gente donde rinde, primero hay que caerle bien.
-- **Estrellas en vez de números.** La afinidad del oficio se ve como 1 a 5 estrellas
-  al elegir, para poder decidir sin abrir una hoja de cálculo.
+- **El habitante puede negarse. Hecho.** Si la afinidad del oficio es menor de 0.3 y
+  no te tiene aprecio (por debajo de Amigo), dice que no. Las dos condiciones a la vez
+  y no cualquiera: a un amigo le pides un favor aunque el puesto no le guste, y un
+  puesto que le encanta lo coge aunque apenas te conozca.
+
+  *Un cuidado que hizo falta:* el reparto de puestos de salida (`EmployEveryone`) va
+  por un camino aparte que no pregunta. Pasando por `Assign`, a quien no le cuadrara
+  ningún oficio se le quedaría en paro para siempre —nunca te va a coger aprecio si no
+  sale de casa— y la economía no cierra sin sueldos.
+- **Palabras en vez de números.** La ficha ya lo dice así —«le encantaría», «no es lo
+  suyo»— desde antes, y se queda: una frase se lee de un vistazo y cinco estrellas hay
+  que contarlas.
 - **Los ascensos los apruebas tú** (Aldea 4) y cuestan monedas de la isla. Un ascenso
   sube el sueldo del habitante y también lo que rinde.
 
@@ -1425,9 +1436,11 @@ de la v1.0 y es la mitad del juego de hoy:
       El motor entero y diecisiete puertas. Lo que queda de la tabla de §12.3 está
       marcado allí: pide contenido que no existe, o sistemas de aldea sin escribir.
 - [x] Herramientas de nivel 2 crafteables (§12.4). Cada una se come la de siempre.
-- [~] Variedad de materiales: 16 nodos dan 7 materiales. La geoda estrena el suyo
-      —`mat_cristal_nimbo`, para el anillo— pero roble, pino, abedul y tablón perdido
-      siguen siendo todos `mat_madera`.
+- [x] Variedad de materiales: 16 nodos dan **12** materiales, todos con fuente y con
+      uso. Los cinco nuevos arreglan cinco sinsentidos: un helecho que soltaba conchas,
+      un arbusto de bayas que soltaba fibra, dos flores idénticas, cuatro árboles
+      idénticos y seis recetas de cocina hechas con fibra vegetal. `MaterialesTests`
+      protege las dos reglas simétricas — ninguno sin fuente, ninguno sin uso.
 - [x] Economía del huerto equilibrada, y las semillas se compran.
 
       *La nota que había aquí estaba mal.* Decía que vender paga el 100% del catálogo
@@ -1480,7 +1493,8 @@ de la v1.0 y es la mitad del juego de hoy:
 - [x] Los cuatro ejes del protagonista deducidos de su conducta (§14.3), con su
       pantalla de «cómo te ve la aldea».
 - [x] Trabajos: 8 oficios, afinidad por personalidad, rangos, sueldos, asignación.
-- [ ] Que un habitante pueda negarse a un trabajo (§15.1).
+- [x] Que un habitante pueda negarse a un trabajo (§15.1). Si el oficio no le pega **y
+      además** no te tiene aprecio, dice que no.
 - [x] **Ampliación de casas, cobrada en obra** (§15.2). `HomeUpgradeService` registrado
       en `GameBootstrap` y con su bloque en la ficha del habitante, que dice qué falta
       cuando falta. Nivel 1: 1200 N◉ + 30 madera + 20 piedra. Nivel 2: 3500 N◉ + 80
@@ -1514,8 +1528,9 @@ de la v1.0 y es la mitad del juego de hoy:
 - [x] Personalización de la isla: 32 adornos con plano cenital por zona.
 - [x] Tablón de encargos en la plaza (§15.4), y botón «Encargos» en la barra.
 - [x] `RequestKind.Material`: peticiones que se pagan con lo recogido (§15.4).
-- [ ] Mediar en una riña (Convivencia 9).
-- [ ] Pedir un favor a un vecino (Convivencia 7).
+- [x] Mediar en una riña (Convivencia 9). Baja un escalón, no la borra.
+- [x] Pedir un favor a un vecino (Convivencia 7). Uno al día, y cuesta un poco de
+      aprecio.
 
 ### 17.3 `[SI DA TIEMPO]` — El juego no lo necesita para ser bueno
 

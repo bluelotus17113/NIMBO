@@ -288,7 +288,97 @@ namespace Nimbo.Tests
                 "puedes hablar con la misma persona todos los días");
         }
 
+        // ── los rivales (§14.4) ──────────────────────────────────────────────
+
+        [Test]
+        public void DeclararteAQuienYaTienePretendienteTeHaceRivalDeAlguien()
+        {
+            string leo = OtroColadoPorBea(afinidad: 60f);
+
+            SerAmigos(80f);
+            Declararse();
+
+            Assert.That(_social.GetRelationship(leo, SocialIds.Player).Conflict,
+                Is.EqualTo(ConflictStage.Rivalry),
+                "el rival era decorado: seguía a lo suyo mientras tú te declarabas y no " +
+                "pasaba nada entre vosotros");
+        }
+
+        [Test]
+        public void SiElRivalLeLlegaMasTeDiceQueNo()
+        {
+            // Él la quiere mucho más que tú, aunque tú llegues de sobra al listón.
+            OtroColadoPorBea(afinidad: 100f);
+
+            SerAmigos(90f);
+            Declararse();
+            PasarElDia();
+
+            Assert.That(EtapaConmigo(), Is.EqualTo(RomanceStage.None),
+                "llegar al listón no basta si hay alguien que le llega más: no hay premio " +
+                "por haber llegado primero");
+        }
+
+        [Test]
+        public void SiTuLeLlegasMasGanasTu()
+        {
+            OtroColadoPorBea(afinidad: 40f);
+
+            SerAmigos(95f);
+            Declararse();
+            PasarElDia();
+
+            Assert.That(EtapaConmigo(), Is.EqualTo(RomanceStage.Dating));
+        }
+
+        [Test]
+        public void ElNoPorOtraPersonaLoDiceYLaNombra()
+        {
+            string leo = OtroColadoPorBea(afinidad: 100f);
+            string comoSeLlama = _registry.Get(leo).Identity.ShortName;
+
+            string frase = null;
+            void Escuchar(CourtshipAnswered e) => frase = e.Line;
+            EventBus.Subscribe<CourtshipAnswered>(Escuchar);
+
+            SerAmigos(90f);
+            Declararse();
+            PasarElDia();
+
+            EventBus.Unsubscribe<CourtshipAnswered>(Escuchar);
+
+            Assert.That(frase, Does.Contain(comoSeLlama),
+                "soltarle el discurso de los ejes cuando el motivo es que quiere a otra " +
+                "persona le haría cambiar de conducta durante semanas para arreglar algo " +
+                "que no era el problema");
+        }
+
         // ── utilidades ───────────────────────────────────────────────────────
+
+        /// <summary>Un segundo vecino, colado por Bea con esa afinidad.</summary>
+        private string OtroColadoPorBea(float afinidad)
+        {
+            var leo = _registry.All.Count > 1 ? _registry.All[1] : null;
+            if (leo == null)
+            {
+                var personalities = PersonalityRoster.CreateService();
+                var factory = new IslanderFactory(_registry, personalities, _clock,
+                                                  new List<string>());
+                leo = factory.CreateRandom("leo");
+                _registry.Add(leo);
+                _save.Islanders.Add(leo);
+            }
+
+            var record = leo.Relationships.GetOrCreate(_bea);
+            record.Romance = RomanceStage.Crush;
+            record.Affinity = afinidad;
+            record.Friendship = FriendshipStage.CloseFriend;
+            record.Interactions = 10;
+            leo.Relationships.Set(record);
+
+            return leo.Id;
+        }
+
 
         private void SerAmigos(float afinidad)
         {

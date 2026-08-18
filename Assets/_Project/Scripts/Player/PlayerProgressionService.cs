@@ -65,6 +65,8 @@ namespace Nimbo.Player
             (SkillKind.Social, 2),       // Compliment
             (SkillKind.Social, 4),       // WarmGestures
             (SkillKind.Crafting, 8),     // EngagementRing
+            (SkillKind.Social, 7),       // AskFavour
+            (SkillKind.Social, 9),       // Mediate
         };
 
         public PlayerProgressionService(PlayerState player, PlayerProgressionConfig config = null)
