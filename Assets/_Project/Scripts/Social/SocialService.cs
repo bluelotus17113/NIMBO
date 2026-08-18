@@ -35,6 +35,11 @@ namespace Nimbo.Social
         private readonly LoveTriangles _triangles;
         private readonly Courtship _courtship;
 
+        private readonly SpouseChores _chores;
+
+        /// <summary>Las bodas apuntadas de la partida. La tuya se guarda con las suyas.</summary>
+        private readonly List<WeddingBooking> _weddings;
+
         /// <summary>Cuántas veces han hecho hoy cada cosa, para los límites diarios.</summary>
         private readonly Dictionary<(string, string, SocialInteraction), int> _todayCounts = new();
         private int _countedDay = -1;
@@ -47,7 +52,8 @@ namespace Nimbo.Social
         public SocialService(IIslanderRegistry registry, IPersonalityService personalities,
                              ISimulationService simulation, IIslanderFactory factory,
                              GameClock clock, SocialConfig config,
-                             List<LoveTriangle> triangles = null)
+                             List<LoveTriangle> triangles = null,
+                             List<WeddingBooking> weddings = null)
         {
             _registry = registry;
             _personalities = personalities;
@@ -60,6 +66,8 @@ namespace Nimbo.Social
             _romance = new RomanceEvaluator(config);
             _triangles = new LoveTriangles(registry, personalities, simulation, config, triangles);
             _courtship = new Courtship(registry, config);
+            _chores = new SpouseChores(registry);
+            _weddings = weddings;
 
             EventBus.Subscribe<DayPassed>(OnDayPassed);
         }
@@ -73,7 +81,7 @@ namespace Nimbo.Social
         {
             _todayCounts.Clear();
             _countedDay = evt.Day;
-            CoolDownAndEvaluate();
+            CoolDownAndEvaluate(evt.Day);
         }
 
         /// <summary>
@@ -81,7 +89,14 @@ namespace Nimbo.Social
         /// romances. Sin esto, dos habitantes que se cayeron bien una vez seguirían
         /// siendo mejores amigos aunque no volvieran a cruzarse nunca.
         /// </summary>
-        private void CoolDownAndEvaluate()
+        /// <remarks>
+        /// El día llega **en el aviso** y no se lee del reloj. Son dos fuentes para el
+        /// mismo dato y solo una es la buena: el aviso dice qué día acaba de empezar, y
+        /// el reloj puede ir por delante —o por detrás, si alguien publica el aviso a
+        /// mano— sin que nadie se entere. Se vio en las bodas del protagonista: la fecha
+        /// se comparaba contra un reloj parado y no llegaba nunca.
+        /// </remarks>
+        private void CoolDownAndEvaluate(int day)
         {
             var all = _registry.All;
             for (int i = 0; i < all.Count; i++)
@@ -109,20 +124,24 @@ namespace Nimbo.Social
             // los triángulos y que los flechazos nuevos: si te dicen que sí, ya estás
             // con esa persona cuando la aldea se pone a repartir enamoramientos.
             ServiceRegistry.TryGet<IConductService>(out var conduct);
-            _courtship.AnswerPending(_clock.Day, conduct);
+            _courtship.AnswerPending(day, conduct);
+            _courtship.AdvanceWedding(day, _weddings);
+
+            // Y tu pareja pasa por el huerto, si la tienes. Una casilla, la que esté
+            // seca: lo justo para que se note que ya no vives solo.
+            _chores.DoMorningChore();
 
             // Los triángulos antes que los flechazos nuevos: lo primero es cerrar los
             // que cumplen hoy, y así el que acaba de llevarse el desengaño arranca ya
             // con su espera puesta en vez de encapricharse de otra esta misma mañana.
-            _triangles.AdvanceDay(_clock.Day);
+            _triangles.AdvanceDay(day);
 
-            DevelopCrushes();
+            DevelopCrushes(day);
         }
 
         /// <summary>Le nacen flechazos a quien le toque, una vez al día.</summary>
-        private void DevelopCrushes()
+        private void DevelopCrushes(int day)
         {
-            int day = _clock.Day;
             var all = _registry.All;
 
             for (int i = 0; i < all.Count; i++)
@@ -453,6 +472,12 @@ namespace Nimbo.Social
 
         public bool PlayerConfess(string islanderId) =>
             _courtship.Confess(islanderId, _clock.Day);
+
+        public ProposalRefusal CanPropose(string islanderId) =>
+            _courtship.CanPropose(islanderId, _clock.Day);
+
+        public bool PlayerPropose(string islanderId) =>
+            _courtship.Propose(islanderId, _clock.Day, _weddings);
 
         public string PartnerOf(string islanderId)
         {

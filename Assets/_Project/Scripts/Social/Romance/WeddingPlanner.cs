@@ -108,6 +108,11 @@ namespace Nimbo.Social.Romance
             {
                 var booking = _save.Weddings[i];
 
+                // La tuya no es cosa del planificador de la aldea (§14.5): la lleva el
+                // cortejo. Si se colara aquí, la primera limpieza la borraría por no
+                // encontrarte en el censo — y el censo nunca te va a encontrar.
+                if (booking.Involves(SocialIds.Player)) continue;
+
                 if (!_registry.TryGet(booking.AId, out _) || !_registry.TryGet(booking.BId, out _))
                 {
                     _save.Weddings.RemoveAt(i);
@@ -134,6 +139,7 @@ namespace Nimbo.Social.Romance
             for (int i = 0; i < _save.Weddings.Count; i++)
             {
                 var booking = _save.Weddings[i];
+                if (booking.Involves(SocialIds.Player)) continue;   // la tuya la lleva el cortejo
                 if (booking.IsMarried || !booking.HasDate) continue;
                 if (day < booking.WeddingDay) continue;
 

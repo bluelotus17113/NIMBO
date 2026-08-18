@@ -4,6 +4,25 @@ using Nimbo.Data.Social;
 namespace Nimbo.Core.Services.Contracts
 {
     /// <summary>Lo que dos habitantes pueden hacer juntos, y que mueve su afinidad.</summary>
+    /// <summary>Por qué no se puede pedir la mano todavía (§14.5).</summary>
+    /// <remarks>
+    /// Tres requisitos, uno de cada mitad del juego: el tiempo y el cariño vienen de lo
+    /// social, el anillo de la granja y el oficio, y la casa de la gestión. Es a
+    /// propósito — la boda es lo último que pasa en la partida y tiene que haber tocado
+    /// las tres cosas para llegar.
+    /// </remarks>
+    public enum ProposalRefusal
+    {
+        Ok = 0,
+        UnknownIslander,
+        NotDating,          // hay que salir antes
+        TooEarly,           // lleváis poco
+        NotFondEnough,      // falta cariño
+        NoRing,
+        HomeTooSmall,       // tu cabaña sin ampliar
+        AlreadyEngaged,
+    }
+
     /// <summary>Por qué no se puede uno declarar todavía (§14.2).</summary>
     /// <remarks>
     /// Cada motivo se le enseña al jugador con sus palabras. «No puedes» a secas es una
@@ -102,6 +121,19 @@ namespace Nimbo.Core.Services.Contracts
         /// lo que se quiere que sienta.
         /// </remarks>
         bool PlayerConfess(string islanderId);
+
+        /// <summary>Qué impide pedir la mano, o <c>Ok</c> si nada.</summary>
+        ProposalRefusal CanPropose(string islanderId);
+
+        /// <summary>
+        /// El protagonista pide la mano. Gasta el anillo y la aldea pone fecha.
+        /// </summary>
+        /// <remarks>
+        /// No os casa en el acto: deja unos días de aviso, como con cualquier pareja de
+        /// la isla (§13.1). Una boda que ocurre en el mismo clic no la ve nadie, y el
+        /// sentido de que la aldea ponga fecha es justamente que se entere.
+        /// </remarks>
+        bool PlayerPropose(string islanderId);
 
         IEnumerable<RelationshipRecord> FriendsOf(string islanderId);
         IEnumerable<RelationshipRecord> ConflictsOf(string islanderId);

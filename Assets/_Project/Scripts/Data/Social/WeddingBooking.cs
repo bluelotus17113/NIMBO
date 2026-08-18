@@ -48,6 +48,9 @@ namespace Nimbo.Data.Social
         }
 
         /// <summary>¿Es esta la entrada de esa pareja, mirada desde cualquier lado?</summary>
+        /// <summary>¿Anda este en la reserva? Sirve para apartar la boda del jugador.</summary>
+        public bool Involves(string someoneId) => AId == someoneId || BId == someoneId;
+
         public bool Is(string one, string other) =>
             (AId == one && BId == other) || (AId == other && BId == one);
     }

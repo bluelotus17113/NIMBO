@@ -66,6 +66,19 @@ namespace Nimbo.Core.Services.Contracts
         /// <summary>El tamaño de rejilla que corresponde a ese nivel.</summary>
         int SizeOfLevel(int level);
 
+        // ── tu cabaña ────────────────────────────────────────────────────────
+        //
+        // Va aparte de las de los vecinos porque no está en ningún edificio ni la
+        // reparte el servicio de vivienda: es tuya y está en tu isla. Los precios y la
+        // obra son los mismos, para que ampliar la tuya cueste lo que cuesta ampliar
+        // la de otro.
+
+        int PlayerLevel { get; }
+
+        UpgradeRejection CanUpgradePlayerHome();
+
+        bool UpgradePlayerHome();
+
         /// <summary>No cambia nada; sirve para pintar el botón y su motivo.</summary>
         UpgradeRejection CanUpgrade(string islanderId);
 

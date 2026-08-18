@@ -12,6 +12,17 @@
         "regalo",
         "flores"
       ]
+    },
+    {
+      "catalogId": "gift_anillo",
+      "displayName": "Anillo de compromiso",
+      "description": "Un aro de plata con un cristal de nimbo engastado. Se hace una vez en la vida.",
+      "price": 900,
+      "unlockLevel": 1,
+      "tags": [
+        "regalo",
+        "raro"
+      ]
     }
   ]
 }

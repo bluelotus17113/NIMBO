@@ -205,6 +205,11 @@ namespace Nimbo.UI.Player
         /// </remarks>
         private Unlock? ToolRankOf(Recipe recipe)
         {
+            // El anillo pide Oficio 8 por su cuenta (§14.5). Por identificador y no por
+            // el nivel de la receta porque es el único objeto del catálogo cuya puerta
+            // no va con lo caro que es de hacer, sino con lo que significa.
+            if (recipe.OutputId == RomanceItems.Ring) return Unlock.EngagementRing;
+
             var item = _economy?.GetItem(recipe.OutputId);
             return item != null && item.Category == ItemCategory.Tool && item.ToolTier >= 2
                 ? Unlock.BetterTools

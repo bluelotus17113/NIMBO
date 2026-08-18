@@ -148,6 +148,62 @@ namespace Nimbo.Housing
             return true;
         }
 
+        // ---------------------------------------------------------------- tu cabaña
+
+        public int PlayerLevel => _save?.Player?.HomeLevel ?? 0;
+
+        public UpgradeRejection CanUpgradePlayerHome()
+        {
+            if (_save?.Player == null) return UpgradeRejection.NoHome;
+
+            int level = _save.Player.HomeLevel;
+            if (level >= MaxLevel) return UpgradeRejection.MaxedOut;
+
+            if (_economy.Wallet.Coins < Prices[level]) return UpgradeRejection.NotEnoughCoins;
+            if (!HasMaterials(level)) return UpgradeRejection.NotEnoughMaterials;
+
+            return UpgradeRejection.Ok;
+        }
+
+        /// <summary>
+        /// Amplía tu cabaña, con las mismas reglas que la de un vecino.
+        /// </summary>
+        /// <remarks>
+        /// Todo o nada, igual que la de ellos: si la obra falla después de cobrar, se
+        /// devuelven las monedas. Quedarse sin nimbos y sin ampliación es el único
+        /// fallo de esta operación que el jugador no puede deshacer.
+        ///
+        /// No publica <c>HomeUpgraded</c>: ese aviso lleva el id de un habitante y la
+        /// crónica lo usa para escribir su nombre. Tu cabaña la ves tú al entrar, y
+        /// «han ampliado la casa de Nimbo» contado por la aldea sonaría a que lo ha
+        /// hecho otro.
+        /// </remarks>
+        public bool UpgradePlayerHome()
+        {
+            if (CanUpgradePlayerHome() != UpgradeRejection.Ok) return false;
+
+            var player = _save.Player;
+            int level = player.HomeLevel;
+            long price = Prices[level];
+
+            if (!_economy.TrySpend(price, "ampliación de tu cabaña")) return false;
+
+            if (!TryTakeMaterials(level))
+            {
+                _economy.AddCoins(price, "ampliación de tu cabaña cancelada");
+                return false;
+            }
+
+            int newSize = Sizes[level + 1];
+
+            RemapFloor(player.Home, newSize);
+            player.Home.Width = newSize;
+            player.Home.Height = newSize;
+            player.HomeLevel = level + 1;
+
+            return true;
+        }
+
         // -------------------------------------------------------------------------- internals
 
         /// <summary>¿Lleva encima toda la obra de ese nivel?</summary>

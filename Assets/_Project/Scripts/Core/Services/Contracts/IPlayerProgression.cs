@@ -75,6 +75,9 @@ namespace Nimbo.Core.Services.Contracts
 
         /// <summary>Abrazar y jugar con alguien.</summary>
         WarmGestures = 17,
+
+        /// <summary>Fabricar el anillo de compromiso (§14.5).</summary>
+        EngagementRing = 18,
     }
 
     /// <summary>

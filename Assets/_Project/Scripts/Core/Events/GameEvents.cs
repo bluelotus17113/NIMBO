@@ -100,6 +100,24 @@ namespace Nimbo.Core.Events
         }
     }
 
+    /// <summary>Tu pareja ha echado una mano en el huerto (§14.5).</summary>
+    /// <remarks>
+    /// Trae la casilla porque quien dibuja el huerto tiene que repintarla: sin eso, la
+    /// tierra sigue seca en pantalla hasta que el jugador pase por encima, y lo único
+    /// que se nota de tener pareja es que no se nota.
+    /// </remarks>
+    public readonly struct SpouseHelped
+    {
+        public readonly string IslanderId;
+        public readonly int X;
+        public readonly int Y;
+
+        public SpouseHelped(string islanderId, int x, int y)
+        {
+            IslanderId = islanderId; X = x; Y = y;
+        }
+    }
+
     /// <summary>Te han contestado a la declaración (§14).</summary>
     /// <remarks>
     /// Trae la frase hecha porque el «no» tiene que **enseñar**: nombra el eje que más

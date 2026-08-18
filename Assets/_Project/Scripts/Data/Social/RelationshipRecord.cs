@@ -110,6 +110,17 @@ namespace Nimbo.Data.Social
         /// </remarks>
         public int BlockedUntilDay;
 
+        /// <summary>
+        /// Desde qué día salís. Cero si no habéis llegado a eso.
+        /// </summary>
+        /// <remarks>
+        /// Hace falta para que la boda pida haber salido un tiempo (§14.5) y no solo
+        /// haber llegado a la etapa. Sin esto, «diez días saliendo» solo se podría medir
+        /// por la afinidad, y la afinidad la sube ir a hablar con alguien tres veces:
+        /// se podría pedir la mano la misma tarde de la declaración.
+        /// </remarks>
+        public int DatingSinceDay;
+
         public static RelationshipRecord NewWith(string otherId) => new RelationshipRecord
         {
             OtherId = otherId,

@@ -63,6 +63,17 @@
       ]
     },
     {
+      "catalogId": "mat_cristal_nimbo",
+      "displayName": "Cristal de nimbo",
+      "description": "El corazon de una geoda. Guarda dentro un trozo de cielo de otro dia.",
+      "price": 40,
+      "unlockLevel": 1,
+      "tags": [
+        "material",
+        "raro"
+      ]
+    },
+    {
       "catalogId": "seed_nimbocereza",
       "displayName": "Semillas de nimbocereza",
       "description": "Tardan 3 días en dar. Hay que regarlas.",

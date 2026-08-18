@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Nimbo.Core.Events;
 using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
@@ -33,8 +34,8 @@ namespace Nimbo.Social.Romance
         private readonly IIslanderRegistry _registry;
         private readonly SocialConfig _config;
 
-        /// <summary>Lo que se gasta al declararse.</summary>
-        public const string BouquetId = "gift_ramo";
+        /// <summary>Lo que se gasta al declararse. Vive en los contratos: lo pide también la pantalla.</summary>
+        public const string BouquetId = RomanceItems.Bouquet;
 
         /// <summary>Afinidad que hace falta con quien menos y con quien más pega.</summary>
         private const float RequiredAtWorst = 90f;
@@ -137,6 +138,7 @@ namespace Nimbo.Social.Romance
             if (accepted)
             {
                 record.Romance = RomanceStage.Dating;
+                record.DatingSinceDay = day;   // desde hoy cuentan los días (§14.5)
                 book.Set(record);
 
                 EventBus.Publish(new RomanceStageChanged(islander.Id, SocialIds.Player,
@@ -201,7 +203,122 @@ namespace Nimbo.Social.Romance
                 : "No sé nunca lo que estás pensando.";
         }
 
-        // ── el ramo ──────────────────────────────────────────────────────────
+        // ── pedir la mano ────────────────────────────────────────────────────
+
+        /// <summary>Días saliendo y cariño que hacen falta para la pedida (§14.5).</summary>
+        private const int DaysDatingBeforeProposal = 10;
+        private const float ProposalAffinity = 85f;
+
+        /// <summary>Días entre la pedida y la boda, para que la aldea se entere.</summary>
+        private const int NoticeDays = 3;
+
+        public ProposalRefusal CanPropose(string islanderId, int day)
+        {
+            if (!_registry.TryGet(islanderId, out var islander))
+                return ProposalRefusal.UnknownIslander;
+
+            var record = islander.Relationships.GetOrCreate(SocialIds.Player);
+
+            if (record.Romance == RomanceStage.Engaged || record.Romance == RomanceStage.Married)
+                return ProposalRefusal.AlreadyEngaged;
+
+            if (record.Romance != RomanceStage.Dating) return ProposalRefusal.NotDating;
+
+            // Los tres requisitos, uno de cada mitad del juego. Se comprueban en este
+            // orden porque es el de lo que cuesta arreglarlos: esperar unos días, ganarse
+            // el cariño, fabricar el anillo, pagar la obra de tu casa.
+            if (day - record.DatingSinceDay < DaysDatingBeforeProposal)
+                return ProposalRefusal.TooEarly;
+
+            if (record.Affinity < ProposalAffinity) return ProposalRefusal.NotFondEnough;
+
+            if (!Has(RomanceItems.Ring)) return ProposalRefusal.NoRing;
+
+            if (ServiceRegistry.TryGet<IHomeUpgradeService>(out var homes) &&
+                homes.PlayerLevel < 1)
+                return ProposalRefusal.HomeTooSmall;
+
+            return ProposalRefusal.Ok;
+        }
+
+        /// <summary>
+        /// Pide la mano: gasta el anillo, os deja prometidos y la aldea pone fecha.
+        /// </summary>
+        /// <remarks>
+        /// La fecha se guarda en la misma lista que las bodas de los vecinos, con
+        /// <c>SocialIds.Player</c> como uno de los dos. Así la crónica la anuncia con las
+        /// mismas plantillas y no hay una segunda forma de tener una boda pendiente.
+        /// </remarks>
+        public bool Propose(string islanderId, int day, List<WeddingBooking> bookings)
+        {
+            if (CanPropose(islanderId, day) != ProposalRefusal.Ok) return false;
+            if (!Take(RomanceItems.Ring)) return false;
+
+            var islander = _registry.Get(islanderId);
+            var book = islander.Relationships;
+            var record = book.GetOrCreate(SocialIds.Player);
+
+            record.Romance = RomanceStage.Engaged;
+            book.Set(record);
+
+            EventBus.Publish(new RomanceStageChanged(islanderId, SocialIds.Player,
+                                                     RomanceStage.Engaged));
+
+            if (bookings != null)
+            {
+                var booking = WeddingBooking.Between(SocialIds.Player, islanderId, day);
+                booking.WeddingDay = day + NoticeDays;
+                bookings.Add(booking);
+
+                EventBus.Publish(new WeddingAnnounced(SocialIds.Player, islanderId,
+                                                      booking.WeddingDay));
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// ¿Toca hoy tu boda?
+        /// </summary>
+        /// <remarks>
+        /// Lo mira el mismo paso diario que contesta a las declaraciones. El
+        /// planificador de bodas de la aldea no puede: busca a los dos en el censo y el
+        /// protagonista no está.
+        /// </remarks>
+        public void AdvanceWedding(int day, List<WeddingBooking> bookings)
+        {
+            if (bookings == null) return;
+
+            for (int i = bookings.Count - 1; i >= 0; i--)
+            {
+                var booking = bookings[i];
+                if (!booking.Involves(SocialIds.Player)) continue;
+                if (booking.IsMarried || !booking.HasDate || booking.WeddingDay > day) continue;
+
+                string islanderId = booking.AId == SocialIds.Player ? booking.BId : booking.AId;
+
+                // Si os habéis roto entre la pedida y la fecha, no hay boda. La reserva
+                // se cae con ella: una fecha que se queda puesta te casaría con alguien
+                // que ya no está contigo el día que volvieras a salir.
+                if (!_registry.TryGet(islanderId, out var islander) ||
+                    !islander.Relationships.TryGet(SocialIds.Player, out var record) ||
+                    record.Romance != RomanceStage.Engaged)
+                {
+                    bookings.RemoveAt(i);
+                    continue;
+                }
+
+                record.Romance = RomanceStage.Married;
+                islander.Relationships.Set(record);
+                booking.MarriedOnDay = day;
+
+                EventBus.Publish(new RomanceStageChanged(islanderId, SocialIds.Player,
+                                                         RomanceStage.Married));
+                EventBus.Publish(new WeddingHeld(SocialIds.Player, islanderId));
+            }
+        }
+
+        // ── el ramo y el anillo ──────────────────────────────────────────────
 
         /// <summary>
         /// El ramo se busca en la mochila y en la despensa, como todo lo demás.
@@ -211,25 +328,28 @@ namespace Nimbo.Social.Romance
         /// la mochila y lo que compra en la despensa—, y un cortejo que solo mirase uno
         /// diría que no tienes el ramo que acabas de fabricar.
         /// </remarks>
-        private static bool HasBouquet()
+        private static bool Has(string catalogId)
         {
             if (ServiceRegistry.TryGet<IInventoryService>(out var bag) &&
-                bag.CountOf(BouquetId) > 0) return true;
+                bag.CountOf(catalogId) > 0) return true;
 
             return ServiceRegistry.TryGet<IEconomyService>(out var economy)
                    && economy.Inventory != null
-                   && economy.Inventory.CountOf(BouquetId) > 0;
+                   && economy.Inventory.CountOf(catalogId) > 0;
         }
 
-        private static bool TakeBouquet()
+        private static bool Take(string catalogId)
         {
             if (ServiceRegistry.TryGet<IInventoryService>(out var bag) &&
-                bag.TryTake(BouquetId)) return true;
+                bag.TryTake(catalogId)) return true;
 
             return ServiceRegistry.TryGet<IEconomyService>(out var economy)
                    && economy.Inventory != null
-                   && economy.Inventory.Remove(BouquetId);
+                   && economy.Inventory.Remove(catalogId);
         }
+
+        private static bool HasBouquet() => Has(BouquetId);
+        private static bool TakeBouquet() => Take(BouquetId);
 
         private static string PartnerOf(IslanderData islander)
         {

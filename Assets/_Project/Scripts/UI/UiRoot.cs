@@ -243,6 +243,12 @@ namespace Nimbo.UI
             _furnishButton = Add("Amueblar", () => EventBus.Publish(new FurnishModeChanged(!_furnishMode)));
             _furnishButton.style.display = DisplayStyle.None;
 
+            // Ampliar tu cabaña, y solo estando dentro de ella. En el mismo sitio que
+            // amueblar porque es el mismo gesto de ocuparse de tu casa, y así no hace
+            // falta un botón más en la fila para algo que se usa dos veces por partida.
+            _expandButton = Add("Ampliar la casa", ExpandHome);
+            _expandButton.style.display = DisplayStyle.None;
+
             Add("Mapa", () =>
             {
                 if (_map.IsShowing) _map.Hide(); else _map.Show();
@@ -300,6 +306,35 @@ namespace Nimbo.UI
         /// seis. Sale gratis del dato que ya está en la receta y ordena la cocina sola:
         /// lo que cuesta reunir cuesta también hacerlo.
         /// </remarks>
+        /// <summary>
+        /// Amplía tu cabaña, y si no se puede dice por qué.
+        /// </summary>
+        /// <remarks>
+        /// El aviso va al cartel de logros porque no hay otro sitio donde quepa un
+        /// «te faltan 20 de piedra» sin abrir una pantalla, y abrir una pantalla para
+        /// leer un motivo es justo lo que hace que nadie lo lea.
+        /// </remarks>
+        private void ExpandHome()
+        {
+            if (!ServiceRegistry.TryGet<IHomeUpgradeService>(out var homes)) return;
+
+            var verdict = homes.CanUpgradePlayerHome();
+            if (verdict == UpgradeRejection.Ok && homes.UpgradePlayerHome())
+            {
+                int size = homes.SizeOfLevel(homes.PlayerLevel);
+                _toast?.Push("Casa ampliada", $"Tu cabaña es ahora de {size}×{size}.");
+                return;
+            }
+
+            _toast?.Push("Todavía no", verdict switch
+            {
+                UpgradeRejection.MaxedOut => "No se puede ampliar más.",
+                UpgradeRejection.NotEnoughCoins => "No te llegan los nimbos.",
+                UpgradeRejection.NotEnoughMaterials => "Falta obra. Hay que traer material.",
+                _ => "Ahora mismo no se puede.",
+            });
+        }
+
         private static int DifficultyOf(Recipe recipe) =>
             Mathf.Clamp(recipe.Ingredients?.Count ?? 1, 1, 5);
 
@@ -375,6 +410,7 @@ namespace Nimbo.UI
         private bool _indoors;
         private Button _buildButton;
         private Button _furnishButton;
+        private Button _expandButton;
 
         /// <summary>
         /// Ha entrado en una casa: la fila de acciones cambia de oficio.
@@ -394,6 +430,8 @@ namespace Nimbo.UI
 
             _buildButton.style.display = indoors ? DisplayStyle.None : DisplayStyle.Flex;
             _furnishButton.style.display = indoors ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_expandButton != null)
+                _expandButton.style.display = indoors ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         /// <summary>Amueblando, como construyendo: fuera todo lo de andar por la isla.</summary>

@@ -369,6 +369,11 @@ namespace Nimbo.Tests
             public int SizeOfLevel(int level) => 8;
             public UpgradeRejection CanUpgrade(string islanderId) => UpgradeRejection.Ok;
             public bool Upgrade(string islanderId) => false;
+
+            // La cabaña del protagonista no pinta nada en las bodas de los vecinos.
+            public int PlayerLevel => 0;
+            public UpgradeRejection CanUpgradePlayerHome() => UpgradeRejection.NoHome;
+            public bool UpgradePlayerHome() => false;
         }
     }
 }

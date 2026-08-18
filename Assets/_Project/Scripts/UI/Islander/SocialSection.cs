@@ -70,7 +70,15 @@ namespace Nimbo.UI.Islander
 
             for (int i = 0; i < Gestures.Length; i++) _actions.Add(Gesture(social, Gestures[i]));
 
-            _actions.Add(ConfessButton(social));
+            // Declararse y pedir la mano nunca están los dos: son dos escalones de la
+            // misma escalera, y enseñar el segundo antes de subir el primero solo sirve
+            // para que el jugador pulse y le digan que no.
+            var etapa = social.PlayerRelationship(islanderId).Romance;
+            if (etapa is Data.Social.RomanceStage.Dating or Data.Social.RomanceStage.Engaged
+                or Data.Social.RomanceStage.Married)
+                _actions.Add(ProposeButton(social));
+            else
+                _actions.Add(ConfessButton(social));
         }
 
         private VisualElement Gesture(ISocialService social,
@@ -133,6 +141,50 @@ namespace Nimbo.UI.Islander
             locked.tooltip = Excuse(refusal);
             return locked;
         }
+
+        /// <summary>
+        /// Pedir la mano: el último escalón, y el que toca las tres mitades del juego.
+        /// </summary>
+        /// <remarks>
+        /// El motivo por el que no se puede es media explicación del juego entero — que
+        /// hace falta tiempo, cariño, un anillo y una casa donde quepáis— así que sale
+        /// escrito aunque el botón esté apagado.
+        /// </remarks>
+        private VisualElement ProposeButton(ISocialService social)
+        {
+            var refusal = social.CanPropose(_islanderId);
+
+            if (refusal == ProposalRefusal.Ok)
+            {
+                var button = UiTheme.Action("Pedirle la mano", () =>
+                {
+                    if (social.PlayerPropose(_islanderId))
+                        _hint.text = "Ha dicho que sí. La aldea ya está poniendo fecha.";
+                });
+                button.style.backgroundColor = UiTheme.Rose;
+                button.style.marginRight = 6;
+                button.style.marginBottom = 4;
+                return button;
+            }
+
+            var locked = UiTheme.Disabled("Pedirle la mano");
+            locked.style.marginRight = 6;
+            locked.style.marginBottom = 4;
+            locked.style.fontSize = 12;
+            locked.tooltip = Excuse(refusal);
+            return locked;
+        }
+
+        private static string Excuse(ProposalRefusal refusal) => refusal switch
+        {
+            ProposalRefusal.NotDating => "Primero habría que salir.",
+            ProposalRefusal.TooEarly => "Lleváis muy poco. Dale unos días más.",
+            ProposalRefusal.NotFondEnough => "Todavía no os queréis tanto.",
+            ProposalRefusal.NoRing => "Hace falta un anillo, y eso se fabrica.",
+            ProposalRefusal.HomeTooSmall => "Tu cabaña se os queda pequeña. Amplíala antes.",
+            ProposalRefusal.AlreadyEngaged => "Ya está dicho.",
+            _ => "Ahora mismo no.",
+        };
 
         private static string Excuse(CourtshipRefusal refusal) => refusal switch
         {

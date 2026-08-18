@@ -49,6 +49,17 @@ namespace Nimbo.Data.Player
         /// </remarks>
         public Housing.RoomLayout Home = new Housing.RoomLayout();
 
+        /// <summary>
+        /// Cuántas veces has ampliado tu cabaña. Empieza a cero, como las de todos.
+        /// </summary>
+        /// <remarks>
+        /// Va aquí y no en la lista de casas de la partida porque tu cabaña no está en
+        /// ningún edificio: no la reparte el servicio de vivienda, es tuya y está en tu
+        /// isla. Es el mismo número que llevan las de los vecinos y con los mismos
+        /// precios, para que ampliar la tuya cueste lo que cuesta ampliar la de otro.
+        /// </remarks>
+        public int HomeLevel;
+
         /// <summary>Las cinco vías por las que sube. Ver <see cref="SkillSet"/>.</summary>
         public SkillSet Skills = new SkillSet();
 

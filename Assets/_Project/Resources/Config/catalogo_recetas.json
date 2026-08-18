@@ -877,6 +877,29 @@
       "outputId": "gift_ramo",
       "outputQuantity": 1,
       "unlockLevel": 1
+    },
+    {
+      "recipeId": "recipe_anillo",
+      "displayName": "Anillo de compromiso",
+      "description": "Tres cristales de nimbo, concha pulida y paciencia. No hay atajo.",
+      "station": "Bench",
+      "ingredients": [
+        {
+          "catalogId": "mat_cristal_nimbo",
+          "quantity": 3
+        },
+        {
+          "catalogId": "mat_concha",
+          "quantity": 4
+        },
+        {
+          "catalogId": "mat_piedra",
+          "quantity": 12
+        }
+      ],
+      "outputId": "gift_anillo",
+      "outputQuantity": 1,
+      "unlockLevel": 8
     }
   ]
 }

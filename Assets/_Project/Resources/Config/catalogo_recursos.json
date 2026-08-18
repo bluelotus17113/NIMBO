@@ -78,9 +78,9 @@
       "displayName": "Geoda de nube",
       "kind": "Rock",
       "requiredTool": "Pickaxe",
-      "dropId": "mat_piedra",
-      "minDrop": 2,
-      "maxDrop": 6,
+      "dropId": "mat_cristal_nimbo",
+      "minDrop": 1,
+      "maxDrop": 2,
       "hits": 6,
       "respawnDays": 10,
       "description": "Por fuera parece una roca más, pero al partirla el interior está hueco y forrado de cristales que vibran con el viento. Los niños las coleccionan y dicen que dentro se oye el mar."

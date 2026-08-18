@@ -1181,6 +1181,9 @@ más queriendo lo mismo, y no está esperando su turno.**
 
 ### 14.5 La boda con el protagonista
 
+**Hecho.** Era el sitio donde el juego se paraba: podías salir con alguien y ahí se
+acababa.
+
 Tres requisitos, uno de cada mitad del juego:
 
 | Requisito | De qué mitad viene |
@@ -1195,18 +1198,38 @@ cargo. Nada de esto es obligatorio y nada caduca si no entras.
 
 ---
 
-**Lo que queda de §14.** Con §14.1–§14.3 hechos, el cortejo funciona de punta a punta:
-te declaras, cuesta un ramo, te contestan al día siguiente, y el «no» te dice en qué no
-os parecíais. Falta:
+**Cómo quedó, y las tres cosas que hicieron falta antes.**
+
+- **El anillo pide un material que no existía.** La geoda de nube —el nodo que más
+  tarda en reponerse, diez días— pasa a soltar `mat_cristal_nimbo` en vez de piedra.
+  Eso es lo que ata el romance a la isla: el anillo no se compra, se va a por él. Y de
+  paso arranca la variedad de materiales, que era otro pendiente.
+- **Tu cabaña no tenía niveles.** `HomeUpgradeService` solo sabía de vecinos, así que
+  el tercer requisito pedía algo que no existía. Ahora `PlayerState.HomeLevel`, con los
+  mismos precios y la misma obra que las de ellos, y botón dentro de casa junto a
+  «Amueblar».
+- **La boda no ocurre en el acto.** La aldea pone fecha a tres días, y la reserva va en
+  la misma lista que las de los vecinos para que la crónica la anuncie con las mismas
+  plantillas. Al planificador de la aldea hay que apartarle la tuya: su primera limpieza
+  te borraba por no encontrarte en el censo, y el censo nunca te va a encontrar.
+
+**Después**, tu pareja riega **una** casilla al día. Una sola a propósito: con el huerto
+entero regado cada mañana, la regadera dejaría de tener sentido y con ella media capa de
+granja. Lo que hace es que se note que ya no vives solo, no ahorrarte el trabajo. Lo de
+«sus necesidades parcialmente a tu cargo» se queda para más adelante.
+
+**Un fallo de verdad que salió al probarlo:** `SocialService` leía `_clock.Day` dentro
+de la evaluación diaria en vez del día que trae el aviso `DayPassed`. Son dos fuentes
+para el mismo dato y solo una es la buena. En el juego coincidían, así que no se había
+notado nunca; con la boda no llegaba nunca la fecha. Afectaba igual a los triángulos y
+a los flechazos.
+
+**Lo que queda de §14:**
 
 - **§14.4 — tu declaración dentro del triángulo.** Hoy el cortejo mira si esa persona
   ya está con alguien y te dice que no llegas a tiempo, pero **no compite**: no entras
   como vértice en el triángulo de §13.2 ni el rival reacciona a ti. Es lo que
   convertiría el romance en una carrera en vez de una comprobación.
-- **§14.5 — la boda contigo.** Necesita el anillo (Oficio 8, que a su vez pide material
-  raro que no existe), la cabaña ampliada al nivel 1 —el protagonista no tiene niveles
-  de casa: `HomeUpgradeService` es para los vecinos— y que la pareja se mude y trabaje
-  el huerto. Es un bloque del tamaño de los tres primeros juntos.
 - **Convivencia 7 y 9** (pedir un favor, mediar en una riña): el menú social ya existe,
   así que ahora sí tienen dónde ir; lo que les falta es la mecánica de cada uno.
 
@@ -1402,8 +1425,9 @@ de la v1.0 y es la mitad del juego de hoy:
       El motor entero y diecisiete puertas. Lo que queda de la tabla de §12.3 está
       marcado allí: pide contenido que no existe, o sistemas de aldea sin escribir.
 - [x] Herramientas de nivel 2 crafteables (§12.4). Cada una se come la de siempre.
-- [~] Variedad de materiales: 16 nodos distintos dan solo 6 materiales. Roble, pino,
-      abedul y tablón perdido son todos `mat_madera`.
+- [~] Variedad de materiales: 16 nodos dan 7 materiales. La geoda estrena el suyo
+      —`mat_cristal_nimbo`, para el anillo— pero roble, pino, abedul y tablón perdido
+      siguen siendo todos `mat_madera`.
 - [x] Economía del huerto equilibrada, y las semillas se compran.
 
       *La nota que había aquí estaba mal.* Decía que vender paga el 100% del catálogo
@@ -1447,9 +1471,11 @@ de la v1.0 y es la mitad del juego de hoy:
       líneas, y guarda el texto ya escrito y no los identificadores, para que la línea de
       un vecino que se fue no salga en blanco. Lo escribe el `NewsBoard`, que ya tenía
       las plantillas.
-- [~] Cortejo del protagonista (§14). El rechazo está —ramo, respuesta al día
-      siguiente, frase que nombra el eje, espera de diez días—. **Los rivales no**: tu
-      declaración no entra como vértice en el triángulo de §13.2, solo comprueba si
+- [~] Cortejo y boda del protagonista (§14). El rechazo está —ramo, respuesta al día
+      siguiente, frase que nombra el eje, espera de diez días— y la boda también:
+      diez días saliendo, anillo de cristal de nimbo y tu cabaña ampliada, con fecha
+      puesta por la aldea y tu pareja regando una casilla al día. **Los rivales no**:
+      tu declaración no entra como vértice en el triángulo de §13.2, solo comprueba si
       esa persona ya está con alguien.
 - [x] Los cuatro ejes del protagonista deducidos de su conducta (§14.3), con su
       pantalla de «cómo te ve la aldea».
