@@ -31,14 +31,21 @@ namespace Nimbo.Social
 
         private readonly StageEvaluator _stages;
         private readonly RomanceEvaluator _romance;
+        private readonly LoveTriangles _triangles;
 
         /// <summary>Cuántas veces han hecho hoy cada cosa, para los límites diarios.</summary>
         private readonly Dictionary<(string, string, SocialInteraction), int> _todayCounts = new();
         private int _countedDay = -1;
 
+        /// <param name="triangles">
+        /// La lista de la partida, para que los triángulos duren sus seis días de un
+        /// arranque a otro. Sin ella se llevan en memoria: las pruebas montan el social
+        /// sin partida y no tienen por qué enterarse.
+        /// </param>
         public SocialService(IIslanderRegistry registry, IPersonalityService personalities,
                              ISimulationService simulation, IIslanderFactory factory,
-                             GameClock clock, SocialConfig config)
+                             GameClock clock, SocialConfig config,
+                             List<LoveTriangle> triangles = null)
         {
             _registry = registry;
             _personalities = personalities;
@@ -49,9 +56,13 @@ namespace Nimbo.Social
 
             _stages = new StageEvaluator(config);
             _romance = new RomanceEvaluator(config);
+            _triangles = new LoveTriangles(registry, personalities, simulation, config, triangles);
 
             EventBus.Subscribe<DayPassed>(OnDayPassed);
         }
+
+        /// <summary>Los triángulos abiertos. Los lee la ficha del vecino y la crónica.</summary>
+        public LoveTriangles Triangles => _triangles;
 
         public void Dispose() => EventBus.Unsubscribe<DayPassed>(OnDayPassed);
 
@@ -91,17 +102,30 @@ namespace Nimbo.Social
                 }
             }
 
+            // Los triángulos antes que los flechazos nuevos: lo primero es cerrar los
+            // que cumplen hoy, y así el que acaba de llevarse el desengaño arranca ya
+            // con su espera puesta en vez de encapricharse de otra esta misma mañana.
+            _triangles.AdvanceDay(_clock.Day);
+
             DevelopCrushes();
         }
 
         /// <summary>Le nacen flechazos a quien le toque, una vez al día.</summary>
         private void DevelopCrushes()
         {
+            int day = _clock.Day;
             var all = _registry.All;
+
             for (int i = 0; i < all.Count; i++)
             {
                 var islander = all[i];
                 if (HasPartner(islander)) continue;
+
+                // Al que acaba de perder un triángulo no le nace nada en unos días
+                // (§13.2). Sin la espera, el desamor no significa nada: se encapricha
+                // de otra persona a la mañana siguiente y nadie se entera de que ha
+                // pasado algo.
+                if (islander.CrushBlockedUntilDay > day) continue;
 
                 var records = islander.Relationships.Records;
                 for (int j = 0; j < records.Count; j++)
@@ -116,6 +140,10 @@ namespace Nimbo.Social
                     records[j] = record;
                     EventBus.Publish(new RomanceStageChanged(islander.Id, record.OtherId,
                                                              RomanceStage.Crush));
+
+                    // ¿Ya había alguien suspirando por esa persona? Ahí nace la rivalidad.
+                    _triangles.OnCrushBorn(islander.Id, record.OtherId, day);
+
                     break; // uno por día: si no, se enamoraría de media isla el martes
                 }
             }
@@ -198,6 +226,42 @@ namespace Nimbo.Social
             {
                 _simulation.ApplyNeed(aId, NeedKind.Social, 5f);
                 _simulation.ApplyNeed(bId, NeedKind.Social, 5f);
+            }
+
+            // Una rivalidad no se cura sola (§13.2): hace falta que uno dé el paso.
+            // Disculparse es el único que existe hoy, y es el que le pega — no se
+            // arregla una rivalidad regalando cosas ni contando chistes.
+            if (interaction == SocialInteraction.Apologize) ClearRivalry(aId, bId);
+        }
+
+        /// <summary>
+        /// Se han hecho las paces: la rivalidad se levanta en los dos lados.
+        /// </summary>
+        /// <remarks>
+        /// En los dos aunque solo uno se disculpe. Dejarla puesta en el otro daría un
+        /// vecino que sigue viendo a un rival en alguien que ya vino a pedirle perdón,
+        /// y eso no hay forma de deshacerlo desde el juego.
+        ///
+        /// Solo levanta la rivalidad. Si además estaban reñidos de antes, eso sigue
+        /// donde estaba: se ha arreglado una cosa, no todas.
+        /// </remarks>
+        private void ClearRivalry(string aId, string bId)
+        {
+            Clear(aId, bId);
+            Clear(bId, aId);
+
+            void Clear(string fromId, string toId)
+            {
+                if (!_registry.TryGet(fromId, out var islander)) return;
+
+                var book = islander.Relationships;
+                if (!book.TryGet(toId, out var record)) return;
+                if (record.Conflict != ConflictStage.Rivalry) return;
+
+                record.Conflict = ConflictStage.None;
+                book.Set(record);
+
+                EventBus.Publish(new ConflictStageChanged(fromId, toId, ConflictStage.None));
             }
         }
 

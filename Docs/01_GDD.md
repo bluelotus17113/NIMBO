@@ -888,26 +888,51 @@ sitio, `TryHaveBaby` por su cuenta. Que haga falta casa grande es lo que enganch
 gestión con la vida de la aldea: **tú no decides que nazca nadie, pero si nunca
 amplías casas, la aldea no crece.**
 
-### 13.2 No hay rivales
+### 13.2 Rivales y triángulos
 
-Hoy dos habitantes pueden tener un flechazo por la misma persona y no pasa nada: no
-se enteran el uno del otro. Es la historia más jugosa que el sistema podría dar y se
-está tirando.
+**Hecho.** Antes, dos habitantes podían tener un flechazo por la misma persona y no
+pasaba nada: no se enteraban el uno del otro. Era la historia más jugosa que el
+sistema podía dar y se estaba tirando.
 
-**Solución — detección de triángulo.** Cuando nace un flechazo de A hacia B, se mira
-si B ya recibe otro de C. Si lo hay:
+Cuando nace un flechazo de A hacia B se mira si B ya recibía otro de C. Si lo hay:
 
-- `ConflictStage` gana un valor: `Rivalry`, entre `Tension` y `Quarrel`.
-- A y C pierden afinidad entre ellos cada día que dure el triángulo.
-- Los dos suben su ritmo de interacción con B (van a buscarle más).
-- A los 6 días se resuelve: gana quien tenga más `afinidad + compatibilidad × 20`.
-  El que gana pasa a salir con B; el que pierde vuelve a `None` con el golpe de
-  desamor y 5 días en los que no le puede nacer otro flechazo.
-- La rivalidad no se cura sola. Queda `Rivalry` hasta que uno se disculpa
-  (`Apologize`, que ya existe) o el jugador media (Convivencia 9).
+- Los dos pretendientes se ponen en `ConflictStage.Rivalry`.
+- Pierden afinidad **entre ellos** cada día que dure. Con B no se enfadan: no es
+  culpa suya.
+- A los 6 días gana quien tenga más `afinidad + compatibilidad × 20`. El que gana
+  pasa a salir con B; el que pierde vuelve a `None` con el golpe de desamor y 5 días
+  en los que no le puede nacer otro flechazo.
+- La rivalidad **no se cura sola**: queda hasta que uno se disculpa (`Apologize`).
 
-Cuesta un bucle sobre las fichas dentro de `DevelopCrushes`. Es la mecánica con mejor
-relación entre líneas de código e historias generadas de todo el documento.
+Lo importante de la resolución es que el jugador no decide nada y aun así la
+entiende: gana quien mejor se lleva con ella. La compatibilidad entra en la cuenta
+porque si solo contara la afinidad ganaría siempre quien más veces se haya cruzado
+con ella, y eso premia el azar de por dónde pasean.
+
+Cinco cosas que salieron al escribirlo y conviene tener anotadas:
+
+- **`Rivalry` va al final del enum, con su número escrito**, aunque en gravedad esté
+  entre la tirantez y la riña. Estos valores acaban en las partidas guardadas y
+  colarlo en medio convertiría las riñas viejas en enemistades. Para ordenar por
+  gravedad está `ConflictStages.Severity()`, y las comparaciones que decían
+  `>= Quarrel` ahora dicen `IsSerious()`.
+- **La reevaluación diaria borraba la rivalidad.** `StageEvaluator` recalcula el
+  conflicto desde la afinidad cada mañana, así que el triángulo se deshacía antes de
+  llegar a verse. Ahora solo la tapa algo peor.
+- **Escribir en una sola agenda no basta.** El que ganaba empezaba a salir con ella y
+  ella no salía con él, porque el flechazo era de una dirección y ella nunca había
+  apuntado nada sobre él. Una pareja escrita en un solo lado la deshace el evaluador
+  de romance a la mañana siguiente.
+- **Dos rivales no se pelean a gritos**: se ignoran, y de vez en cuando uno da el
+  paso. Es la única forma que tienen de salir de ahí.
+- **Se disculpa uno y se levanta en los dos.** Dejarla puesta en el otro daría un
+  vecino que sigue viendo un rival en quien acaba de venir a pedirle perdón, y eso no
+  hay forma de deshacerlo desde el juego.
+
+**Lo que queda:** que los dos suban su ritmo de interacción con B —«van a buscarle
+más»— vive en `IslanderBrain`, que hoy elige a quién visitar por cercanía y
+necesidad; y la mediación del jugador (Convivencia 9) necesita el menú de
+interacciones sociales que llega con §14.
 
 ### 13.3 Nadie se entera de nada
 
@@ -1353,7 +1378,7 @@ de la v1.0 y es la mitad del juego de hoy:
       ampliada. Revisa la lista en vez de escuchar el aviso, y eso es a propósito: así
       recoge también a las parejas que ya llevaban semanas congeladas en partidas
       guardadas. 13 tests en `BodasTests`.
-- [ ] Rivales y triángulos amorosos entre habitantes (§13.2).
+- [x] Rivales y triángulos amorosos entre habitantes (§13.2).
 - [x] **La Crónica** (§13.3). Botón «Crónica» en la barra, lo más reciente arriba,
       agrupado por días con «Hoy» y «Ayer» en palabras. Se guarda en la partida —lo que
       se quiere leer al volver es lo que pasó mientras no estabas— con tope de 150
@@ -1427,7 +1452,7 @@ cuatro primeras son código que ya existe y solo hay que conectar.
 | ~~4~~ | ~~`Resolve` que consume el payload + `RequestKind.Material` y el tablón (§15.4)~~ | **hecho** | recolectar tiene un porqué social |
 | ~~5~~ | ~~Enchufar los tres minijuegos (§9.2)~~ | **hecho** | tres verbos escritos y apagados |
 | ~~6~~ | ~~Las cinco vías y sus desbloqueos (§12)~~ | **hecho** (el motor y catorce puertas; ver §12.3) | la progresión entera |
-| 7 | Rivales y triángulos (§13.2) | un día | las historias que el jugador va a contar |
+| ~~7~~ | ~~Rivales y triángulos (§13.2)~~ | **hecho** | las historias que el jugador va a contar |
 | 8 | Cortejo del protagonista con rechazo (§14) | dos días | el pilar romántico, apoyado en 6 y 7 |
 
 **La regla que salió de hacer los tres primeros.** Al cerrar el punto 2 quedó claro que

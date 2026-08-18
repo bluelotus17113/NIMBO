@@ -236,8 +236,11 @@ namespace Nimbo.Game.Bootstrap
             var factory = new IslanderFactory(registry, personalities, _clock,
                                               FoodIds(itemCatalog));
 
+            // Con la lista de triángulos de la partida: duran seis días, así que tienen
+            // que sobrevivir a cerrar el juego. Uno que solo viviera en memoria se
+            // resolvería solo al cargar, sin que nadie lo viera.
             _social = new SocialService(registry, personalities, _simulation, factory,
-                                        _clock, _socialConfig);
+                                        _clock, _socialConfig, _save.Triangles);
 
             var housing = new HousingService(furniture, _save, registry);
 

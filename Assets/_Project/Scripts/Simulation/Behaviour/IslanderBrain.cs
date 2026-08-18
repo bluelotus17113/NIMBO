@@ -201,8 +201,16 @@ namespace Nimbo.Simulation.Behaviour
         {
             var record = _social.GetRelationship(aId, bId);
 
-            if (record.Conflict >= ConflictStage.Quarrel)
+            // Por gravedad y no por el número del enum: la rivalidad se añadió al final
+            // para no renumerar las partidas guardadas.
+            if (record.Conflict.IsSerious())
                 return _rng.Chance(0.7f) ? SocialInteraction.Argue : SocialInteraction.Apologize;
+
+            // Dos rivales no se pelean a gritos: se aguantan. Casi siempre se ignoran, y
+            // de vez en cuando uno da el paso — que es la única forma que tienen de
+            // salir de ahí, porque la rivalidad no se cura sola (§13.2).
+            if (record.Conflict == ConflictStage.Rivalry)
+                return _rng.Chance(0.25f) ? SocialInteraction.Apologize : SocialInteraction.Ignore;
 
             if (record.Friendship >= FriendshipStage.Friend)
                 return _rng.Chance(0.5f) ? SocialInteraction.Joke : SocialInteraction.Chat;

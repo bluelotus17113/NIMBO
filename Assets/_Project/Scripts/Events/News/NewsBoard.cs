@@ -261,6 +261,15 @@ namespace Nimbo.Events.News
                     $"{a} y {b} están en plena enemistad.",
                     $"Esto es serio: {a} y {b} ya ni se hablan.",
                 },
+                // Sin decir por quién: el nombre no lo trae el aviso, y sacarlo del
+                // censo aquí obligaría al tablón a hurgar en las agendas de todos.
+                // Además se lee mejor con el misterio puesto — quien quiera saberlo
+                // abre la ficha, que para eso está.
+                ConflictStage.Rivalry => new[] {
+                    $"{a} y {b} andan detrás de la misma persona…",
+                    $"Se veía venir: {a} y {b} se han dado cuenta de que les gusta la misma persona.",
+                    $"Ojo con {a} y {b}, que se han vuelto rivales de la noche a la mañana.",
+                },
                 _ => null,
             };
 

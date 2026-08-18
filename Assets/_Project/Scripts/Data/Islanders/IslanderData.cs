@@ -58,6 +58,17 @@ namespace Nimbo.Data.Islanders
         public List<string> Wardrobe = new List<string>();
         public string EquippedOutfit = "";
 
+        /// <summary>
+        /// Hasta qué día no le puede nacer otro flechazo.
+        /// </summary>
+        /// <remarks>
+        /// Lo pone perder un triángulo (§13.2). Sin esta espera, quien se lleva el
+        /// desengaño se encapricha de otra persona a la mañana siguiente y el desamor
+        /// no significa nada: es la pausa la que hace que el jugador se dé cuenta de que
+        /// ha pasado algo.
+        /// </remarks>
+        public int CrushBlockedUntilDay;
+
         /// <summary>Dónde está ahora mismo en la isla. Lo escribe solo el módulo de isla.</summary>
         public string CurrentZoneId = "";
 

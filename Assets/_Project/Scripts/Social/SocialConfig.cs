@@ -44,6 +44,19 @@ namespace Nimbo.Social
         public float DivorceThreshold = -50f;
 
         [Header("Costes emocionales")]
+        [Header("Triángulos (§13.2)")]
+        [Tooltip("Días que dura la rivalidad antes de que se resuelva sola.")]
+        [Min(1)] public int TriangleDays = 6;
+
+        [Tooltip("Afinidad que pierden los dos rivales entre ellos cada día que dura.")]
+        public float RivalryDailyAffinity = -6f;
+
+        [Tooltip("Lo que pesa la compatibilidad al decidir quién gana, sobre la afinidad.")]
+        [Min(0f)] public float RivalryCompatibilityWeight = 20f;
+
+        [Tooltip("Días sin poder encapricharse de nadie después de perder.")]
+        [Min(0)] public int HeartbreakCooldownDays = 5;
+
         public float HeartbreakAffinity = -10f;
         public float BreakupAffinity = -20f;
         public float DivorceAffinity = -30f;

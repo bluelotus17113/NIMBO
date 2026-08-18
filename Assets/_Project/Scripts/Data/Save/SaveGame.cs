@@ -79,6 +79,15 @@ namespace Nimbo.Data.Save
         public List<Social.WeddingBooking> Weddings = new List<Social.WeddingBooking>();
 
         /// <summary>
+        /// Los triángulos amorosos abiertos (§13.2).
+        /// </summary>
+        /// <remarks>
+        /// Duran seis días, así que tienen que sobrevivir a cerrar el juego. Uno que
+        /// solo viviera en memoria se resolvería solo al cargar, sin que nadie lo viera.
+        /// </remarks>
+        public List<Social.LoveTriangle> Triangles = new List<Social.LoveTriangle>();
+
+        /// <summary>
         /// Lo que ha ido pasando en la aldea, de lo más viejo a lo más reciente.
         /// </summary>
         /// <remarks>

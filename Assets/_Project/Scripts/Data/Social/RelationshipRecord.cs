@@ -13,12 +13,47 @@ namespace Nimbo.Data.Social
     }
 
     /// <summary>La rama de las riñas. Va aparte de la amistad a propósito.</summary>
+    /// <remarks>
+    /// <see cref="Rivalry"/> va al final **con su número escrito** aunque en gravedad
+    /// esté entre la tirantez y la riña: estos valores acaban en las partidas
+    /// guardadas, y colarlo en medio convertiría las riñas de una partida vieja en
+    /// enemistades y las enemistades en algo que no existe. Para ordenarlas por lo mal
+    /// que están las cosas está <see cref="ConflictStages.Severity"/>.
+    /// </remarks>
     public enum ConflictStage
     {
         None = 0,
         Tension = 1,
         Quarrel = 2,
         Feud = 3,
+
+        /// <summary>Los dos quieren a la misma persona y ya lo saben.</summary>
+        Rivalry = 4,
+    }
+
+    /// <summary>Cómo de mal están las cosas, en orden.</summary>
+    public static class ConflictStages
+    {
+        /// <summary>De 0 a 4. Es el orden de verdad, que no es el del enum.</summary>
+        public static int Severity(this ConflictStage stage) => stage switch
+        {
+            ConflictStage.None => 0,
+            ConflictStage.Tension => 1,
+            ConflictStage.Rivalry => 2,
+            ConflictStage.Quarrel => 3,
+            _ => 4,
+        };
+
+        /// <summary>
+        /// Lo bastante grave como para esquivarse por la calle.
+        /// </summary>
+        /// <remarks>
+        /// Una rivalidad no lo es: los dos siguen yendo a los mismos sitios, porque
+        /// justamente van adonde está la persona que les gusta. Esquivarse es de los
+        /// que ya no se hablan.
+        /// </remarks>
+        public static bool IsSerious(this ConflictStage stage) =>
+            stage is ConflictStage.Quarrel or ConflictStage.Feud;
     }
 
     public enum RomanceStage

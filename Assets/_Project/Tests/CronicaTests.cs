@@ -141,6 +141,21 @@ namespace Nimbo.Tests
         }
 
         [Test]
+        public void UnaRivalidadSeCuenta()
+        {
+            // Es la historia más jugosa que da la simulación (§13.2) y sin plantilla se
+            // publicaba en silencio: el jugador veía «rivales» en la ficha si entraba, y
+            // no se enteraba nunca de que había pasado.
+            EventBus.Publish(new ConflictStageChanged(_ana, _leo, ConflictStage.Rivalry));
+            EventBus.Publish(new ConflictStageChanged(_leo, _ana, ConflictStage.Rivalry));
+
+            Assert.That(_save.Chronicle, Has.Count.EqualTo(1),
+                "una rivalidad es de dos y se cuenta una vez");
+            Assert.That(_save.Chronicle[0].Text, Does.Contain("misma persona")
+                                                    .Or.Contain("rivales"));
+        }
+
+        [Test]
         public void PeroLosDosFlechazosSiSonDosNoticias()
         {
             // Aquí las dos direcciones son la historia: que a Ana le guste Leo y que a

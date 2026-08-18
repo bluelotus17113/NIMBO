@@ -93,6 +93,27 @@ namespace Nimbo.PlayTests
                 "el aviso se publicó y la crónica no se enteró: no hay nadie escuchando");
         }
 
+        [UnityTest]
+        public IEnumerator UnaRivalidadLlegaALaCronica()
+        {
+            yield return CargarYEmpezar();
+
+            Assert.IsTrue(ServiceRegistry.TryGet<IChronicleService>(out var cronica));
+            Assert.IsTrue(ServiceRegistry.TryGet<IIslanderRegistry>(out var censo));
+            Assert.That(censo.Count, Is.GreaterThanOrEqualTo(2));
+
+            int antes = cronica.Entries.Count;
+
+            // Justo lo que publica el triángulo al abrirse (§13.2).
+            EventBus.Publish(new ConflictStageChanged(
+                censo.All[0].Id, censo.All[1].Id, ConflictStage.Rivalry));
+            yield return null;
+
+            Assert.That(cronica.Entries.Count, Is.EqualTo(antes + 1),
+                "la rivalidad es la historia más jugosa que da la simulación y el " +
+                "jugador no tiene por dónde enterarse");
+        }
+
         /// <summary>
         /// El texto de todos los botones que hay en pantalla.
         /// </summary>

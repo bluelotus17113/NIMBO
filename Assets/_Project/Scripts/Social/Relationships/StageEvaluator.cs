@@ -33,7 +33,15 @@ namespace Nimbo.Social.Relationships
                 EventBus.Publish(new FriendshipStageChanged(fromId, record.OtherId, friendship));
             }
 
-            if (conflict != record.Conflict)
+            // Una rivalidad no se cura sola: no la borra que la afinidad esté bien
+            // (§13.2). Solo la tapa algo peor —una riña de verdad, una enemistad— y de
+            // ahí ya no se vuelve a «rivales», se vuelve a estar bien. Sin esto, el
+            // triángulo se deshacía cada mañana en la reevaluación diaria y no llegaba
+            // a verse nunca.
+            bool taparRivalidad = record.Conflict == ConflictStage.Rivalry
+                                  && conflict.Severity() <= ConflictStage.Rivalry.Severity();
+
+            if (conflict != record.Conflict && !taparRivalidad)
             {
                 record.Conflict = conflict;
                 EventBus.Publish(new ConflictStageChanged(fromId, record.OtherId, conflict));

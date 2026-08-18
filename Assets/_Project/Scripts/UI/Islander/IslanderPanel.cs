@@ -218,6 +218,7 @@ namespace Nimbo.UI.Islander
             {
                 ConflictStage.Feud => "enemistados",
                 ConflictStage.Quarrel => "reñidos",
+                ConflictStage.Rivalry => "rivales",
                 ConflictStage.Tension => "tirantes",
                 _ => record.Friendship switch
                 {
@@ -233,7 +234,11 @@ namespace Nimbo.UI.Islander
         {
             if (record.Romance is RomanceStage.Married or RomanceStage.Engaged
                 or RomanceStage.Dating or RomanceStage.Crush) return UiTheme.Mood;
-            if (record.Conflict >= ConflictStage.Quarrel) return UiTheme.Critical;
+            // Por gravedad y no por el número del enum: la rivalidad se añadió al final
+            // para no renumerar las partidas guardadas, así que comparar con `>=` la
+            // pintaría más grave que una enemistad.
+            if (record.Conflict.IsSerious()) return UiTheme.Critical;
+            if (record.Conflict == ConflictStage.Rivalry) return UiTheme.PeachDeep;
             if (record.Conflict == ConflictStage.Tension) return UiTheme.Low;
             if (record.Friendship >= FriendshipStage.Friend) return UiTheme.Social;
             return UiTheme.InkSoft;
