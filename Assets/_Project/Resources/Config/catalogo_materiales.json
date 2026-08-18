@@ -76,7 +76,7 @@
       "catalogId": "crop_nimbocereza",
       "displayName": "Nimbocereza",
       "description": "Un cerezo enano que da frutos del color del cielo al atardecer. Solo crece en tierra que ha sentido el viento de las alturas. Dulce y refrescante, ideal para mermeladas que quitan el vértigo.",
-      "price": 45,
+      "price": 36,
       "unlockLevel": 1,
       "tags": [
         "cultivo"
@@ -96,7 +96,7 @@
       "catalogId": "crop_alasauce",
       "displayName": "Alasauce",
       "description": "Una planta con hojas en forma de ala que produce unas vainas picantes. Dicen que comer una antes de volar te da mejor maniobrabilidad. Los isleños la usan para salsas que despiertan hasta a las nubes.",
-      "price": 54,
+      "price": 71,
       "unlockLevel": 1,
       "tags": [
         "cultivo"
@@ -106,7 +106,7 @@
       "catalogId": "seed_cristalovento",
       "displayName": "Semillas de cristal de viento",
       "description": "Tardan 6 días en dar. Hay que regarlas.",
-      "price": 56,
+      "price": 48,
       "unlockLevel": 1,
       "tags": [
         "semilla"
@@ -116,7 +116,7 @@
       "catalogId": "crop_cristalovento",
       "displayName": "Cristal de viento",
       "description": "Una formación cristalina que crece en los bordes de las islas, donde el viento pega más fuerte. Al recoger sus fragmentos, vuelve a brotar. Los cristales tintinean con la brisa y se usan para fabricar campanas de meditación.",
-      "price": 72,
+      "price": 40,
       "unlockLevel": 1,
       "tags": [
         "cultivo"
@@ -136,7 +136,7 @@
       "catalogId": "crop_cetrella",
       "displayName": "Cetrella",
       "description": "Una seta bioluminiscente que crece en la cara inferior de las islas, colgando hacia el vacío. Su luz azulada guía a los viajeros nocturnos. Hay que recogerla con cuidado: si se rompe, tiñe las manos durante días.",
-      "price": 63,
+      "price": 89,
       "unlockLevel": 1,
       "tags": [
         "cultivo"
@@ -156,7 +156,7 @@
       "catalogId": "crop_nimbocalabaza",
       "displayName": "Nimbocalabaza",
       "description": "Una calabaza enorme que crece flotando unos centímetros sobre la tierra. Cuanto más pesa, más alto flota: hay que atarla para que no se escape. Con una sola alcanza para alimentar a media aldea.",
-      "price": 72,
+      "price": 108,
       "unlockLevel": 1,
       "tags": [
         "cultivo"
@@ -166,7 +166,7 @@
       "catalogId": "seed_musgolante",
       "displayName": "Semillas de musgolante",
       "description": "Tardan 5 días en dar. Hay que regarlas.",
-      "price": 50,
+      "price": 31,
       "unlockLevel": 1,
       "tags": [
         "semilla"
@@ -176,7 +176,7 @@
       "catalogId": "crop_musgolante",
       "displayName": "Musgolante",
       "description": "Un musgo dorado que tapiza las rocas flotantes y se regenera solo tras cada cosecha. Machacado suelta un polvo que aligera el peso de quien lo respira: los albañiles de las islas lo usan para cargar piedras como si fueran de corcho.",
-      "price": 63,
+      "price": 17,
       "unlockLevel": 1,
       "tags": [
         "cultivo"
@@ -196,7 +196,7 @@
       "catalogId": "crop_raisnube",
       "displayName": "Raiznube",
       "description": "Una raíz que absorbe la humedad de las nubes directamente del aire. No necesita riego de lluvia: le basta la neblina del amanecer. Con ella se prepara un caldo que cura el mareo de altura.",
-      "price": 54,
+      "price": 71,
       "unlockLevel": 1,
       "tags": [
         "cultivo"
@@ -216,7 +216,7 @@
       "catalogId": "crop_azurflor",
       "displayName": "Azurflor",
       "description": "Una flor de seis pétalos color zafiro que solo se abre cuando la isla atraviesa una nube. Su aroma atrae a las libélulas mensajeras. Se necesitan siete días de cuidados para que despliegue todo su esplendor.",
-      "price": 81,
+      "price": 128,
       "unlockLevel": 1,
       "tags": [
         "cultivo"
@@ -236,7 +236,7 @@
       "catalogId": "crop_trigoeter",
       "displayName": "Trigo éter",
       "description": "Un trigo translúcido que crece rápido y da mucho grano. Su harina produce un pan tan ligero que flota sobre el plato. El alimento básico de cualquiera que viva por encima de las nubes.",
-      "price": 45,
+      "price": 27,
       "unlockLevel": 1,
       "tags": [
         "cultivo"
@@ -256,7 +256,7 @@
       "catalogId": "crop_sombraliquida",
       "displayName": "Sombra líquida",
       "description": "La planta más rara y valiosa: crece en la umbría perpetua bajo las islas mayores, donde no llega el sol. Su fruto suelta un líquido negro como tinta que los escribas usan para redactar contratos irrompibles. Tarda una eternidad en madurar.",
-      "price": 90,
+      "price": 150,
       "unlockLevel": 1,
       "tags": [
         "cultivo"
@@ -266,7 +266,7 @@
       "catalogId": "seed_esporaalba",
       "displayName": "Semillas de espora alba",
       "description": "Tardan 4 días en dar. Hay que regarlas.",
-      "price": 44,
+      "price": 29,
       "unlockLevel": 1,
       "tags": [
         "semilla"
@@ -276,7 +276,7 @@
       "catalogId": "crop_esporaalba",
       "displayName": "Espora alba",
       "description": "Un hongo que brota al amanecer y se recoge al anochecer, pero no muere: vuelve a asomar al día siguiente. Sus esporas brillan con luz propia y sirven para fabricar antorchas que nunca se apagan.",
-      "price": 54,
+      "price": 16,
       "unlockLevel": 1,
       "tags": [
         "cultivo"
@@ -296,7 +296,7 @@
       "catalogId": "crop_vidrioestelar",
       "displayName": "Vidrio estelar",
       "description": "Brotan de noche, como si las estrellas dejasen caer semillas al pasar. En solo dos días produce unas esferas transparentes con motitas brillantes dentro. Frágiles y preciosas, se venden bien en cualquier mercadillo.",
-      "price": 36,
+      "price": 15,
       "unlockLevel": 1,
       "tags": [
         "cultivo"

@@ -19,22 +19,44 @@ namespace Nimbo.Economy.Shops
         {
             if (shop == null || catalog == null) return Array.Empty<string>();
 
-            // Agrupar todos los items de las categorías que la tienda maneja.
+            var rng = Rng.FromSeed($"{shop.ShopId}:{day}");   // mismo día → mismo surtido
+
+            // Uno de cada familia antes que nada.
+            //
+            // Con un sorteo plano sobre todo el montón, una familia pequeña al lado de
+            // una grande no sale casi nunca: las doce semillas contra las cuarenta y
+            // cinco comidas de la tienda salían dos días de cada tres sin una sola
+            // semilla, y el huerto se quedaba parado esperando surtido. Una tienda que
+            // declara que vende algo tiene que venderlo.
+            var stock = new List<string>();
             var pool = new List<string>();
+
             for (int i = 0; i < shop.Categories.Count; i++)
             {
+                var family = new List<string>();
                 foreach (var item in catalog.ItemsOfCategory(shop.Categories[i]))
-                    pool.Add(item.CatalogId);
+                    family.Add(item.CatalogId);
+
+                if (family.Count == 0) continue;
+
+                rng.Shuffle(family);
+
+                if (stock.Count < shop.StockSlots)
+                {
+                    stock.Add(family[0]);
+                    family.RemoveAt(0);
+                }
+                pool.AddRange(family);
             }
 
-            if (pool.Count == 0) return Array.Empty<string>();
+            if (stock.Count == 0 && pool.Count == 0) return Array.Empty<string>();
 
-            // Azar con semilla: mismo shop + mismo día → misma secuencia.
-            var rng = Rng.FromSeed($"{shop.ShopId}:{day}");
+            // El resto de huecos, al azar entre todo lo que queda.
             rng.Shuffle(pool);
+            int rest = Math.Min(shop.StockSlots - stock.Count, pool.Count);
+            if (rest > 0) stock.AddRange(pool.GetRange(0, rest));
 
-            int count = Math.Min(shop.StockSlots, pool.Count);
-            return pool.GetRange(0, count).AsReadOnly();
+            return stock.AsReadOnly();
         }
     }
 }

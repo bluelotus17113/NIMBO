@@ -1404,8 +1404,31 @@ de la v1.0 y es la mitad del juego de hoy:
 - [x] Herramientas de nivel 2 crafteables (§12.4). Cada una se come la de siempre.
 - [~] Variedad de materiales: 16 nodos distintos dan solo 6 materiales. Roble, pino,
       abedul y tablón perdido son todos `mat_madera`.
-- [~] Venta: hoy paga el 100% del precio de catálogo, así que comprar y vender es
-      neutro y nada empuja a preferir lo que recoges.
+- [x] Economía del huerto equilibrada, y las semillas se compran.
+
+      *La nota que había aquí estaba mal.* Decía que vender paga el 100% del catálogo
+      y que comprar y vender es neutro. No lo es: el cajón solo compra materiales y
+      cosechas, y ninguna tienda los vende, así que ese ciclo no existe. Al medirlo
+      salieron dos cosas peores:
+
+      - **Las semillas no se podían comprar en ninguna parte.** Ninguna tienda declara
+        `ItemCategory.Seed`. Se arrancaba con ocho de un solo cultivo y, al acabarse,
+        el huerto se quedaba en tierra labrada para siempre. Media capa de granja
+        colgaba de un regalo de bienvenida.
+      - **Un cultivo rentaba cinco veces más que otro** (74 nimbos al día contra 14).
+        El huerto no era una decisión: había una respuesta correcta y once
+        equivocadas, que es justo la optimización que este proyecto evita.
+
+      Ahora el reparto va de 21,5 a 29 al día —los que rebrotan medidos por su ritmo
+      **sostenido**, que es donde se escondía el dominante— y la parcela de salida da
+      unos 300 al día, dentro de la banda de §7.4. Las semillas se venden en NimboMart
+      y en el mercado flotante, y el surtido garantiza **una de cada familia** que la
+      tienda declara: con sorteo plano, doce semillas contra cuarenta y cinco comidas
+      salían dos días de cada tres sin ninguna.
+
+      Los números viven en `catalogo_materiales.json` y los fija `EconomiaHuertoTests`
+      contra la banda del diseño, no contra cifras concretas: lo que se protege es la
+      forma de la economía.
 
 **El pilar de vida y gestión** (§13, §14, §15):
 

@@ -25,9 +25,19 @@ namespace Nimbo.Economy.Shops
 
         // ── Las cinco tiendas del contrato ──────────────────────────────────────
 
+        /// <remarks>
+        /// Vende también semillas, y esto no es un adorno: **no había forma de comprar
+        /// una**. El protagonista arrancaba con ocho de un solo cultivo y, cuando se le
+        /// acababan, el huerto se quedaba para siempre en tierra labrada. Media capa de
+        /// granja dependía de un regalo de bienvenida.
+        ///
+        /// En la tienda de comida y no en una propia porque las semillas son comida que
+        /// aún no ha crecido, y porque una zona nueva pediría vecinos y desbloqueos que
+        /// dejarían el huerto parado igual pero más tarde.
+        /// </remarks>
         public static readonly ShopDefinition NimboMart = new ShopDefinition(
             "NimboMart", "NimboMart", 12,
-            ItemCategory.Food, ItemCategory.Consumable, ItemCategory.Gift);
+            ItemCategory.Food, ItemCategory.Consumable, ItemCategory.Gift, ItemCategory.Seed);
 
         public static readonly ShopDefinition MueblesNimbo = new ShopDefinition(
             "Muebles Nimbo", "Muebles Nimbo", 8,
@@ -45,7 +55,7 @@ namespace Nimbo.Economy.Shops
             "Mercado flotante", "Mercado flotante", 6,
             ItemCategory.Food, ItemCategory.Clothing, ItemCategory.Furniture,
             ItemCategory.Decoration, ItemCategory.Gift, ItemCategory.Consumable,
-            ItemCategory.Wallpaper, ItemCategory.Flooring);
+            ItemCategory.Wallpaper, ItemCategory.Flooring, ItemCategory.Seed);
 
         public static readonly IReadOnlyList<ShopDefinition> All = new List<ShopDefinition>
         {
