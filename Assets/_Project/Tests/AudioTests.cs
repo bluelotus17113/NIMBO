@@ -203,8 +203,8 @@ namespace Nimbo.Tests
         [Test]
         public void DosSemillasDanAmbientesDistintos()
         {
-            var a = SoundBank.BuildAmbience(1, 4f);
-            var b = SoundBank.BuildAmbience(2, 4f);
+            var a = SoundBank.BuildAmbience(1, seconds: 4f);
+            var b = SoundBank.BuildAmbience(2, seconds: 4f);
 
             var sa = new float[a.samples];
             var sb = new float[b.samples];

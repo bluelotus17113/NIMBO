@@ -1418,9 +1418,41 @@ pasan los tests y no existen en el juego.
 - [x] Semana de juego estructurada (lunes a domingo con bonos).
 - [x] Guardado y carga de partida (JSON versionado, copia atómica).
 - [x] UI: HUD, ficha, tienda, creador, construcción y menú principal (con pausa y ajustes).
-- [~] Sonido: voces sintetizadas, efectos y ambiente generativo están. La música
-      todavía no cambia con lo que pasa: suena el mismo ambiente en calma y en
-      fiesta, y eso es lo que falta para poder marcarlo.
+- [x] Sonido: voces sintetizadas, efectos y ambiente generativo, y **la música cambia
+      con lo que pasa**. Tres humores y no más —calma, noche y fiesta—, porque cada uno
+      tiene que reconocerse *sin mirar la pantalla*, y con seis matices ninguno lo es.
+      La noche entra a las 21 y sale a las 6; la fiesta le gana a la hora, que es el
+      caso normal: los conciertos empiezan a las cinco y acaban de noche, y un fondo
+      que se apagara a mitad del concierto parecería roto.
+
+      Tres decisiones que no son obvias y conviene no deshacer:
+
+      - **Los tres salen de la misma escala y de la misma semilla.** Lo que cambia es el
+        paso, la octava y el brillo. Durante los dos segundos y medio del cruce se oyen
+        los dos a la vez: con tonalidades distintas, ese cruce sonaría a error. Y con la
+        misma semilla, el fondo de noche es *tu* fondo de noche —la misma sucesión de
+        acordes que reconoces de día, tocada de otra manera.
+      - **Dos fuentes de audio, no una.** Cambiar el clip de una sola fuente es un
+        silencio de un frame, y un silencio en el fondo se oye como un fallo aunque dure
+        nada. El intercambio se hace al **empezar** el cruce, no al acabarlo, para que
+        una fiesta que arranque justo en el amanecer no devuelva la saliente de golpe al
+        volumen entero.
+      - **Los tres fondos se sintetizan al cargar la partida**, no cuando toca cada uno.
+        Son setecientos mil senos por clip: un frame perdido. Ahí no se ve; al empezar la
+        fiesta se vería justo cuando el jugador está mirando.
+
+      Para que el sonido pudiera enterarse hubo que sacar el aviso del módulo: el
+      calendario solo avisaba con eventos de C#, y a esos únicamente se les escucha desde
+      dentro de `Nimbo.Events`. Ahora `EventScheduler` publica además `VillageEventStarted`
+      y `VillageEventEnded` en el bus, que es lo que ven `Nimbo.Art` y `Nimbo.UI`.
+
+      Los tests dicen que la noche cruza menos veces por cero y que la fiesta cruza más,
+      y eso es todo lo que un test puede decir de una música. Para lo otro está
+      `CapturaMusica`, que saca los tres bucles a `Capturas/musica_*.wav`:
+
+      ```
+      unity -runTests -testPlatform PlayMode -testFilter CapturaMusica
+      ```
 
 **La capa de granja y oficio** (§1, pilar 3; `04_ALDEA.md` §5). No estaba en la lista
 de la v1.0 y es la mitad del juego de hoy:

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Nimbo.Core.Audio;
 using Nimbo.Core.Util;
 using UnityEngine;
 
@@ -180,6 +181,57 @@ namespace Nimbo.Art.Audio
         }
 
         /// <summary>
+        /// Cómo suena cada humor: el tempo, el registro y cuánto pesa cada voz.
+        /// </summary>
+        /// <remarks>
+        /// Los tres salen de **la misma escala**, y eso no es pereza: durante los dos
+        /// segundos y medio del cruce se oyen dos a la vez, y si cada uno tuviera su
+        /// tonalidad ese cruce sonaría a error. Lo que cambia es el paso, la octava y
+        /// el brillo, que es lo que el oído asocia a «ha pasado algo» sin tener que
+        /// reconocer una melodía nueva.
+        /// </remarks>
+        private readonly struct AmbienceVoice
+        {
+            public readonly float NoteSeconds;
+            public readonly float Transpose;   // 0,5 = una octava abajo
+            public readonly float Amplitude;
+            public readonly float RootWeight;
+            public readonly float HighWeight;
+            public readonly float PulseWeight; // 0 = sin pulso
+
+            public AmbienceVoice(float noteSeconds, float transpose, float amplitude,
+                                 float rootWeight, float highWeight, float pulseWeight)
+            {
+                NoteSeconds = noteSeconds;
+                Transpose = transpose;
+                Amplitude = amplitude;
+                RootWeight = rootWeight;
+                HighWeight = highWeight;
+                PulseWeight = pulseWeight;
+            }
+        }
+
+        private static AmbienceVoice VoiceFor(MusicMood mood) => mood switch
+        {
+            // Una octava abajo, casi el doble de lento y con el agudo apagado: de noche
+            // no es «lo mismo más bajito», es que lo brillante desaparece.
+            MusicMood.Night => new AmbienceVoice(
+                noteSeconds: 4.4f, transpose: 0.5f, amplitude: 0.065f,
+                rootWeight: 0.70f, highWeight: 0.15f, pulseWeight: 0f),
+
+            // El doble de rápido, con pulso a la mitad de cada nota —unos 92 por
+            // minuto— y el agudo casi igualado al grave.
+            MusicMood.Party => new AmbienceVoice(
+                noteSeconds: 1.3f, transpose: 1f, amplitude: 0.10f,
+                rootWeight: 0.50f, highWeight: 0.42f, pulseWeight: 0.55f),
+
+            // Calma: exactamente lo que sonaba antes de que la música tuviera humores.
+            _ => new AmbienceVoice(
+                noteSeconds: 2.6f, transpose: 1f, amplitude: 0.09f,
+                rootWeight: 0.60f, highWeight: 0.30f, pulseWeight: 0f),
+        };
+
+        /// <summary>
         /// Un fondo ambiental en bucle: acordes lentos sobre una escala pentatónica.
         /// </summary>
         /// <remarks>
@@ -187,25 +239,31 @@ namespace Nimbo.Art.Audio
         /// que se puede sortear el orden y nunca desafina. Es el truco viejo de la
         /// música generativa y aquí encaja: la isla suena distinta cada partida y
         /// siempre suena bien.
+        ///
+        /// La semilla es la misma para los tres humores a propósito: así el fondo de
+        /// noche es *tu* fondo de noche, la misma sucesión de acordes que reconoces de
+        /// día, tocada de otra manera.
         /// </remarks>
-        public static AudioClip BuildAmbience(uint seed, float seconds = 32f)
+        public static AudioClip BuildAmbience(uint seed, MusicMood mood = MusicMood.Calm,
+                                              float seconds = 32f)
         {
             // Do mayor pentatónica, dos octavas.
             float[] scale = { 261.6f, 293.7f, 329.6f, 392f, 440f,
                               523.3f, 587.3f, 659.3f, 784f, 880f };
 
+            var voice = VoiceFor(mood);
+
             int total = Mathf.CeilToInt(SampleRate * seconds);
             var samples = new float[total];
             var rng = new Rng(seed);
 
-            const float NoteSeconds = 2.6f;
-            int noteSamples = Mathf.CeilToInt(SampleRate * NoteSeconds);
+            int noteSamples = Mathf.CeilToInt(SampleRate * voice.NoteSeconds);
             int noteCount = Mathf.CeilToInt((float)total / noteSamples);
 
             for (int n = 0; n < noteCount; n++)
             {
-                float root = scale[rng.Range(0, 5)];
-                float high = scale[rng.Range(4, scale.Length)];
+                float root = scale[rng.Range(0, 5)] * voice.Transpose;
+                float high = scale[rng.Range(4, scale.Length)] * voice.Transpose;
 
                 int start = n * noteSamples;
                 int end = Mathf.Min(total, start + noteSamples);
@@ -218,10 +276,12 @@ namespace Nimbo.Art.Audio
                     // Entra y sale suave: las notas se solapan y no hay cortes.
                     float envelope = Mathf.Sin(p * Mathf.PI) * 0.5f;
 
-                    samples[i] += (Mathf.Sin(time * root * Mathf.PI * 2f) * 0.6f
-                                 + Mathf.Sin(time * high * Mathf.PI * 2f) * 0.3f)
-                                * envelope * 0.09f;
+                    samples[i] += (Mathf.Sin(time * root * Mathf.PI * 2f) * voice.RootWeight
+                                 + Mathf.Sin(time * high * Mathf.PI * 2f) * voice.HighWeight)
+                                * envelope * voice.Amplitude;
                 }
+
+                if (voice.PulseWeight > 0f) AddPulses(samples, start, end, voice);
             }
 
             // Rampa en los extremos para que el bucle no chasque al volver al principio.
@@ -233,9 +293,44 @@ namespace Nimbo.Art.Audio
                 samples[total - 1 - i] *= k;
             }
 
-            var clip = AudioClip.Create("ambiente", total, 1, SampleRate, false);
+            var clip = AudioClip.Create($"ambiente_{mood}".ToLowerInvariant(),
+                                        total, 1, SampleRate, false);
             clip.SetData(samples, 0);
             return clip;
+        }
+
+        /// <summary>
+        /// Dos golpes graves por nota: el principio y la mitad.
+        /// </summary>
+        /// <remarks>
+        /// Es lo mínimo que hace que algo suene a fiesta. Sin pulso, subir el tempo de
+        /// unos acordes que entran y salen suave solo suena a nervioso; con pulso, se
+        /// oye que hay gente. Se apaga rápido —un décimo de segundo— para que marque el
+        /// tiempo sin taparlo todo.
+        /// </remarks>
+        private static void AddPulses(float[] samples, int start, int end,
+                                      in AmbienceVoice voice)
+        {
+            const float PulseFrequency = 98f;   // sol grave, dentro de la escala
+            const float PulseSeconds = 0.1f;
+
+            int pulseSamples = Mathf.CeilToInt(SampleRate * PulseSeconds);
+            int half = start + (end - start) / 2;
+
+            for (int beat = 0; beat < 2; beat++)
+            {
+                int from = beat == 0 ? start : half;
+
+                for (int i = from; i < Mathf.Min(end, from + pulseSamples); i++)
+                {
+                    float p = (float)(i - from) / pulseSamples;
+                    float decay = 1f - p;                 // golpe seco, no campana
+                    float time = (float)i / SampleRate;
+
+                    samples[i] += Mathf.Sin(time * PulseFrequency * Mathf.PI * 2f)
+                                * decay * decay * voice.PulseWeight * voice.Amplitude;
+                }
+            }
         }
     }
 }

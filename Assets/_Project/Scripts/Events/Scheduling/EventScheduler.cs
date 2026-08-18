@@ -77,6 +77,7 @@ namespace Nimbo.Events.Scheduling
             _activeEvent = null;
             _cooldownUntilHour = _activeStartedHour + _config.MaxEventDurationHours + _config.CooldownHours;
             EventEnded?.Invoke(finished);
+            EventBus.Publish(new VillageEventEnded(finished.Id));
         }
 
         // ------------------------------------------------------------------- suscripciones
@@ -158,6 +159,7 @@ namespace Nimbo.Events.Scheduling
             _activeEvent = def;
             _activeStartedHour = hour;
             EventStarted?.Invoke(def, hour);
+            EventBus.Publish(new VillageEventStarted(def.Id, def.DisplayName, hour));
         }
 
         void CheckBirthdays(int day)

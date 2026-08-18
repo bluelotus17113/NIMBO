@@ -1,7 +1,11 @@
+using System.Collections;
+using System.Collections.Generic;
+using Nimbo.Core.Audio;
 using Nimbo.Core.Events;
 using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
 using Nimbo.Core.Settings;
+using Nimbo.Core.Time;
 using Nimbo.Core.Util;
 using Nimbo.Data.Islanders;
 using UnityEngine;
@@ -17,20 +21,40 @@ namespace Nimbo.Art.Audio
     ///
     /// Se limita a una voz a la vez a propósito. Con doce habitantes reaccionando,
     /// oírlos a todos hablando encima es ruido; oír a uno es carácter.
+    ///
+    /// La música tiene tres humores (<see cref="MusicMood"/>) y se pasa de uno a otro
+    /// **cruzando**, nunca cortando. Son dos fuentes de música justo por eso: con una
+    /// sola, cambiar de clip es un silencio de un frame, y un silencio en el fondo se
+    /// oye como un fallo aunque dure nada.
     /// </remarks>
     [RequireComponent(typeof(AudioSource))]
     public sealed class AudioDirector : MonoBehaviour
     {
+        /// <summary>Lo que tarda en pasarse de un humor a otro.</summary>
+        /// <remarks>
+        /// Dos segundos y medio: bastante para que no se note el corte, poco para que
+        /// al empezar una fiesta la música llegue con ella y no un rato después.
+        /// </remarks>
+        public const float CrossfadeSeconds = 2.5f;
+
         [SerializeField, Range(0f, 1f)] private float _musicVolume = 0.35f;
         [SerializeField, Range(0f, 1f)] private float _sfxVolume = 0.6f;
         [SerializeField, Range(0f, 1f)] private float _voiceVolume = 0.7f;
 
         private AudioSource _music;
+        private AudioSource _musicFading;
         private AudioSource _sfx;
         private AudioSource _voice;
 
-        private AudioClip _ambience;
+        private readonly Dictionary<MusicMood, AudioClip> _ambiences = new(3);
         private AudioClip _currentVoice;
+
+        private Coroutine _crossfade;
+        private bool _eventRunning;
+        private int _hour = 12;
+
+        /// <summary>Qué está sonando de fondo ahora mismo.</summary>
+        public MusicMood CurrentMood { get; private set; } = MusicMood.Calm;
 
         private void Awake()
         {
@@ -44,6 +68,11 @@ namespace Nimbo.Art.Audio
             _music.loop = true;
             _music.playOnAwake = false;
             _music.volume = _musicVolume;
+
+            _musicFading = gameObject.AddComponent<AudioSource>();
+            _musicFading.loop = true;
+            _musicFading.playOnAwake = false;
+            _musicFading.volume = 0f;
 
             _sfx = gameObject.AddComponent<AudioSource>();
             _sfx.playOnAwake = false;
@@ -64,6 +93,12 @@ namespace Nimbo.Art.Audio
             EventBus.Subscribe<RequestRaised>(OnRequestRaised);
             EventBus.Subscribe<RequestResolved>(OnRequestResolved);
             EventBus.Subscribe<EmotionShown>(OnEmotion);
+
+            // Lo que mueve la música. La hora es lo que se nota todos los días; la
+            // fiesta es lo que se nota de vez en cuando.
+            EventBus.Subscribe<HourPassed>(OnHourPassed);
+            EventBus.Subscribe<VillageEventStarted>(OnVillageEventStarted);
+            EventBus.Subscribe<VillageEventEnded>(OnVillageEventEnded);
 
             // Los verbos del jugador. Faltaban todos: el sonido escuchaba lo que hacía
             // la isla y no lo que hacían tus manos, así que talar, cosechar, craftear y
@@ -86,6 +121,10 @@ namespace Nimbo.Art.Audio
             EventBus.Unsubscribe<RequestResolved>(OnRequestResolved);
             EventBus.Unsubscribe<EmotionShown>(OnEmotion);
 
+            EventBus.Unsubscribe<HourPassed>(OnHourPassed);
+            EventBus.Unsubscribe<VillageEventStarted>(OnVillageEventStarted);
+            EventBus.Unsubscribe<VillageEventEnded>(OnVillageEventEnded);
+
             EventBus.Unsubscribe<NodeHit>(OnNodeHit);
             EventBus.Unsubscribe<NodeGathered>(OnNodeGathered);
             EventBus.Unsubscribe<CropHarvested>(OnCropHarvested);
@@ -95,7 +134,10 @@ namespace Nimbo.Art.Audio
 
         private void OnDestroy()
         {
-            if (_ambience != null) Destroy(_ambience);
+            foreach (var clip in _ambiences.Values)
+                if (clip != null) Destroy(clip);
+            _ambiences.Clear();
+
             if (_currentVoice != null) Destroy(_currentVoice);
             SoundBank.Clear();
         }
@@ -115,11 +157,116 @@ namespace Nimbo.Art.Audio
             }
         }
 
+        /// <summary>
+        /// Al cargar se construyen los tres fondos de una vez, no el que toca ahora.
+        /// </summary>
+        /// <remarks>
+        /// Sintetizar treinta y dos segundos son unos setecientos mil senos, y eso es
+        /// un frame perdido. Hacerlo aquí no se ve —ya se está cargando la partida—;
+        /// hacerlo al empezar la fiesta se vería justo cuando el jugador está mirando.
+        ///
+        /// Y se empieza en el humor que toque por la hora, no en calma: cargar una
+        /// partida guardada a las once de la noche y oír el fondo de mediodía es la
+        /// misma incoherencia que había antes, solo que en el primer minuto.
+        /// </remarks>
         private void OnGameLoaded(GameLoaded _)
         {
-            _ambience = SoundBank.BuildAmbience(AmbienceSeed());
-            _music.clip = _ambience;
+            // Volver al menú y cargar otra partida pasa por aquí otra vez, y la semilla
+            // sale del primer habitante: son fondos distintos. Sin tirar los viejos se
+            // quedarían tres clips de tres megas colgando por cada carga.
+            if (_crossfade != null) { StopCoroutine(_crossfade); _crossfade = null; }
+            foreach (var stale in _ambiences.Values)
+                if (stale != null) Destroy(stale);
+            _ambiences.Clear();
+
+            _musicFading.Stop();
+            _musicFading.clip = null;
+            _musicFading.volume = 0f;
+
+            uint seed = AmbienceSeed();
+            foreach (MusicMood mood in System.Enum.GetValues(typeof(MusicMood)))
+                _ambiences[mood] = SoundBank.BuildAmbience(seed, mood);
+
+            _hour = ServiceRegistry.TryGet<GameClock>(out var clock) ? clock.Hour : _hour;
+            _eventRunning = ServiceRegistry.TryGet<IVillageEvents>(out var events)
+                         && !string.IsNullOrEmpty(events.ActiveEventId);
+
+            CurrentMood = MusicMoods.For(_hour, _eventRunning);
+            _music.clip = _ambiences[CurrentMood];
+            _music.volume = _musicVolume;
             _music.Play();
+        }
+
+        private void OnHourPassed(HourPassed evt)
+        {
+            _hour = evt.Hour;
+            RefreshMood();
+        }
+
+        private void OnVillageEventStarted(VillageEventStarted evt)
+        {
+            _eventRunning = true;
+            RefreshMood();
+        }
+
+        private void OnVillageEventEnded(VillageEventEnded evt)
+        {
+            _eventRunning = false;
+            RefreshMood();
+        }
+
+        private void RefreshMood()
+        {
+            var wanted = MusicMoods.For(_hour, _eventRunning);
+            if (wanted == CurrentMood) return;
+
+            CurrentMood = wanted;
+
+            // Si todavía no hay fondos —el aviso llegó antes de cargar la partida—, no
+            // hay nada que cruzar: el humor queda apuntado y lo recoge OnGameLoaded.
+            if (!_ambiences.TryGetValue(wanted, out var clip) || clip == null) return;
+
+            if (_crossfade != null) StopCoroutine(_crossfade);
+            _crossfade = StartCoroutine(CrossfadeTo(clip));
+        }
+
+        /// <summary>
+        /// Cambia el fondo cruzando las dos fuentes.
+        /// </summary>
+        /// <remarks>
+        /// Las dos rampas son lineales, así que el volumen total no se hunde por el
+        /// medio. Con dos desvanecidos en curva —los que «suenan mejor» de uno en
+        /// uno— el centro baja y parece que la música se va un segundo.
+        ///
+        /// El intercambio de fuentes se hace **al empezar** y no al terminar, y eso
+        /// importa cuando un cruce interrumpe a otro: si una fiesta empieza justo en
+        /// el amanecer, la que se estaba desvaneciendo pasa a ser la saliente desde el
+        /// volumen que tuviera. Haciéndolo al final, la saliente volvería de golpe al
+        /// volumen entero, que es un salto que se oye.
+        /// </remarks>
+        private IEnumerator CrossfadeTo(AudioClip clip)
+        {
+            (_music, _musicFading) = (_musicFading, _music);
+
+            _music.clip = clip;
+            _music.volume = 0f;
+            _music.time = 0f;
+            _music.Play();
+
+            float desde = _musicFading.volume;
+
+            for (float t = 0f; t < CrossfadeSeconds; t += Time.unscaledDeltaTime)
+            {
+                float k = Mathf.Clamp01(t / CrossfadeSeconds);
+                _music.volume = _musicVolume * k;
+                _musicFading.volume = desde * (1f - k);
+                yield return null;
+            }
+
+            _music.volume = _musicVolume;
+            _musicFading.Stop();
+            _musicFading.volume = 0f;
+            _crossfade = null;
         }
 
         /// <summary>
@@ -216,7 +363,16 @@ namespace Nimbo.Art.Audio
             _voice.Play();
         }
 
-        public void SetMusicVolume(float volume) => _music.volume = _musicVolume = Mathf.Clamp01(volume);
+        /// <summary>
+        /// El deslizador de música. En mitad de un cruce no toca las fuentes: las dos
+        /// rampas ya se calculan sobre <c>_musicVolume</c> y lo recogen al frame
+        /// siguiente. Escribirlas aquí además pondría la saliente al volumen entero.
+        /// </summary>
+        public void SetMusicVolume(float volume)
+        {
+            _musicVolume = Mathf.Clamp01(volume);
+            if (_crossfade == null) _music.volume = _musicVolume;
+        }
         public void SetSfxVolume(float volume) => _sfxVolume = Mathf.Clamp01(volume);
         public void SetVoiceVolume(float volume) => _voice.volume = _voiceVolume = Mathf.Clamp01(volume);
     }

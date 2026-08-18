@@ -358,6 +358,31 @@ namespace Nimbo.Core.Events
         }
     }
 
+    /// <summary>Ha empezado algo en la aldea: un concierto, un festival, un mercadillo.</summary>
+    /// <remarks>
+    /// El calendario ya avisaba de esto con eventos de C# (<c>EventScheduler.EventStarted</c>),
+    /// pero solo se le puede escuchar desde dentro de <c>Nimbo.Events</c>. El sonido y la
+    /// interfaz viven fuera y solo ven <c>Nimbo.Core</c>, así que lo mismo sale también
+    /// por el bus. Los dos avisos son a propósito: el de dentro lleva la definición
+    /// entera, este lleva lo que necesita quien está lejos.
+    /// </remarks>
+    public readonly struct VillageEventStarted
+    {
+        public readonly string EventId;
+        public readonly string DisplayName;
+        public readonly int Hour;
+        public VillageEventStarted(string eventId, string displayName, int hour)
+        {
+            EventId = eventId; DisplayName = displayName; Hour = hour;
+        }
+    }
+
+    public readonly struct VillageEventEnded
+    {
+        public readonly string EventId;
+        public VillageEventEnded(string eventId) => EventId = eventId;
+    }
+
     // --- la aldea: mochila, huerto, recolección y crafteo --------------------
 
     public readonly struct InventoryChanged

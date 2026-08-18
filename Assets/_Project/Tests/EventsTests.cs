@@ -155,6 +155,44 @@ namespace Nimbo.Tests
         }
 
         // -------------------------------------------------------------------
+        // 3 bis. El aviso que sale del módulo: lo que oye el resto del juego
+        // -------------------------------------------------------------------
+
+        [Test]
+        public void EmpezarYAcabarUnEventoSeAnunciaPorElBus()
+        {
+            // El calendario avisaba solo con eventos de C#, y a esos únicamente se les
+            // puede escuchar desde dentro de `Nimbo.Events`. El sonido vive en
+            // `Nimbo.Art` y la interfaz en `Nimbo.UI`: ninguno de los dos podía
+            // enterarse de que había una fiesta. Es la costura, y aquí se prueba.
+            _registry.AddIslander("alba", "Alba", 5);
+            _registry.AddIslander("leo", "Leo", 5);
+            _registry.AddIslander("mia", "Mia", 5);
+            _island.Level = 5;
+            _island.UnlockedBuildings.Add("zona_escenario");
+
+            string empezado = null, acabado = null;
+            void OnStart(VillageEventStarted e) => empezado = e.EventId;
+            void OnEnd(VillageEventEnded e) => acabado = e.EventId;
+
+            EventBus.Subscribe<VillageEventStarted>(OnStart);
+            EventBus.Subscribe<VillageEventEnded>(OnEnd);
+
+            using (var scheduler = new EventScheduler(_config))
+            {
+                EventBus.Publish(new HourPassed(18, 6));
+                Assert.IsNotNull(empezado, "empezó un evento y fuera del módulo nadie se enteró");
+
+                scheduler.FinishActiveEvent();
+                Assert.That(acabado, Is.EqualTo(empezado),
+                    "acabó el evento y fuera del módulo nadie se enteró");
+            }
+
+            EventBus.Unsubscribe<VillageEventStarted>(OnStart);
+            EventBus.Unsubscribe<VillageEventEnded>(OnEnd);
+        }
+
+        // -------------------------------------------------------------------
         // 4. Cumpleaños: el día que toca y no el anterior
         // -------------------------------------------------------------------
 
