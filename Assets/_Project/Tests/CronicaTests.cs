@@ -140,6 +140,67 @@ namespace Nimbo.Tests
             Assert.That(_save.Chronicle.Count, Is.EqualTo(1));
         }
 
+        // ── el protagonista también sale ─────────────────────────────────────
+
+        [Test]
+        public void ElProtagonistaSaleEnLaCronicaPorSuNombre()
+        {
+            _save.Player.DisplayName = "Nimbo";
+
+            EventBus.Publish(new RomanceStageChanged(_ana, SocialIds.Player,
+                                                     RomanceStage.Engaged));
+
+            Assert.That(_save.Chronicle, Has.Count.EqualTo(1),
+                "el protagonista no está en el censo, así que la crónica no sabía " +
+                "nombrarlo y se saltaba la línea entera: todo lo suyo era invisible");
+            Assert.That(_save.Chronicle[0].Text, Does.Contain("Nimbo"));
+        }
+
+        [Test]
+        public void AntesDeQueExistaElProtagonistaNoSeInventaUnNombre()
+        {
+            _save.Player.DisplayName = "";
+
+            EventBus.Publish(new RomanceStageChanged(_ana, SocialIds.Player,
+                                                     RomanceStage.Engaged));
+
+            Assert.That(_save.Chronicle, Is.Empty,
+                "sin protagonista creado no hay a quien nombrar, y una línea a medias " +
+                "es peor que ninguna");
+        }
+
+        [Test]
+        public void ElCortejoLoCuentaSuAvisoYNoDosVeces()
+        {
+            _save.Player.DisplayName = "Nimbo";
+
+            // El cortejo publica las dos cosas a la vez: el cambio de etapa y su propio
+            // aviso con la frase. Sin filtro salían dos líneas para el mismo momento.
+            EventBus.Publish(new RomanceStageChanged(_ana, SocialIds.Player,
+                                                     RomanceStage.Dating));
+            EventBus.Publish(new CourtshipAnswered(_ana, true, "Ana te ha dicho que sí."));
+
+            Assert.That(_save.Chronicle, Has.Count.EqualTo(1));
+            Assert.That(_save.Chronicle[0].Text, Is.EqualTo("Ana te ha dicho que sí."),
+                "manda quien lo cuenta mejor: el aviso del cortejo trae la frase que " +
+                "explica el «no»");
+        }
+
+        [Test]
+        public void PagarLaObraDeUnaCasaSeQuedaEscrito()
+        {
+            EventBus.Publish(new HomeUpgraded(_ana, level: 1, size: 11));
+
+            Assert.That(_save.Chronicle, Has.Count.EqualTo(1),
+                "de lo poco que hace el jugador que merece quedar escrito, y no se " +
+                "contaba");
+
+            // Por el nombre y no por el tamaño: de las tres plantillas, una habla de la
+            // cara que se le queda y no del número, que es justo la que da variedad.
+            Assert.That(_save.Chronicle[0].Text,
+                Does.Contain(_registry.Get(_ana).Identity.ShortName));
+        }
+
         [Test]
         public void UnaRivalidadSeCuenta()
         {

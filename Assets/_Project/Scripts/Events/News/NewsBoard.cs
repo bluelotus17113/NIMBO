@@ -72,6 +72,7 @@ namespace Nimbo.Events.News
         readonly Action<ConflictStageChanged> _onConflict;
         readonly Action<WeddingAnnounced> _onWedding;
         readonly Action<CourtshipAnswered> _onCourtship;
+        readonly Action<HomeUpgraded> _onHomeUpgraded;
         readonly Action<HourPassed> _onHour;
 
         public IReadOnlyList<Headline> Headlines => _headlines;
@@ -92,6 +93,7 @@ namespace Nimbo.Events.News
 
             _onRomance = OnRomanceChanged;
             _onCourtship = OnCourtshipAnswered;
+            _onHomeUpgraded = OnHomeUpgraded;
             _onLevelUp = OnLevelUp;
             _onBaby = OnBabyBorn;
             _onBuilding = OnBuildingUnlocked;
@@ -106,6 +108,7 @@ namespace Nimbo.Events.News
             EventBus.Subscribe(_onConflict);
             EventBus.Subscribe(_onWedding);
             EventBus.Subscribe(_onCourtship);
+            EventBus.Subscribe(_onHomeUpgraded);
             EventBus.Subscribe(_onHour);
         }
 
@@ -118,6 +121,7 @@ namespace Nimbo.Events.News
             EventBus.Unsubscribe(_onConflict);
             EventBus.Unsubscribe(_onWedding);
             EventBus.Unsubscribe(_onCourtship);
+            EventBus.Unsubscribe(_onHomeUpgraded);
             EventBus.Unsubscribe(_onHour);
         }
 
@@ -151,11 +155,44 @@ namespace Nimbo.Events.News
         /// </remarks>
         void OnCourtshipAnswered(CourtshipAnswered evt) => AddHeadline(evt.Line);
 
+        /// <summary>
+        /// Le has pagado la obra a alguien.
+        /// </summary>
+        /// <remarks>
+        /// De lo poco que hace el jugador que merece quedar escrito. Pasa dos veces por
+        /// vecino como mucho, cuesta monedas y material de verdad, y se ve al entrar en
+        /// la casa — las tres cosas que hacen que algo sea memorable.
+        ///
+        /// **Lo que no entra son las peticiones atendidas ni los regalos**, y no por
+        /// falta de ganas: se atienden varias al día y con doce vecinos la crónica se
+        /// llenaría de «le llevaste madera a Bea» hasta tapar las bodas. Una memoria que
+        /// lo apunta todo no es una memoria, es un registro.
+        /// </remarks>
+        void OnHomeUpgraded(HomeUpgraded evt)
+        {
+            string name = ShortName(evt.IslanderId);
+            if (name == null) return;
+
+            AddHeadline(PickTemplate(new[] {
+                $"La casa de {name} es ahora de {evt.Size}×{evt.Size}. Está encantad{e_oa(name)}.",
+                $"{name} estrena casa: obra pagada y {evt.Size}×{evt.Size} de sitio.",
+                $"Han ampliado la casa de {name}. Se le nota en la cara.",
+            }));
+        }
+
         void OnRomanceChanged(RomanceStageChanged evt)
         {
             string a = ShortName(evt.FromId);
             string b = ShortName(evt.ToId);
             if (a == null || b == null) return;
+
+            // El cortejo del protagonista ya lo cuenta su propio aviso, con la frase que
+            // explica el «no» (§14.3.5). Sin esto salían dos líneas seguidas para el
+            // mismo momento: «Bea te ha dicho que sí» y «¡Bea y Nimbo ya son pareja!».
+            // Es el mismo fallo que las bodas contadas por los dos lados, y se arregla
+            // igual: manda quien lo cuenta mejor.
+            bool mine = evt.FromId == SocialIds.Player || evt.ToId == SocialIds.Player;
+            if (mine && evt.Stage is RomanceStage.Confessed or RomanceStage.Dating) return;
 
             // Un flechazo es de uno hacia otro y las dos direcciones son noticia: que
             // Ana esté colada por Leo y que Leo lo esté por Ana son dos titulares, y ahí
@@ -333,8 +370,33 @@ namespace Nimbo.Events.News
             return templates[rng.Range(0, templates.Length)];
         }
 
+        /// <summary>
+        /// Cómo se llama alguien en la crónica. El protagonista, por su nombre.
+        /// </summary>
+        /// <remarks>
+        /// **Devolvía null para el protagonista y eso lo borraba de la memoria de la
+        /// aldea.** No está en el censo —no tiene personalidad ni necesidades— así que
+        /// el censo no sabía nombrarlo, y todas las plantillas se saltan la línea si
+        /// falta un nombre. El resultado era que la crónica recordaba las bodas y las
+        /// riñas de los vecinos y el jugador era un fantasma que les arreglaba cosas:
+        /// nada de lo suyo se contaba nunca.
+        ///
+        /// Por su nombre y no como «tú» porque la crónica es la memoria **de la
+        /// aldea**, contada en tercera persona. «Bea y tú ya son pareja» no lo escribe
+        /// nadie; «Bea y Nimbo ya son pareja» sí, y encima es el nombre que el jugador
+        /// eligió.
+        ///
+        /// Antes de que exista el protagonista sigue devolviendo null, que es lo
+        /// correcto: no hay a quien nombrar.
+        /// </remarks>
         string ShortName(string islanderId)
         {
+            if (islanderId == SocialIds.Player)
+            {
+                string name = _save?.Player?.DisplayName;
+                return string.IsNullOrEmpty(name) ? null : name;
+            }
+
             var registry = ServiceRegistry.Get<IIslanderRegistry>();
             if (registry == null || !registry.TryGet(islanderId, out var islander)) return null;
             return islander.Identity.ShortName;
