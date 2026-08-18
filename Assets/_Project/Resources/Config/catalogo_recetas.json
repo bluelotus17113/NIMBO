@@ -858,6 +858,25 @@
       "outputId": "tool_guadana_larga",
       "outputQuantity": 1,
       "unlockLevel": 1
+    },
+    {
+      "recipeId": "recipe_ramo",
+      "displayName": "Ramo de flores",
+      "description": "Ocho pétalos y un poco de fibra para atarlos. Hay que ir a por las flores una a una.",
+      "station": "Hand",
+      "ingredients": [
+        {
+          "catalogId": "mat_petalo",
+          "quantity": 8
+        },
+        {
+          "catalogId": "mat_fibra",
+          "quantity": 2
+        }
+      ],
+      "outputId": "gift_ramo",
+      "outputQuantity": 1,
+      "unlockLevel": 1
     }
   ]
 }

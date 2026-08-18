@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Nimbo.Core.Events;
+using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
 using Nimbo.Core.Time;
 using Nimbo.Data.Islanders;
@@ -32,6 +33,7 @@ namespace Nimbo.Social
         private readonly StageEvaluator _stages;
         private readonly RomanceEvaluator _romance;
         private readonly LoveTriangles _triangles;
+        private readonly Courtship _courtship;
 
         /// <summary>Cuántas veces han hecho hoy cada cosa, para los límites diarios.</summary>
         private readonly Dictionary<(string, string, SocialInteraction), int> _todayCounts = new();
@@ -57,6 +59,7 @@ namespace Nimbo.Social
             _stages = new StageEvaluator(config);
             _romance = new RomanceEvaluator(config);
             _triangles = new LoveTriangles(registry, personalities, simulation, config, triangles);
+            _courtship = new Courtship(registry, config);
 
             EventBus.Subscribe<DayPassed>(OnDayPassed);
         }
@@ -101,6 +104,12 @@ namespace Nimbo.Social
                     records[j] = record;
                 }
             }
+
+            // Lo primero de la mañana es contestar a quien se declaró ayer. Antes que
+            // los triángulos y que los flechazos nuevos: si te dicen que sí, ya estás
+            // con esa persona cuando la aldea se pone a repartir enamoramientos.
+            ServiceRegistry.TryGet<IConductService>(out var conduct);
+            _courtship.AnswerPending(_clock.Day, conduct);
 
             // Los triángulos antes que los flechazos nuevos: lo primero es cerrar los
             // que cumplen hoy, y así el que acaba de llevarse el desengaño arranca ya
@@ -412,8 +421,38 @@ namespace Nimbo.Social
             if (interaction is SocialInteraction.Chat or SocialInteraction.Joke)
                 _simulation.ApplyNeed(islanderId, NeedKind.Social, 5f);
 
+            NoteExpression(interaction);
             return true;
         }
+
+        /// <summary>
+        /// Cómo hablas con la gente es el eje de Expresión (§14.3.1).
+        /// </summary>
+        /// <remarks>
+        /// Los gestos que se ven —una broma, un abrazo, un halago, jugar— frente a los
+        /// que no —charlar sin más—. Es una proporción entre cosas que compiten por el
+        /// mismo momento: cuando te pones delante de alguien haces una **o** la otra.
+        ///
+        /// Declararse no cuenta para ningún lado. Pasa una vez con cada persona y es la
+        /// decisión más grande del juego; dejar que además te describa el carácter
+        /// sería medir el argumento en vez de la costumbre.
+        /// </remarks>
+        private void NoteExpression(SocialInteraction interaction)
+        {
+            if (interaction is SocialInteraction.Confess or SocialInteraction.Gift) return;
+            if (!ServiceRegistry.TryGet<IConductService>(out var conduct)) return;
+
+            bool expressive = interaction is SocialInteraction.Joke or SocialInteraction.Hug
+                              or SocialInteraction.Compliment or SocialInteraction.PlayTogether;
+
+            conduct.Note(PersonalityAxis.Expression, expressive);
+        }
+
+        public CourtshipRefusal CanConfess(string islanderId) =>
+            _courtship.CanConfess(islanderId, _clock.Day);
+
+        public bool PlayerConfess(string islanderId) =>
+            _courtship.Confess(islanderId, _clock.Day);
 
         public string PartnerOf(string islanderId)
         {

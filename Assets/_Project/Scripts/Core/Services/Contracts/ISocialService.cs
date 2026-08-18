@@ -4,6 +4,23 @@ using Nimbo.Data.Social;
 namespace Nimbo.Core.Services.Contracts
 {
     /// <summary>Lo que dos habitantes pueden hacer juntos, y que mueve su afinidad.</summary>
+    /// <summary>Por qué no se puede uno declarar todavía (§14.2).</summary>
+    /// <remarks>
+    /// Cada motivo se le enseña al jugador con sus palabras. «No puedes» a secas es una
+    /// puerta cerrada sin cartel; «te falta un ramo» es algo que hacer esta tarde.
+    /// </remarks>
+    public enum CourtshipRefusal
+    {
+        Ok = 0,
+        UnknownIslander,
+        NotUnlocked,        // Convivencia 5
+        NotFriendEnough,    // hace falta ser amigo antes
+        NoBouquet,
+        TooSoon,            // te dijo que no hace poco
+        AlreadyCourting,    // ya te has declarado y falta la respuesta
+        Taken,              // ya está con alguien
+    }
+
     public enum SocialInteraction
     {
         Chat = 0,
@@ -71,6 +88,20 @@ namespace Nimbo.Core.Services.Contracts
         /// cómo juegues, no de un sorteo del creador de personajes.
         /// </remarks>
         bool PlayerInteract(string islanderId, SocialInteraction interaction);
+
+        /// <summary>Qué impide declararse, o <c>Ok</c> si nada.</summary>
+        CourtshipRefusal CanConfess(string islanderId);
+
+        /// <summary>
+        /// El protagonista se declara. Gasta el ramo y deja la respuesta para mañana.
+        /// </summary>
+        /// <remarks>
+        /// La respuesta no es inmediata **a propósito**. Un sí o un no en el mismo clic
+        /// convierte la declaración en una tirada de dados que se mira una vez; con un
+        /// día de por medio, el jugador se va a dormir con la duda, que es exactamente
+        /// lo que se quiere que sienta.
+        /// </remarks>
+        bool PlayerConfess(string islanderId);
 
         IEnumerable<RelationshipRecord> FriendsOf(string islanderId);
         IEnumerable<RelationshipRecord> ConflictsOf(string islanderId);

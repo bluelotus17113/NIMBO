@@ -75,6 +75,7 @@ namespace Nimbo.UI.Achievements
             EventBus.Subscribe<AchievementUnlocked>(OnUnlocked);
             EventBus.Subscribe<SkillLeveledUp>(OnSkillLeveledUp);
             EventBus.Subscribe<UnlockGained>(OnUnlockGained);
+            EventBus.Subscribe<CourtshipAnswered>(OnCourtshipAnswered);
         }
 
         public void Unsubscribe()
@@ -82,6 +83,7 @@ namespace Nimbo.UI.Achievements
             EventBus.Unsubscribe<AchievementUnlocked>(OnUnlocked);
             EventBus.Unsubscribe<SkillLeveledUp>(OnSkillLeveledUp);
             EventBus.Unsubscribe<UnlockGained>(OnUnlockGained);
+            EventBus.Unsubscribe<CourtshipAnswered>(OnCourtshipAnswered);
         }
 
         /// <summary>Un cartel a mano. Lo usan las vías y cualquiera que tenga algo que decir.</summary>
@@ -112,6 +114,18 @@ namespace Nimbo.UI.Achievements
         /// </remarks>
         private void OnUnlockGained(UnlockGained evt) =>
             Push("Ya puedes", Player.SkillsPanel.Describe(evt.Unlock));
+
+        /// <summary>
+        /// La respuesta a la declaración, a la mañana siguiente (§14.2).
+        /// </summary>
+        /// <remarks>
+        /// Aquí y en la crónica, y no es repetirse: el cartel es para enterarte en el
+        /// momento y la crónica para encontrarlo tres días después. Lo que no puede
+        /// pasar es que una respuesta que has estado esperando toda la noche se cuente
+        /// solo en un sitio que hay que acordarse de abrir.
+        /// </remarks>
+        private void OnCourtshipAnswered(CourtshipAnswered evt) =>
+            Push(evt.Accepted ? "Ha dicho que sí" : "Te ha dicho que no", evt.Line);
 
         /// <summary>Lo llama la interfaz cada fotograma, con el tiempo sin escalar.</summary>
         public void Tick(float unscaledDelta)

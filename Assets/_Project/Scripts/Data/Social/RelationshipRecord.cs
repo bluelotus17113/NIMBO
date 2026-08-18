@@ -100,6 +100,16 @@ namespace Nimbo.Data.Social
         /// <summary>Minuto de juego de la última interacción, para que la afinidad se enfríe sola.</summary>
         public long LastInteractionMinute;
 
+        /// <summary>
+        /// Hasta qué día no se puede volver a intentar lo romántico por aquí.
+        /// </summary>
+        /// <remarks>
+        /// Lo pone un rechazo (§14.3.5). La espera es la mitad del sentido de que te
+        /// digan que no: sin ella, declararse otra vez al día siguiente convierte el
+        /// cortejo en insistir hasta que salga.
+        /// </remarks>
+        public int BlockedUntilDay;
+
         public static RelationshipRecord NewWith(string otherId) => new RelationshipRecord
         {
             OtherId = otherId,

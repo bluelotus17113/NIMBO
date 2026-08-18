@@ -32,6 +32,11 @@ namespace Nimbo.Economy.Items
             // los soltaba, pero para el catálogo no existían.
             LoadJson(Resources.Load<TextAsset>("Config/catalogo_herramientas").text, "Tool");
             LoadJson(Resources.Load<TextAsset>("Config/catalogo_materiales").text, "Material");
+
+            // Los regalos: cosas que se fabrican para dárselas a alguien y no sirven
+            // para nada más. La categoría existía desde el principio y no la llenaba
+            // ningún fichero, así que el ramo del cortejo (§14.2) estrena la casa.
+            LoadJson(Resources.Load<TextAsset>("Config/catalogo_regalos").text, "Gift");
             All = _byId.Values.ToList().AsReadOnly();
         }
 

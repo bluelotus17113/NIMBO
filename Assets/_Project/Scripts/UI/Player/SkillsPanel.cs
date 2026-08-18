@@ -26,6 +26,7 @@ namespace Nimbo.UI.Player
 
         private readonly Label _headline;
         private readonly VisualElement _lines;
+        private readonly VisualElement _conduct;
 
         /// <summary>Lo que abre cada vía, en orden. Para poder decir qué viene después.</summary>
         private static readonly Dictionary<SkillKind, Unlock[]> Ladder = new()
@@ -61,6 +62,14 @@ namespace Nimbo.UI.Player
 
             _lines = new VisualElement();
             Root.Add(_lines);
+
+            // «Cómo te ve la aldea» (§14.3.9) va aquí debajo y no en un botón propio:
+            // las dos cosas contestan a la misma pregunta —quién es el protagonista—,
+            // una por lo que sabe hacer y otra por cómo lo hace. Separarlas en dos
+            // pantallas obligaría a abrir dos para leerse entero.
+            _conduct = new VisualElement();
+            _conduct.style.marginTop = 12;
+            Root.Add(_conduct);
         }
 
         public void Show()
@@ -87,6 +96,75 @@ namespace Nimbo.UI.Player
 
             foreach (SkillKind skill in System.Enum.GetValues(typeof(SkillKind)))
                 _lines.Add(Line(progression, skill));
+
+            RebuildConduct();
+        }
+
+        /// <summary>
+        /// Cómo te ve la aldea: cuatro rasgos en palabras, sacados de lo que haces.
+        /// </summary>
+        /// <remarks>
+        /// **En palabras y no en números**, y con «todavía no está claro» cuando no hay
+        /// muestras suficientes — que además es verdad. Un número invita a optimizarlo;
+        /// una frase invita a reconocerse.
+        ///
+        /// Nadie la ha escrito a mano y describe al jugador de verdad, que es lo bonito
+        /// de que la personalidad del protagonista salga de su conducta.
+        /// </remarks>
+        private void RebuildConduct()
+        {
+            _conduct.Clear();
+            if (!ServiceRegistry.TryGet<IConductService>(out var conduct)) return;
+
+            var title = UiTheme.Title("Cómo te ve la aldea");
+            _conduct.Add(title);
+
+            var profile = conduct.Profile;
+
+            foreach (Data.Islanders.PersonalityAxis axis in
+                     System.Enum.GetValues(typeof(Data.Islanders.PersonalityAxis)))
+            {
+                var row = new VisualElement();
+                row.style.flexDirection = FlexDirection.Row;
+                row.style.alignItems = Align.Center;
+                row.style.marginBottom = 3;
+
+                var name = UiTheme.Body(AxisName(axis), soft: true);
+                name.style.width = 110;
+                row.Add(name);
+
+                float confidence = conduct.ConfidenceOf(axis);
+                var word = UiTheme.Body(confidence < 0.5f
+                    ? "todavía no está claro"
+                    : Trait(axis, profile[axis]));
+                row.Add(word);
+
+                _conduct.Add(row);
+            }
+        }
+
+        private static string AxisName(Data.Islanders.PersonalityAxis axis) => axis switch
+        {
+            Data.Islanders.PersonalityAxis.Energy => "Ritmo",
+            Data.Islanders.PersonalityAxis.Expression => "Al hablar",
+            Data.Islanders.PersonalityAxis.Attitude => "Con la gente",
+            _ => "Cómo miras",
+        };
+
+        private static string Trait(Data.Islanders.PersonalityAxis axis, float value)
+        {
+            bool positive = value > 0f;
+
+            return axis switch
+            {
+                Data.Islanders.PersonalityAxis.Energy =>
+                    positive ? "no paras quieto" : "vas con calma",
+                Data.Islanders.PersonalityAxis.Expression =>
+                    positive ? "lo dices todo" : "te guardas las cosas",
+                Data.Islanders.PersonalityAxis.Attitude =>
+                    positive ? "siempre acompañado" : "vas a tu aire",
+                _ => positive ? "estás en las nubes" : "tienes los pies en el suelo",
+            };
         }
 
         private static VisualElement Line(IPlayerProgression progression, SkillKind skill)

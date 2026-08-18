@@ -100,6 +100,25 @@ namespace Nimbo.Core.Events
         }
     }
 
+    /// <summary>Te han contestado a la declaración (§14).</summary>
+    /// <remarks>
+    /// Trae la frase hecha porque el «no» tiene que **enseñar**: nombra el eje que más
+    /// lejos quedó, y con eso el jugador aprende el sistema sin tutorial y sin ver un
+    /// número. Componerla aquí y no en la pantalla es lo que permite que la cuenten a
+    /// la vez el cartel y la crónica sin escribirla dos veces.
+    /// </remarks>
+    public readonly struct CourtshipAnswered
+    {
+        public readonly string IslanderId;
+        public readonly bool Accepted;
+        public readonly string Line;
+
+        public CourtshipAnswered(string islanderId, bool accepted, string line)
+        {
+            IslanderId = islanderId; Accepted = accepted; Line = line;
+        }
+    }
+
     /// <summary>Una de las cinco vías del protagonista ha subido.</summary>
     public readonly struct SkillLeveledUp
     {

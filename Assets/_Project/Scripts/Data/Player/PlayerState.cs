@@ -51,6 +51,9 @@ namespace Nimbo.Data.Player
 
         /// <summary>Las cinco vías por las que sube. Ver <see cref="SkillSet"/>.</summary>
         public SkillSet Skills = new SkillSet();
+
+        /// <summary>Cómo se comporta, medido por lo que hace. Ver <see cref="ConductRecord"/>.</summary>
+        public ConductRecord Conduct = new ConductRecord();
     }
 
     /// <summary>

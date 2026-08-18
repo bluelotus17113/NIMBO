@@ -91,6 +91,7 @@ namespace Nimbo.Game.Bootstrap
         private Nimbo.Events.EventsService _events;
         private Nimbo.Events.Minigames.MinigameService _minigames;
         private PlayerProgressionService _progression;
+        private ConductService _conduct;
 
         private IslanderRegistry _registry;
         private long _lastAutosaveMinute;
@@ -264,6 +265,12 @@ namespace Nimbo.Game.Bootstrap
             // contaba.
             _progression = new PlayerProgressionService(_save.Player, _progressionConfig);
 
+            // La conducta observada (§14.3). Va con la progresión porque es la otra
+            // mitad de «quién es el protagonista»: una cuenta lo que sabe hacer y la
+            // otra cómo lo hace. Se la alimentan el cuerpo, el buscador de objetivo y
+            // el social; ella sola escucha lo que fabrica.
+            _conduct = new ConductService(_save.Player);
+
             // El orden aquí sí manda: la mochila la necesitan los otros tres, y el
             // crafteo necesita además la isla para saber de qué nivel va.
             _inventory = new InventoryService(_save.Player, _economy);
@@ -342,6 +349,7 @@ namespace Nimbo.Game.Bootstrap
             ServiceRegistry.Register<IAchievementService>(_achievements);
             ServiceRegistry.Register<PlayerService>(_player);
             ServiceRegistry.Register<IPlayerProgression>(_progression);
+            ServiceRegistry.Register<IConductService>(_conduct);
             ServiceRegistry.Register<IInventoryService>(_inventory);
             ServiceRegistry.Register<IFarmingService>(_farming);
             ServiceRegistry.Register<IGatheringService>(_gathering);
@@ -561,6 +569,7 @@ namespace Nimbo.Game.Bootstrap
             _weddings?.Dispose();
             _events?.Dispose();
             _progression?.Dispose();
+            _conduct?.Dispose();
             EventBus.Unsubscribe<DayPassed>(OnDayPassed);
             EventBus.Unsubscribe<AchievementUnlocked>(OnAchievementUnlocked);
             ServiceRegistry.Clear();

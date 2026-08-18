@@ -62,6 +62,8 @@ namespace Nimbo.Player
             (SkillKind.Crafting, 6),     // BetterTools
             (SkillKind.Farming, 3),      // WideWatering
             (SkillKind.Gathering, 10),   // NodesOnMap
+            (SkillKind.Social, 2),       // Compliment
+            (SkillKind.Social, 4),       // WarmGestures
         };
 
         public PlayerProgressionService(PlayerState player, PlayerProgressionConfig config = null)

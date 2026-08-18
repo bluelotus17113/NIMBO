@@ -1,6 +1,8 @@
 using Nimbo.Art.Chibi;
 using Nimbo.Art.Materials;
 using Nimbo.Core.Events;
+using Nimbo.Core.Services;
+using Nimbo.Core.Services.Contracts;
 using Nimbo.Data.Islanders;
 using UnityEngine;
 
@@ -126,6 +128,48 @@ namespace Nimbo.Art.PlayerView
         /// <summary>Cuánto vigor le queda, de 0 a 1. Lo pone el servicio del jugador.</summary>
         public float VigorFraction { get; set; } = 1f;
 
+        private IConductService _conduct;
+        private float _sinceNote;
+        private float _runningSeconds;
+        private float _movingSeconds;
+
+        /// <summary>Cada cuánto se suelta lo acumulado, en segundos.</summary>
+        private const float NoteEvery = 1f;
+
+        /// <summary>
+        /// Va sumando segundos y los suelta una vez por segundo.
+        /// </summary>
+        /// <remarks>
+        /// De golpe y no a cada fotograma: son sesenta llamadas por segundo para mover
+        /// dos números, y el resultado es exactamente el mismo porque lo que se guarda
+        /// son segundos, no veces.
+        /// </remarks>
+        private void NoteEnergy(bool running)
+        {
+            _movingSeconds += Time.deltaTime;
+            if (running) _runningSeconds += Time.deltaTime;
+
+            _sinceNote += Time.deltaTime;
+            if (_sinceNote < NoteEvery) return;
+            _sinceNote = 0f;
+
+            // Se busca hasta encontrarlo y ya no se vuelve a preguntar. Los segundos
+            // acumulados no se pierden mientras tanto: siguen sumando y se sueltan
+            // enteros el primer segundo en que el servicio existe.
+            if (_conduct == null && !ServiceRegistry.TryGet(out _conduct)) return;
+
+            // En minutos y no en segundos: una muestra es «un momento», y con segundos
+            // la Energía quedaría decidida antes de cruzar el prado mientras la
+            // Expresión seguiría pidiendo cuarenta conversaciones.
+            _conduct.Note(PersonalityAxis.Energy,
+                          towardPositive: true, weight: _runningSeconds / 60f);
+            _conduct.Note(PersonalityAxis.Energy,
+                          towardPositive: false, weight: (_movingSeconds - _runningSeconds) / 60f);
+
+            _runningSeconds = 0f;
+            _movingSeconds = 0f;
+        }
+
         private void Update()
         {
             if (_controller == null) return;
@@ -133,7 +177,14 @@ namespace Nimbo.Art.PlayerView
             var move = _frozen ? Vector3.zero : ReadMove();
             IsMoving = move.sqrMagnitude > 0.0001f;
 
-            float speed = Input.GetKey(KeyCode.LeftShift) ? _runSpeed : _walkSpeed;
+            bool running = Input.GetKey(KeyCode.LeftShift);
+            float speed = running ? _runSpeed : _walkSpeed;
+
+            // Correr o andar es el eje de Energía (§14.3.1), y sale de aquí porque aquí
+            // ya se distinguía para elegir la velocidad. Se apunta **solo mientras te
+            // mueves**: si contara el rato parado, quien deja el juego abierto sería
+            // calmadísimo, y eso no mide el carácter sino el tiempo de sesión.
+            if (IsMoving) NoteEnergy(running);
 
             // El cansancio no para al jugador, solo lo ralentiza. En este juego el
             // vigor a cero no puede dejarte tirado en mitad del campo.

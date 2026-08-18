@@ -20,6 +20,7 @@ namespace Nimbo.UI.Islander
     {
         private readonly JobSection _job = new JobSection();
         private readonly HomeSection _home = new HomeSection();
+        private readonly SocialSection _social = new SocialSection();
         private readonly VisualElement _requests;
         private readonly VisualElement _relationships;
         private readonly Label _name;
@@ -74,6 +75,10 @@ namespace Nimbo.UI.Islander
             requestCard.Add(_requests);
             Root.Add(requestCard);
 
+            // Lo social por delante del trabajo y de la casa: la ficha va de una
+            // persona que quiere algo, y lo primero que uno viene a hacer aquí es
+            // decirle algo.
+            Root.Add(_social.Root);
             Root.Add(_job.Root);
             Root.Add(_home.Root);
 
@@ -130,6 +135,7 @@ namespace Nimbo.UI.Islander
             }
 
             RefreshRequests(islander);
+            _social.Refresh(_islanderId);
             _job.Refresh(_islanderId);
             _home.Refresh(_islanderId);
             RefreshRelationships(islander, registry);

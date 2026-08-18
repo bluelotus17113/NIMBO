@@ -71,6 +71,7 @@ namespace Nimbo.Events.News
         readonly Action<BuildingUnlocked> _onBuilding;
         readonly Action<ConflictStageChanged> _onConflict;
         readonly Action<WeddingAnnounced> _onWedding;
+        readonly Action<CourtshipAnswered> _onCourtship;
         readonly Action<HourPassed> _onHour;
 
         public IReadOnlyList<Headline> Headlines => _headlines;
@@ -90,6 +91,7 @@ namespace Nimbo.Events.News
             _clock = clock;
 
             _onRomance = OnRomanceChanged;
+            _onCourtship = OnCourtshipAnswered;
             _onLevelUp = OnLevelUp;
             _onBaby = OnBabyBorn;
             _onBuilding = OnBuildingUnlocked;
@@ -103,6 +105,7 @@ namespace Nimbo.Events.News
             EventBus.Subscribe(_onBuilding);
             EventBus.Subscribe(_onConflict);
             EventBus.Subscribe(_onWedding);
+            EventBus.Subscribe(_onCourtship);
             EventBus.Subscribe(_onHour);
         }
 
@@ -114,6 +117,7 @@ namespace Nimbo.Events.News
             EventBus.Unsubscribe(_onBuilding);
             EventBus.Unsubscribe(_onConflict);
             EventBus.Unsubscribe(_onWedding);
+            EventBus.Unsubscribe(_onCourtship);
             EventBus.Unsubscribe(_onHour);
         }
 
@@ -133,6 +137,19 @@ namespace Nimbo.Events.News
                 $"La isla prepara la boda de {a} y {b}, el día {evt.Day}.",
             }));
         }
+
+        /// <summary>
+        /// Te han contestado a la declaración (§14).
+        /// </summary>
+        /// <remarks>
+        /// Se escribe la frase tal cual llega, sin plantillas: el «no» ya viene
+        /// redactado desde el cortejo porque nombra el eje que más lejos quedó, y
+        /// reescribirlo aquí perdería justo la parte que enseña.
+        ///
+        /// Y va a la crónica aunque el cartel del momento ya lo haya dicho: al volver
+        /// dentro de tres días, esto es lo que uno quiere encontrar.
+        /// </remarks>
+        void OnCourtshipAnswered(CourtshipAnswered evt) => AddHeadline(evt.Line);
 
         void OnRomanceChanged(RomanceStageChanged evt)
         {

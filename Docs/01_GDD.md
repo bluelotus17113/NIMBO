@@ -760,11 +760,11 @@ Lo que falta se agrupa en tres bolsas y conviene saber por qué:
 
 | Nivel | Desbloquea |
 |---|---|
-| 1 | Hablar, contar un chiste (`Chat`, `Joke`) |
-| 2 | Halagar (`Compliment`) |
+| 1 | `[x]` Hablar, contar un chiste (`Chat`, `Joke`) |
+| 2 | `[x]` Halagar (`Compliment`) |
 | 3 | Un regalo más al día |
-| 4 | Abrazar y confiar un secreto (`Hug`, `PlayTogether`) |
-| 5 | **Cortejar** (`Confess` — §14) |
+| 4 | `[x]` Abrazar y jugar (`Hug`, `PlayTogether`) |
+| 5 | `[x]` **Cortejar** (`Confess` — §14) |
 | 7 | Pedir un favor: un vecino te trae material que necesitas |
 | 9 | Mediar en una riña: baja un escalón de `ConflictStage` |
 
@@ -952,6 +952,10 @@ Reutiliza `NewsBoard`, que ya está escrito.
 
 ### 14.1 La regla
 
+**Hecho** §14.1, §14.2 y §14.3. Lo de §14.4 (que tu declaración entre en el triángulo
+de la aldea) y §14.5 (la boda contigo) siguen en pie: ver el final de §14.5.
+
+
 El protagonista puede cortejar a un habitante, **y puede fallar**. No es una barra
 que se llena: es una declaración que se hace una vez y tiene respuesta.
 
@@ -1064,6 +1068,9 @@ como arbitrario.
 float required = Mathf.Lerp(90f, 62f, Mathf.InverseLerp(-0.2f, 0.8f, compat));  // ⚙️
 ```
 
+Con `Compatibility.Between` y nunca con `Full`: `Full` suma el sesgo entre tipos de
+personalidad, y el protagonista no tiene tipo — tiene ejes.
+
 | Compatibilidad | Afinidad necesaria | Qué se siente |
 |---|---|---|
 | 0.8 — os parecéis | 62 | sale casi solo |
@@ -1130,8 +1137,21 @@ cambia ni una firma.
 
 #### 14.3.8 Cómo se comprueba que está bien
 
-1. **Dos partidas, una de 20 min/día y otra de 3 h/día haciendo lo mismo, dan el mismo
-   perfil (±0.05).** Es el test que caza la vuelta a los contadores absolutos.
+1. **Dos partidas, una de 20 min/día y otra de 3 h/día haciendo lo mismo, dan la misma
+   proporción.** Es el test que caza la vuelta a los contadores absolutos.
+
+   *Corregido al implementarlo:* decía «el mismo perfil», y el perfil **sí** difiere,
+   porque el encogimiento tira a cero lo que tiene pocas muestras y cinco minutos de
+   juego son cinco minutos de pruebas. Lo que no puede depender de la duración es la
+   proporción en crudo, y eso es lo que se comprueba (`RawAxisOf`). Que la confianza
+   suba con el rato es correcto y se comprueba aparte.
+
+   *Y una unidad que no cuadraba:* los ejes continuos llegaban en **segundos** y los
+   de golpe de uno en uno, con la misma `K = 40`. Con eso la Energía quedaba decidida
+   antes de cruzar el prado mientras la Expresión seguía pidiendo cuarenta
+   conversaciones, y la confianza de un eje no significaba lo mismo que la del otro.
+   Ahora lo continuo llega en **minutos**: cuarenta minutos andando valen lo mismo que
+   cuarenta conversaciones.
 2. Un eje sin muestras da exactamente 0 y confianza 0.
 3. Cambiar de conducta a propósito tarda ≥ 10 días de juego en mover un eje 0.5.
 4. `Compatibility.Between` con el perfil del jugador nunca sale de [−1, +1].
@@ -1172,6 +1192,23 @@ Tres requisitos, uno de cada mitad del juego:
 Después, la pareja se muda a tu cabaña, hace **una acción del huerto al día** por su
 cuenta (riega lo que esté seco), y sus necesidades pasan a estar parcialmente a tu
 cargo. Nada de esto es obligatorio y nada caduca si no entras.
+
+---
+
+**Lo que queda de §14.** Con §14.1–§14.3 hechos, el cortejo funciona de punta a punta:
+te declaras, cuesta un ramo, te contestan al día siguiente, y el «no» te dice en qué no
+os parecíais. Falta:
+
+- **§14.4 — tu declaración dentro del triángulo.** Hoy el cortejo mira si esa persona
+  ya está con alguien y te dice que no llegas a tiempo, pero **no compite**: no entras
+  como vértice en el triángulo de §13.2 ni el rival reacciona a ti. Es lo que
+  convertiría el romance en una carrera en vez de una comprobación.
+- **§14.5 — la boda contigo.** Necesita el anillo (Oficio 8, que a su vez pide material
+  raro que no existe), la cabaña ampliada al nivel 1 —el protagonista no tiene niveles
+  de casa: `HomeUpgradeService` es para los vecinos— y que la pareja se mude y trabaje
+  el huerto. Es un bloque del tamaño de los tres primeros juntos.
+- **Convivencia 7 y 9** (pedir un favor, mediar en una riña): el menú social ya existe,
+  así que ahora sí tienen dónde ir; lo que les falta es la mecánica de cada uno.
 
 ---
 
@@ -1453,7 +1490,7 @@ cuatro primeras son código que ya existe y solo hay que conectar.
 | ~~5~~ | ~~Enchufar los tres minijuegos (§9.2)~~ | **hecho** | tres verbos escritos y apagados |
 | ~~6~~ | ~~Las cinco vías y sus desbloqueos (§12)~~ | **hecho** (el motor y catorce puertas; ver §12.3) | la progresión entera |
 | ~~7~~ | ~~Rivales y triángulos (§13.2)~~ | **hecho** | las historias que el jugador va a contar |
-| 8 | Cortejo del protagonista con rechazo (§14) | dos días | el pilar romántico, apoyado en 6 y 7 |
+| ~~8~~ | ~~Cortejo del protagonista con rechazo (§14)~~ | **hecho** (§14.1–§14.3; ver el final de §14.5) | el pilar romántico |
 
 **La regla que salió de hacer los tres primeros.** Al cerrar el punto 2 quedó claro que
 una boda que el jugador no puede percibir no está entregada, y por eso la Crónica subió

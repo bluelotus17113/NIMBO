@@ -68,6 +68,13 @@ namespace Nimbo.Core.Services.Contracts
 
         /// <summary>Los nodos listos para recoger salen en el mapa.</summary>
         NodesOnMap = 15,
+
+        // ── el trato con la gente ────────────────────────────────────────────
+        /// <summary>Halagar a un vecino.</summary>
+        Compliment = 16,
+
+        /// <summary>Abrazar y jugar con alguien.</summary>
+        WarmGestures = 17,
     }
 
     /// <summary>

@@ -51,6 +51,7 @@ namespace Nimbo.Art.PlayerView
         private IRequestService _requests;
         private IMinigameService _minigames;
         private IPlayerProgression _progression;
+        private IConductService _conduct;
         private World.InteriorView _interior;
         private World.WorldView _world;
 
@@ -133,11 +134,19 @@ namespace Nimbo.Art.PlayerView
 
             // Los vecinos primero: si tienes a alguien al lado y un arbusto detrás,
             // lo que quieres es hablar con la persona.
+            bool accompanied = false;
             if (_registry != null)
             {
                 foreach (var islander in _registry.All)
                 {
                     if (!TryGetIslanderPosition(islander.Id, out var position)) continue;
+
+                    // De paso, el eje de Actitud (§14.3.1): estar cerca de alguien en
+                    // vez de andar solo. Se aprovecha este recorrido, que ya mira a
+                    // todos los vecinos con sus posiciones en su cadencia lenta, así
+                    // que medirlo no añade ni una iteración.
+                    if (!accompanied && Near(origin, position, CompanyRange)) accompanied = true;
+
                     if (!InRange(origin, position, ref best)) continue;
 
                     Kind = TargetKind.Islander;
@@ -145,6 +154,8 @@ namespace Nimbo.Art.PlayerView
                     Prompt = MeetPrompt(islander.Identity.ShortName);
                 }
             }
+
+            NoteCompany(accompanied);
 
             if (Kind == TargetKind.Islander) return;
 
@@ -462,6 +473,32 @@ namespace Nimbo.Art.PlayerView
                 _ => $"Tablón de encargos — hay {pending} cosas",
             };
             return true;
+        }
+
+        /// <summary>A cuánto cuenta como estar acompañado, en metros.</summary>
+        private const float CompanyRange = 8f;
+
+        /// <summary>
+        /// Apunta si estabas con alguien o a tu aire.
+        /// </summary>
+        /// <remarks>
+        /// Solo puertas afuera. Dentro de una casa no hay vecinos que valgan —el
+        /// interior es una escena aparte y está vacía—, así que contar ahí diría que
+        /// todo el que amuebla su cabaña es un ermitaño.
+        ///
+        /// El peso son los segundos que han pasado desde la última vez que se miró, que
+        /// es el intervalo de refresco: así el eje mide **rato** y no cuántas veces se
+        /// ha recalculado el objetivo.
+        /// </remarks>
+        private void NoteCompany(bool accompanied)
+        {
+            if (_conduct == null && !ServiceRegistry.TryGet(out _conduct)) return;
+            if (_interior != null && _interior.Inside) return;
+
+            // En minutos, como la Energía: los cuatro ejes tienen que tardar parecido
+            // en creerse o la confianza de uno no significa lo mismo que la de otro.
+            _conduct.Note(Data.Islanders.PersonalityAxis.Attitude, accompanied,
+                          _refreshInterval / 60f);
         }
 
         /// <summary>El nivel de la isla, de 1 a 5. Sin isla registrada, el más fácil.</summary>

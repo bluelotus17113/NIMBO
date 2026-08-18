@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "category": "Gift",
+  "items": [
+    {
+      "catalogId": "gift_ramo",
+      "displayName": "Ramo de flores",
+      "description": "Pétalos recogidos a mano y atados con fibra. Dura dos días y se sabe, y por eso significa algo.",
+      "price": 45,
+      "unlockLevel": 1,
+      "tags": [
+        "regalo",
+        "flores"
+      ]
+    }
+  ]
+}
