@@ -92,6 +92,8 @@ namespace Nimbo.Game.Bootstrap
         private Nimbo.Events.Minigames.MinigameService _minigames;
         private PlayerProgressionService _progression;
         private ConductService _conduct;
+        private Nimbo.Events.Scheduling.VillageEvents _villageEvents;
+        private Nimbo.Events.Scheduling.EventSparks _sparks;
 
         private IslanderRegistry _registry;
         private long _lastAutosaveMinute;
@@ -323,6 +325,11 @@ namespace Nimbo.Game.Bootstrap
             // puesto — tocar en la fiesta del pueblo tiene que notarse en el pueblo.
             _minigames = new Nimbo.Events.Minigames.MinigameService(null, _events.Scheduler);
 
+            // Poner una fiesta en el calendario (§15.3), y que de ella salga algo: en
+            // una fiesta los vecinos coinciden, y ahí nacen los flechazos.
+            _villageEvents = new Nimbo.Events.Scheduling.VillageEvents(_events.Scheduler, _clock);
+            _sparks = new Nimbo.Events.Scheduling.EventSparks(_events.Scheduler);
+
             _brain = new IslanderBrain(registry, _island, personalities, _social, _clock);
             _jobs = new JobService(registry, _simulation, _island, _clock);
             _tree = new NimboTree(_save, _clock, registry);
@@ -350,6 +357,7 @@ namespace Nimbo.Game.Bootstrap
             ServiceRegistry.Register<PlayerService>(_player);
             ServiceRegistry.Register<IPlayerProgression>(_progression);
             ServiceRegistry.Register<IConductService>(_conduct);
+            ServiceRegistry.Register<IVillageEvents>(_villageEvents);
             ServiceRegistry.Register<IInventoryService>(_inventory);
             ServiceRegistry.Register<IFarmingService>(_farming);
             ServiceRegistry.Register<IGatheringService>(_gathering);
@@ -570,6 +578,7 @@ namespace Nimbo.Game.Bootstrap
             _events?.Dispose();
             _progression?.Dispose();
             _conduct?.Dispose();
+            _sparks?.Dispose();
             EventBus.Unsubscribe<DayPassed>(OnDayPassed);
             EventBus.Unsubscribe<AchievementUnlocked>(OnAchievementUnlocked);
             ServiceRegistry.Clear();

@@ -39,6 +39,7 @@ namespace Nimbo.UI
         private Requests.RequestBoardPanel _board;
         private Minigames.MinigamePanel _minigame;
         private Player.SkillsPanel _skills;
+        private Village.EventsPanel _events;
         private Player.HotbarView _hotbar;
         private Player.BagPanel _bag;
         private Player.CraftPanel _craft;
@@ -142,6 +143,9 @@ namespace Nimbo.UI
 
             _skills = new Player.SkillsPanel();
             body.Add(_skills.Root);
+
+            _events = new Village.EventsPanel();
+            body.Add(_events.Root);
 
             _bag = new Player.BagPanel();
             body.Add(_bag.Root);
@@ -260,6 +264,12 @@ namespace Nimbo.UI
             Add("Hacer", () =>
             {
                 if (_craft.IsShowing) _craft.Hide(); else _craft.Show();
+            });
+            // Organizar va junto a los encargos y la crónica: las tres son cosas de
+            // llevar la aldea, y las tres se abren desde el menú y no desde el mundo.
+            Add("Fiestas", () =>
+            {
+                if (_events.IsShowing) _events.Hide(); else _events.Show();
             });
             // Las cinco vías, junto a la mochila y el crafteo: es información del
             // protagonista, no de la aldea, y va con lo suyo.
@@ -596,7 +606,7 @@ namespace Nimbo.UI
         private bool AnyPanelOpen =>
             _panel.IsShowing || _shop.IsShowing || _decor.IsShowing ||
             _achievements.IsShowing || _bag.IsShowing || _craft.IsShowing || _board.IsShowing ||
-            _minigame.IsShowing || _skills.IsShowing ||
+            _minigame.IsShowing || _skills.IsShowing || _events.IsShowing ||
             _shipping.IsShowing || _map.IsShowing || _build.IsShowing ||
             _furnish.IsShowing || _creator.IsShowing || _chronicle.IsShowing;
 

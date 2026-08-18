@@ -238,21 +238,42 @@ namespace Nimbo.Tests
 
         // ── utilidades ───────────────────────────────────────────────────────
 
-        /// <summary>Un oficio abierto que a Bea no le pegue nada.</summary>
+        /// <summary>Un oficio abierto, y una Bea a la que no le pega nada.</summary>
+        /// <remarks>
+        /// Antes esto salía del sorteo de personalidad de la fábrica: se quedaba con el
+        /// peor oficio **de la Bea que hubiera tocado**, así que las veces que le
+        /// cuadraban todos los abiertos los dos tests se saltaban solos. Un test que
+        /// unas veces comprueba y otras no, no comprueba nada.
+        ///
+        /// Ahora busca la peor pareja posible —cada oficio abierto contra los dieciséis
+        /// arquetipos— y le pone a Bea esa personalidad. Si ni así baja del listón, es
+        /// que en esta isla no hay ningún oficio que le pueda venir mal a nadie, y
+        /// entonces saltárselo sí es la respuesta correcta.
+        /// </remarks>
         private bool TryPeorOficio(out JobKind peor)
         {
             peor = JobKind.None;
             float worst = float.MaxValue;
+            var perfil = default(PersonalityProfile);
 
             foreach (var job in _jobs.AvailableJobs)
             {
-                float fit = _jobs.AffinityFor(_bea, job);
-                if (fit >= worst) continue;
-                worst = fit;
-                peor = job;
+                for (int tipo = 0; tipo < PersonalityProfile.TypeCount; tipo++)
+                {
+                    var candidato = PersonalityProfile.FromTypeIndex(tipo);
+                    float fit = JobCatalog.Affinity(candidato, job);
+                    if (fit >= worst) continue;
+
+                    worst = fit;
+                    peor = job;
+                    perfil = candidato;
+                }
             }
 
-            return peor != JobKind.None && worst < 0.3f;
+            if (peor == JobKind.None || worst >= 0.3f) return false;
+
+            _registry.Get(_bea).Personality = perfil;
+            return true;
         }
 
         private void CaerleBien(string islanderId, float afinidad)

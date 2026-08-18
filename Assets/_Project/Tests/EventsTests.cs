@@ -112,7 +112,7 @@ namespace Nimbo.Tests
                 scheduler.EventStarted += (def, h) => eventsStarted++;
 
                 // Disparar HourPassed en sábado a las 18h (ventana de concierto)
-                _island.UnlockedBuildings.Clear(); // zona "stage" cerrada
+                _island.UnlockedBuildings.Clear(); // zona «zona_escenario» cerrada
                 EventBus.Publish(new HourPassed(18, 6)); // día 6 = sábado
             }
 
@@ -131,7 +131,11 @@ namespace Nimbo.Tests
             _registry.AddIslander("leo", "Leo", 5);
             _registry.AddIslander("mia", "Mia", 5);
             _island.Level = 5;
-            _island.UnlockedBuildings.Add("stage");
+            // El escenario, con el nombre que tiene en el plano de la isla. Este test
+            // era el único que abría la zona a mano, así que era también el único que
+            // podía notar que el calendario pedía «stage», que no existe en ninguna
+            // parte: los tres eventos de escenario y plaza no podían pasar nunca.
+            _island.UnlockedBuildings.Add("zona_escenario");
 
             var started = new List<string>();
             using (var scheduler = new EventScheduler(_config))

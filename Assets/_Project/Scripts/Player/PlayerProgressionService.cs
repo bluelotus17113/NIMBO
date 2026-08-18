@@ -67,6 +67,8 @@ namespace Nimbo.Player
             (SkillKind.Crafting, 8),     // EngagementRing
             (SkillKind.Social, 7),       // AskFavour
             (SkillKind.Social, 9),       // Mediate
+            (SkillKind.Village, 5),      // HostEvents
+            (SkillKind.Village, 7),      // HostFestivals
         };
 
         public PlayerProgressionService(PlayerState player, PlayerProgressionConfig config = null)

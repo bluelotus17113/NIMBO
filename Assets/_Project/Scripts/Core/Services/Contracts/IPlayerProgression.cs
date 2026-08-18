@@ -84,6 +84,12 @@ namespace Nimbo.Core.Services.Contracts
 
         /// <summary>Mediar en una riña entre dos vecinos (§13.2).</summary>
         Mediate = 20,
+
+        /// <summary>Organizar fiestas pequeñas (§15.3).</summary>
+        HostEvents = 21,
+
+        /// <summary>Organizar festivales (§15.3).</summary>
+        HostFestivals = 22,
     }
 
     /// <summary>

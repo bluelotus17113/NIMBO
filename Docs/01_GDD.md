@@ -1484,23 +1484,58 @@ de la v1.0 y es la mitad del juego de hoy:
       líneas, y guarda el texto ya escrito y no los identificadores, para que la línea de
       un vecino que se fue no salga en blanco. Lo escribe el `NewsBoard`, que ya tenía
       las plantillas.
-- [~] Cortejo y boda del protagonista (§14). El rechazo está —ramo, respuesta al día
-      siguiente, frase que nombra el eje, espera de diez días— y la boda también:
-      diez días saliendo, anillo de cristal de nimbo y tu cabaña ampliada, con fecha
-      puesta por la aldea y tu pareja regando una casilla al día. **Los rivales no**:
-      tu declaración no entra como vértice en el triángulo de §13.2, solo comprueba si
-      esa persona ya está con alguien.
+- [x] Cortejo y boda del protagonista (§14). El rechazo —ramo, respuesta al día
+      siguiente, frase que nombra el eje, espera de diez días—, la boda —diez días
+      saliendo, anillo de cristal de nimbo y tu cabaña ampliada, con fecha puesta por
+      la aldea y tu pareja regando una casilla al día— y los rivales: declararte a
+      alguien que ya tiene pretendiente te mete en el triángulo de §13.2 como un
+      vértice más, y al contestarte se compara tu puntuación con la suya con la misma
+      tabla (§14.4).
 - [x] Los cuatro ejes del protagonista deducidos de su conducta (§14.3), con su
       pantalla de «cómo te ve la aldea».
 - [x] Trabajos: 8 oficios, afinidad por personalidad, rangos, sueldos, asignación.
-- [x] Que un habitante pueda negarse a un trabajo (§15.1). Si el oficio no le pega **y
-      además** no te tiene aprecio, dice que no.
+- [~] Que un habitante pueda negarse a un trabajo (§15.1). La regla está escrita,
+      enchufada y probada —si el oficio no le pega **y además** no te tiene aprecio,
+      dice que no— pero **el listón está donde no llega nadie**. `MinJobAffinity` vale
+      0,30 y la afinidad es `1 − distancia`: con los dieciséis arquetipos canónicos a
+      ±0,75, el oficio que peor le puede caer a alguien saca **0,350** (Músico y Guía).
+      Ni un solo tipo de personalidad baja del listón con ningún oficio. Midiendo con
+      los isleños de verdad, que salen con cada eje en ±[0,35 · 1], **el 0,22 % tendría
+      algún oficio por debajo**: con doce vecinos, dos de cada cien partidas ven un «no»
+      alguna vez.
+
+      Lo delató un test que se saltaba a sí mismo. `GestionAldeaTests` buscaba el peor
+      oficio de una Bea sorteada al azar y, si no lo encontraba, hacía `Assert.Ignore`;
+      al hacerlo exhaustivo —los ocho oficios contra los dieciséis arquetipos— resultó
+      que la peor pareja posible tampoco baja de 0,30. Un test que unas veces comprueba
+      y otras no, no comprueba.
+
+      **Es un número, no código.** El barrido dice que a 0,50 el 61 % de los vecinos
+      rechazaría algún oficio, el 13,7 % de los pares se cae, y **nadie se queda sin
+      ningún sí** — que es la condición que no se puede romper, porque un vecino sin
+      oficio posible no cobra nunca. Queda decidir el valor.
 - [x] **Ampliación de casas, cobrada en obra** (§15.2). `HomeUpgradeService` registrado
       en `GameBootstrap` y con su bloque en la ficha del habitante, que dice qué falta
       cuando falta. Nivel 1: 1200 N◉ + 30 madera + 20 piedra. Nivel 2: 3500 N◉ + 80
       madera + 60 piedra + 10 savia. Todo o nada: si falta un solo material no se gasta
       ninguno ni se cobran las monedas.
-- [ ] Que el jugador pueda organizar eventos (§15.3).
+- [x] **Que el jugador pueda organizar eventos** (§15.3). Botón «Fiestas» en la barra,
+      con todas las del calendario a la vista —incluidas las que no puedes pagar o
+      desbloquear todavía, y con el motivo escrito—, 300 nimbos las pequeñas y 1200 los
+      festivales, una cada vez. De cada evento sale como mucho **un** flechazo, el de la
+      pareja libre que mejor pega, y sale de un solo lado: montar la fiesta es poner el
+      sitio donde la gente coincide, no emparejar a nadie.
+
+      **Al hacerlo salió una variante nueva de la enfermedad de siempre**, y esta es la
+      peor de todas: el enchufe estaba puesto **en un agujero que no existe**. Tres
+      eventos —concierto, festival de la isla y concurso de talentos— pedían las zonas
+      `stage` y `plaza_central`, que no son los nombres del plano (`zona_escenario` y
+      `zona_plaza`). `IsUnlocked` decía que no para siempre, así que esos tres eventos
+      **no podían ocurrir nunca**, ni sorteados ni pagados — y con el concierto se caía
+      el minijuego de ritmo, que solo se puede jugar si hay uno en marcha. Lo tapaba que
+      el único test que abría la zona a mano la abría con el nombre equivocado también.
+      Ahora hay un test que recorre el calendario contra el plano y exige que toda zona
+      pedida exista.
 - [x] Peticiones que cuestan lo que piden (§15.4): material exacto, o cualquiera de su
       familia eligiendo tú. Se cobra de la mochila y de la despensa.
 - [x] **`EventsService` encendido.** Sucesos diarios, sueños, conciertos, noticias y
@@ -1579,6 +1614,19 @@ caducaban y restaban ánimo — y solo se podían leer entrando en la ficha de c
 de uno en uno. Con doce vecinos eso son doce pantallas para averiguar si hay algo que
 hacer, y ese recorrido no lo hace nadie dos veces. Un sistema encendido con una forma de
 mirarlo que nadie usaría está tan apagado como el que no arranca.
+
+Y §15.3 añadió las dos últimas, que son las peores porque **ningún test las ve como
+fallo**:
+
+- **El enchufe puesto en un agujero que no existe.** Tres eventos pedían zonas con
+  nombres que no están en el plano, así que la condición para que ocurrieran era falsa
+  para siempre. No hay excepción, no hay aviso: simplemente no pasan. Se caza
+  comprobando que **toda referencia por nombre existe en el otro lado** —los ids de
+  zona, los de receta, los de objeto—, y eso son cuatro líneas por catálogo.
+- **El listón puesto donde no llega nadie.** La regla de negarse a un trabajo funciona,
+  pero su umbral está por debajo del mínimo que el sistema puede producir, así que
+  nunca se cumple. Se caza midiendo el rango real —el peor caso posible contra el
+  umbral— en vez de probar un caso concreto y darlo por bueno.
 
 ---
 

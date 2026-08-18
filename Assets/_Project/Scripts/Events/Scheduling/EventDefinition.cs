@@ -39,11 +39,22 @@ namespace Nimbo.Events.Scheduling
         /// (cumpleaños, puente, etc.).</summary>
         public readonly bool IsTriggered;
 
+        /// <summary>
+        /// Si es una fiesta grande. Solo cambia lo que cuesta organizarla y qué nivel
+        /// de Aldea pide (§15.3).
+        /// </summary>
+        /// <remarks>
+        /// Escrito en la ficha y no deducido de los requisitos: «pide cinco vecinos» y
+        /// «es un festival» se parecen hoy por casualidad, y el día que alguien añada un
+        /// evento pequeño para seis vecinos dejarían de parecerse sin que nadie lo note.
+        /// </remarks>
+        public readonly bool IsFestival;
+
         public EventDefinition(
             string id, string displayName, string description,
             int startHour, int endHour, string dayOfWeek,
             int minIslanders, int minIslandLevel, string requiredZone,
-            float weight, bool isTriggered = false)
+            float weight, bool isTriggered = false, bool isFestival = false)
         {
             Id = id;
             DisplayName = displayName;
@@ -56,6 +67,7 @@ namespace Nimbo.Events.Scheduling
             RequiredZone = requiredZone;
             Weight = weight;
             IsTriggered = isTriggered;
+            IsFestival = isFestival;
         }
 
         /// <summary>

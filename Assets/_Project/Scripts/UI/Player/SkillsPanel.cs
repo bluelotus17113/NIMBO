@@ -42,7 +42,8 @@ namespace Nimbo.UI.Player
             [SkillKind.Social] = new[] { Unlock.Compliment, Unlock.ExtraGift,
                                          Unlock.WarmGestures, Unlock.Courtship,
                                          Unlock.AskFavour, Unlock.Mediate },
-            [SkillKind.Village] = new[] { Unlock.AssignJobs, Unlock.UpgradeHomes },
+            [SkillKind.Village] = new[] { Unlock.AssignJobs, Unlock.UpgradeHomes,
+                                          Unlock.HostEvents, Unlock.HostFestivals },
         };
 
         public SkillsPanel()
@@ -270,6 +271,8 @@ namespace Nimbo.UI.Player
             Unlock.EngagementRing => "fabricar el anillo de compromiso",
             Unlock.AskFavour => "pedirle un favor a un vecino",
             Unlock.Mediate => "mediar cuando dos se han enfadado",
+            Unlock.HostEvents => "organizar una fiesta en la aldea",
+            Unlock.HostFestivals => "organizar festivales",
             Unlock.WideWatering => "la regadera moja tres casillas de una vez",
             _ => "verás en el mapa lo que está listo para recoger",
         };

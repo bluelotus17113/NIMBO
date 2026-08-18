@@ -21,12 +21,12 @@ namespace Nimbo.Events.Scheduling
                 new EventDefinition(
                     "concert", "Concierto en el escenario",
                     "Un isleño canta o toca en el escenario. Los demás miran, aplauden… o abuchean.",
-                    17, 22, "saturday", 3, 5, "stage", 2f),
+                    17, 22, "saturday", 3, 5, "zona_escenario", 2f),
 
                 new EventDefinition(
                     "island_festival", "Festival de la isla",
                     "Todos los isleños se reúnen en la plaza. Música, baile y puestos de comida.",
-                    14, 20, "sunday", 5, 5, "plaza_central", 3f),
+                    14, 20, "sunday", 5, 5, "zona_plaza", 3f, isFestival: true),
 
                 new EventDefinition(
                     "market_day", "Día de mercado",
@@ -36,7 +36,7 @@ namespace Nimbo.Events.Scheduling
                 new EventDefinition(
                     "talent_show", "Concurso de talentos",
                     "Cada isleño muestra lo que sabe hacer. Unos cantan, otros hacen malabares, otros… lo intentan.",
-                    16, 21, "saturday", 4, 5, "stage", 1.5f),
+                    16, 21, "saturday", 4, 5, "zona_escenario", 1.5f, isFestival: true),
 
                 new EventDefinition(
                     "starry_night", "Noche de estrellas",
