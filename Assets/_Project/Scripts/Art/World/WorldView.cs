@@ -24,6 +24,17 @@ namespace Nimbo.Art.World
         [SerializeField] private float _islandRadius = 100f;
         [SerializeField] private float _islandDepth = 62f;
 
+        /// <summary>Cuántas matas de hierba lleva cada isla.</summary>
+        /// <remarks>
+        /// Nueve mil salen a una mata cada tres metros cuadrados largos. Parece poco
+        /// escrito, pero cada mata mide casi un metro de ancho: desde la cámara del
+        /// juego se lee como un prado, y a ras de suelo como hierba alta separada,
+        /// que es lo que es. Subirlo es la primera palanca si la isla se ve pelada, y
+        /// bajarlo la primera si se atasca.
+        /// </remarks>
+        [SerializeField] private int _villageTufts = 9000;
+        [SerializeField] private int _homeTufts = 2600;
+
         private readonly Dictionary<string, IslanderView> _views = new();
         private readonly Dictionary<string, Vector3> _zoneCentres = new();
         private readonly Dictionary<string, GameObject> _decorViews = new();
@@ -32,6 +43,11 @@ namespace Nimbo.Art.World
 
         private Transform _islanders;
         private Transform _decorRoot;
+
+        // La superficie de cada isla y dónde cuelga, guardadas para sembrarlas
+        // después de levantar las zonas: la hierba tiene que esquivar lo construido.
+        private Transform _villageRoot, _homeRoot;
+        private Mesh _villageSurface, _homeSurface;
         private IIslanderRegistry _registry;
         private IIslandService _island;
         private IPersonalityService _personalities;
@@ -74,6 +90,7 @@ namespace Nimbo.Art.World
 
             BuildIsland();
             BuildZones();
+            BuildMeadows();
             BuildDecor();
 
             _islanders = new GameObject("Habitantes").transform;
@@ -98,7 +115,9 @@ namespace Nimbo.Art.World
             var island = new GameObject("Isla").transform;
             island.SetParent(transform, worldPositionStays: false);
 
-            AddMesh(island, "prado", IslandMeshBuilder.BuildSurface(_islandRadius),
+            _villageRoot = island;
+            _villageSurface = IslandMeshBuilder.BuildSurface(_islandRadius);
+            AddMesh(island, "prado", _villageSurface,
                     ToonPalette.Solid(ToonPalette.Grass), solid: true);
             AddMesh(island, "roca", IslandMeshBuilder.BuildUnderside(_islandRadius, _islandDepth),
                     ToonPalette.Solid(ToonPalette.Rock));
@@ -116,10 +135,62 @@ namespace Nimbo.Art.World
             var tree = new GameObject("Árbol Nimbo").transform;
             tree.SetParent(island, worldPositionStays: false);
             AddMesh(tree, "tronco", trunk, ToonPalette.Solid(ToonPalette.TrunkBrown), solid: true);
-            AddMesh(tree, "copa", crown, ToonPalette.Solid(ToonPalette.LeafGreen));
+
+            // La copa se mueve menos que una mata: un árbol de veintiséis metros que
+            // se sacuda como un arbusto se lee como de goma. Y no recibe sombras, por
+            // lo mismo que las demás copas: ver la nota en GatheringView.AddPart.
+            AddMesh(tree, "copa", crown,
+                    ToonPalette.Foliage(ToonPalette.LeafGreen, windStrength: 0.10f),
+                    Vector3.zero, receivesShadows: false);
 
             BuildRequestBoard(island);
             BuildClouds(island);
+        }
+
+        /// <summary>
+        /// Siembra las dos islas, ya con lo construido en pie.
+        /// </summary>
+        /// <remarks>
+        /// **Después de las zonas y no antes.** La hierba tiene que saber dónde hay una
+        /// casa para no crecer dentro, y quien sabe eso es la lista de bultos que
+        /// llenan las zonas al levantarse. Sembrando antes, cada edificio saldría con
+        /// briznas atravesándole el suelo.
+        ///
+        /// Los bultos se ensanchan un metro largo: un edificio ocupa su caja, pero una
+        /// mata que crece pegada a la pared asoma por dentro, porque la mata se dobla.
+        /// </remarks>
+        private void BuildMeadows()
+        {
+            var villageKeepOut = new List<Meadow.KeepOut>(_obstacles.Count);
+            for (int i = 0; i < _obstacles.Count; i++)
+                villageKeepOut.Add(new Meadow.KeepOut(_obstacles[i].Centre,
+                                                      _obstacles[i].Radius + 1.3f));
+
+            if (_villageRoot != null && _villageSurface != null)
+                Meadow.Build(_villageRoot, _villageSurface, _islandRadius, seed: 7u,
+                             tuftCount: _villageTufts, grass: ToonPalette.Grass,
+                             worldOffset: Vector3.zero, keepOut: villageKeepOut);
+
+            if (_homeRoot == null || _homeSurface == null) return;
+
+            // Tu isla no pasa por la lista de bultos —su casa y su huerto los levanta
+            // otro componente— así que los sitios se nombran aquí. Están en
+            // coordenadas del mundo y la isla cuelga del sur, de ahí la resta.
+            var centre = Data.World.Archipelago.HomeCentre;
+            var homeKeepOut = new List<Meadow.KeepOut>
+            {
+                new(Data.Player.PlayerHome.Cabin - centre, 5.6f),
+                new(Data.Player.PlayerHome.Stove - centre, 2f),
+                new(Data.Player.PlayerHome.Bench - centre, 2f),
+                new(Data.Player.PlayerHome.ShippingBox - centre, 1.8f),
+                new(Data.Player.PlayerHome.Spawn - centre, 2.4f),
+                new(new Vector3(Data.Farming.FarmPlot.CentreX - centre.x, 0f,
+                                Data.Farming.FarmPlot.CentreZ - centre.z), 8f),
+            };
+
+            Meadow.Build(_homeRoot, _homeSurface, Data.World.Archipelago.HomeRadius, seed: 31u,
+                         tuftCount: _homeTufts, grass: ToonPalette.Grass,
+                         worldOffset: centre, keepOut: homeKeepOut);
         }
 
         /// <summary>
@@ -180,7 +251,9 @@ namespace Nimbo.Art.World
 
             float radius = Data.World.Archipelago.HomeRadius;
 
-            AddMesh(home, "prado", IslandMeshBuilder.BuildSurface(radius, seed: 31u),
+            _homeRoot = home;
+            _homeSurface = IslandMeshBuilder.BuildSurface(radius, seed: 31u);
+            AddMesh(home, "prado", _homeSurface,
                     ToonPalette.Solid(ToonPalette.Grass), solid: true);
             AddMesh(home, "roca", IslandMeshBuilder.BuildUnderside(radius, _islandDepth * 0.6f),
                     ToonPalette.Solid(ToonPalette.Rock));
@@ -543,7 +616,7 @@ namespace Nimbo.Art.World
 
         private static void AddMesh(Transform parent, string name, Mesh mesh, Material material,
                                     Vector3 offset, Quaternion rotation = default,
-                                    bool solid = false)
+                                    bool solid = false, bool receivesShadows = true)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, worldPositionStays: false);
@@ -551,7 +624,10 @@ namespace Nimbo.Art.World
             go.transform.localRotation = rotation == default ? Quaternion.identity : rotation;
 
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
-            go.AddComponent<MeshRenderer>().sharedMaterial = material;
+
+            var renderer = go.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = material;
+            renderer.receiveShadows = receivesShadows;
 
             // Caja para lo que es una caja, malla para lo que no: un MeshCollider por
             // cada tabla del puente son cuarenta mallas de colisión para algo que son

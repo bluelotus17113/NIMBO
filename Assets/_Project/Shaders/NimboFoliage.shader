@@ -1,49 +1,54 @@
-// El shader de toda la isla. Ver ToonPalette, que es quien reparte las bandas.
+// La vegetación: hierba, copas de árbol y matas.
 //
-// Lo que hace distinto a URP/Lit, y por qué:
+// Es el shader de la isla (Nimbo/Toon) con las tres cosas que la vegetación
+// necesita y el resto no:
 //
-//   La luz no ilumina: elige. En vez de multiplicar el color del objeto por la
-//   cantidad de luz que le llega, la cantidad de luz se usa como índice en una
-//   rampa de cuatro colores pintados a mano. Es la fórmula de los fondos de anime
-//   —en Blender, «Diffuse BSDF → Shader to RGB → ColorRamp»— y es la diferencia
-//   entre una copa de árbol con cuatro verdes y una con un degradado. Un degradado
-//   es una esfera de plástico; cuatro verdes es un dibujo. Ver NimboAnime.hlsl.
+//   Viento en el vértice. Ver NimboWind en NimboAnime.hlsl. Va también en el pase
+//   de sombras: si la hierba se mueve y su sombra no, la sombra la delata.
 //
-//   Sombra con color propio. La banda de sombra no es el color base oscurecido:
-//   lleva el tono girado hacia el cian y menos claridad, que es lo que hace el
-//   pintor. Un verde en sombra tira a verde azulado, no a verde sucio.
+//   Dos caras. Una brizna es una lámina; vista por detrás, con la cara de atrás
+//   descartada, desaparece. Se dibujan las dos con la **misma** normal: ver la nota
+//   en el fragmento, que es donde está el motivo y no es el obvio.
 //
-//   Variación a gran escala. Manchas anchas que tiñen hacia los dos extremos de la
-//   propia rampa: unas frías y oscuras, otras cálidas y claras. Es la pareja de
-//   colores de la referencia, sacada de la paleta en vez de elegida aparte. Sin
-//   esto, un prado es un verde liso hasta el horizonte.
+//   Raíz oscura. La brizna se apaga hacia abajo y la copa hacia dentro. En la
+//   referencia es un degradado en coordenadas de objeto; aquí viene escrito en el
+//   vértice, que sale más barato y aguanta que la malla se gire.
 //
-//   Contraluz. Un hilo de cielo en el borde de las siluetas. Despega las cosas del
-//   fondo sin tener que dibujarles un contorno.
+// **Lo que la malla tiene que traer escrito en el color del vértice:**
+//   r = oclusión — 0 metido dentro del bulto, 1 a la intemperie
+//   g = máscara de viento — 0 en la raíz, 1 en la punta
+//   b = degradado raíz-punta para el tono
+//   a = semilla de la mata, para que dos matas vecinas no sean del mismo verde
 //
-//   Nada de reflejos. Un plano ancho —un tejado, una mesa, un hombro— cogía una
-//   franja blanca que se leía como una pieza suelta.
+// Sin ese contrato la vegetación sale plana y quieta, no rota: el color del
+// vértice sin escribir es negro, y negro significa raíz, sombra y sin viento.
 
-Shader "Nimbo/Toon"
+Shader "Nimbo/Foliage"
 {
     Properties
     {
-        _BaseMap("Textura", 2D) = "white" {}
+        _BaseMap("Recorte", 2D) = "white" {}
         _BaseColor("Color", Color) = (1, 1, 1, 1)
-        _Smoothness("Brillo", Range(0, 1)) = 0
 
-        // Las cuatro bandas. Las calcula ToonPalette a partir del color base, con
-        // los mismos giros de tono y claridad que la rampa de la referencia.
         _BandDeep("Banda profunda", Color) = (0.19, 0.43, 0.35, 1)
         _BandShadow("Banda de sombra", Color) = (0.21, 0.49, 0.27, 1)
         _BandLit("Banda de luz", Color) = (0.33, 0.62, 0.26, 1)
         _BandHigh("Banda de sol", Color) = (0.62, 0.80, 0.41, 1)
 
-        // Dónde salta la rampa y en cuánto. Medidos de la rampa del follaje: las
-        // transiciones son estrechas —0,072 y 0,061— pero no son un corte.
-        _EdgeLow("Salto a la luz", Range(0, 1)) = 0.40
-        _SoftLow("Ancho del salto", Range(0.002, 0.5)) = 0.10
-        _EdgeHigh("Salto al sol", Range(0, 1)) = 0.88
+        // El follaje lleva el salto más ancho que el resto, y no es capricho. En la
+        // referencia la copa son cuarenta tarjetas de hojas recortadas: el borde
+        // entre luz y sombra nunca es una línea porque lo rompen las hojas. Aquí la
+        // copa es un bulto liso, así que con el salto estrecho salía una raya de
+        // dientes de sierra cruzando el árbol, siguiendo las aristas de los
+        // triángulos. El ancho hace de hojas.
+        _EdgeLow("Salto a la luz", Range(0, 1)) = 0.42
+        _SoftLow("Ancho del salto", Range(0.002, 0.5)) = 0.22
+        // El follaje entra en la banda de sol más tarde que el suelo. Una brizna
+        // hereda la normal del suelo, así que le llega la misma luz; con el mismo
+        // umbral y su pizca de variación por mata, media hierba cruzaba a la banda
+        // alta y el prado salía de matas blanquecinas sobre verde. La banda de sol
+        // se le reserva a lo que de verdad mira al sol: el lomo de una copa.
+        _EdgeHigh("Salto al sol", Range(0, 1)) = 0.93
         _SoftHigh("Ancho del segundo", Range(0.002, 0.5)) = 0.07
 
         // Cuánta luz llega a lo que no mira al sol. Sin esto, la cara de sombra de
@@ -54,36 +59,26 @@ Shader "Nimbo/Toon"
         // ya trae el rebote; aquí se alimenta del coseno pelado y hay que sumárselo.
         _AmbientLift("Luz de relleno", Range(0, 0.6)) = 0.22
 
-        // Manchas de color. En metros: 14 es una mancha del ancho de una casa. Los
-        // dos tintes son la pareja de la referencia y los escribe ToonPalette: son
-        // los extremos de la propia rampa puestos como multiplicador.
         _Variation("Variación de color", Range(0, 1)) = 0.36
         _VariationScale("Tamaño de la mancha", Float) = 12
         _VariaCool("Tinte de la mancha fría", Vector) = (0.62, 1.12, 1.30, 1)
         _VariaWarm("Tinte de la mancha cálida", Vector) = (1.55, 1.28, 0.95, 1)
+        _ClumpVariation("Variación por mata", Range(0, 0.5)) = 0.05
+        _RootDarken("Oscurecido de la raíz", Range(0, 1)) = 0.16
+        _UseVertexAO("Usa la oclusión del vértice", Range(0, 1)) = 1
 
-        // Oclusión por vértice: 0 = metido dentro del bulto, 1 = a la intemperie.
-        // Se activa solo donde la malla la trae escrita, que es la vegetación.
-        _UseVertexAO("Usa la oclusión del vértice", Range(0, 1)) = 0
+        _WindStrength("Fuerza del viento", Range(0, 2)) = 0.22
+        _WindScale("Tamaño de la racha", Float) = 9
+        _WindSpeed("Velocidad de la racha", Float) = 0.5
+        _WindDirection("Hacia dónde sopla", Vector) = (0.82, 0.57, 0, 0)
 
         _RimColor("Color del contraluz", Color) = (0.86, 0.94, 1, 1)
-        _RimPower("Cierre del contraluz", Range(0.5, 8)) = 3.2
-        _RimStrength("Fuerza del contraluz", Range(0, 1)) = 0.18
-
-        // Cuánto apaga una sombra proyectada. A uno, lo que está a la sombra cae a
-        // la banda de sombra entera, que es lo que quiere este estilo.
+        _RimPower("Cierre del contraluz", Range(0.5, 8)) = 2.6
+        _RimStrength("Fuerza del contraluz", Range(0, 1)) = 0.22
         _ShadowStrength("Fuerza de la sombra", Range(0, 1)) = 0.85
 
-        // Las escribe ToonPalette para el material de las caras, que es el único
-        // transparente. Ocultas porque no se tocan a mano.
-        [HideInInspector] _Surface("__surface", Float) = 0
-        [HideInInspector] _Blend("__blend", Float) = 0
-        [HideInInspector] _SrcBlend("__src", Float) = 1
-        [HideInInspector] _DstBlend("__dst", Float) = 0
-        [HideInInspector] _ZWrite("__zwrite", Float) = 1
+        _Cutoff("Recorte", Range(0, 1)) = 0.5
         [HideInInspector] _AlphaClip("__clip", Float) = 0
-        [HideInInspector] _Cutoff("__cutoff", Float) = 0.5
-        [HideInInspector] _Metallic("__metallic", Float) = 0
     }
 
     SubShader
@@ -108,6 +103,7 @@ Shader "Nimbo/Toon"
             float4 _VariaCool;
             float4 _VariaWarm;
             half4 _RimColor;
+            float4 _WindDirection;
             half _EdgeLow;
             half _SoftLow;
             half _EdgeHigh;
@@ -115,19 +111,17 @@ Shader "Nimbo/Toon"
             half _AmbientLift;
             half _Variation;
             float _VariationScale;
+            half _ClumpVariation;
+            half _RootDarken;
             half _UseVertexAO;
-            half _Smoothness;
+            float _WindStrength;
+            float _WindScale;
+            float _WindSpeed;
             half _RimPower;
             half _RimStrength;
             half _ShadowStrength;
             half _Cutoff;
-            half _Surface;
-            half _Blend;
-            half _SrcBlend;
-            half _DstBlend;
-            half _ZWrite;
             half _AlphaClip;
-            half _Metallic;
         CBUFFER_END
         ENDHLSL
 
@@ -136,9 +130,8 @@ Shader "Nimbo/Toon"
             Name "ForwardLit"
             Tags { "LightMode" = "UniversalForward" }
 
-            Blend [_SrcBlend] [_DstBlend]
-            ZWrite [_ZWrite]
-            Cull Back
+            Cull Off
+            ZWrite On
 
             HLSLPROGRAM
             #pragma vertex Vert
@@ -148,6 +141,7 @@ Shader "Nimbo/Toon"
             #pragma multi_compile_fragment _ _SHADOWS_SOFT
             #pragma multi_compile_fog
             #pragma multi_compile_instancing
+            #pragma shader_feature_local_fragment _ALPHATEST_ON
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             #include "NimboAnime.hlsl"
@@ -181,15 +175,16 @@ Shader "Nimbo/Toon"
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_TRANSFER_INSTANCE_ID(input, output);
 
-                VertexPositionInputs positions = GetVertexPositionInputs(input.positionOS.xyz);
-                VertexNormalInputs normals = GetVertexNormalInputs(input.normalOS);
+                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                positionWS += NimboWind(positionWS, input.colour.g, _WindDirection.xy,
+                                        _WindScale, _WindSpeed, _WindStrength);
 
-                output.positionCS = positions.positionCS;
-                output.positionWS = positions.positionWS;
-                output.normalWS = normals.normalWS;
+                output.positionCS = TransformWorldToHClip(positionWS);
+                output.positionWS = positionWS;
+                output.normalWS = TransformObjectToWorldNormal(input.normalOS);
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 output.colour = input.colour;
-                output.fogFactor = ComputeFogFactor(positions.positionCS.z);
+                output.fogFactor = ComputeFogFactor(output.positionCS.z);
                 return output;
             }
 
@@ -197,22 +192,25 @@ Shader "Nimbo/Toon"
             {
                 UNITY_SETUP_INSTANCE_ID(input);
 
-                // Solo la textura. El color del objeto **no** se multiplica aquí:
-                // vive en las cuatro bandas, y multiplicarlo además lo aplicaría dos
-                // veces y saldría todo negro. _BaseColor se sigue escribiendo porque
-                // es lo que lee el paracaídas de URP/Lit si el shader no llega al
-                // empaquetado, y de ahí sale también la transparencia de las caras.
-                half4 albedo = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv);
-                half alpha = albedo.a * _BaseColor.a;
+                half4 recorte = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv);
+                #ifdef _ALPHATEST_ON
+                    clip(recorte.a * _BaseColor.a - _Cutoff);
+                #endif
 
+                // **La normal no se le da la vuelta a la cara de atrás, y esto costó
+                // una tanda de capturas.** Lo normal es voltearla, porque en una
+                // lámina la normal de verdad apunta a un lado. Pero aquí la normal no
+                // es la de la geometría: es la del **suelo**, escrita a propósito para
+                // que el césped se ilumine como una superficie. Volteada, una brizna
+                // vista por detrás pasaba a tener la normal mirando al suelo, se
+                // quedaba sin sol y caía a la banda profunda: el prado salió de
+                // briznas azul verdosas sobre un suelo verde claro, como un cepillo
+                // mojado. La normal escrita vale para las dos caras.
                 float3 normalWS = normalize(input.normalWS);
                 float3 viewWS = normalize(GetWorldSpaceViewDir(input.positionWS));
 
                 Light main = GetMainLight(TransformWorldToShadowCoord(input.positionWS));
 
-                // El nivel de la rampa. Sin envolver la luz: las bandas quieren un
-                // terminador de verdad, y envolverlo era lo que hacía que todo
-                // pareciera de plástico blando.
                 half ndl = saturate(dot(normalWS, main.direction));
                 half atten = lerp(1.0h, main.shadowAttenuation, _ShadowStrength);
 
@@ -221,12 +219,10 @@ Shader "Nimbo/Toon"
                 // caer en la de sombra, no por debajo de ella.
                 half level = (ndl * (1.0h - _AmbientLift) + _AmbientLift) * atten;
 
-                // Un empujón corto y fijo antes de la rampa. No es la mancha de color
-                // —esa va después y multiplicando—: esto es para que el borde entre
-                // sombra y luz no sea una línea limpia de circunferencia, que es lo
-                // que delata que hay una esfera debajo.
                 half mottle = NimboVariation(input.positionWS, _VariationScale);
-                level = saturate(level + (mottle - 0.5h) * 0.12h);
+                level += (mottle - 0.5h) * 0.12h;
+                level += (input.colour.a - 0.5h) * _ClumpVariation * 2.0h;
+                level = saturate(level + (input.colour.b - 1.0h) * _RootDarken);
 
                 NimboBands bands;
                 bands.deep = _BandDeep.rgb;
@@ -242,24 +238,11 @@ Shader "Nimbo/Toon"
                 half3 colour = NimboShade(bands, level, occlusion);
                 colour = NimboMottle(colour, _VariaCool.rgb, _VariaWarm.rgb, mottle, _Variation);
 
-                // La textura, si la hay, pinta encima: las caras de los muñecos son
-                // rasgos sobre un color, no un color propio.
-                colour *= albedo.rgb;
-
-                // Un brillo suave, y solo si el material lo pide: el cristal de un
-                // escaparate lo quiere y una pared no.
-                if (_Smoothness > 0.001h)
-                {
-                    half3 halfway = normalize(main.direction + viewWS);
-                    half spec = pow(saturate(dot(normalWS, halfway)), exp2(_Smoothness * 7.0h + 2.0h));
-                    colour += main.color * spec * _Smoothness * level;
-                }
-
                 half rim = pow(1.0h - saturate(dot(normalWS, viewWS)), _RimPower);
                 colour += _RimColor.rgb * (rim * _RimStrength * (0.30h + 0.70h * ndl));
 
                 colour = MixFog(colour, input.fogFactor);
-                return half4(colour, alpha);
+                return half4(colour, 1);
             }
             ENDHLSL
         }
@@ -272,16 +255,32 @@ Shader "Nimbo/Toon"
             ZWrite On
             ZTest LEqual
             ColorMask 0
-            Cull Back
+
+            // **La cara de delante se descarta al proyectar la sombra, y esto es
+            // importante.** Una copa es un volumen cerrado: si el mapa de sombras
+            // guarda su cara más cercana al sol, esa misma cara sale sombreada por sí
+            // misma al pintarla y la copa entera cae a la banda oscura. Se vio en la
+            // primera captura: el árbol salió de un solo verde apagado de arriba
+            // abajo. Guardando la cara de atrás, la profundidad queda un diámetro más
+            // lejos y la de delante se ve limpia. La sombra que proyecta no cambia:
+            // sale del otro lado del mismo bulto.
+            //
+            // La hierba no se entera de esto porque no proyecta sombra ninguna.
+            Cull Front
 
             HLSLPROGRAM
             #pragma vertex ShadowVert
             #pragma fragment ShadowFrag
             #pragma multi_compile_instancing
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
+            #pragma shader_feature_local_fragment _ALPHATEST_ON
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+            #include "NimboAnime.hlsl"
+
+            TEXTURE2D(_BaseMap);
+            SAMPLER(sampler_BaseMap);
 
             float3 _LightDirection;
             float3 _LightPosition;
@@ -290,12 +289,15 @@ Shader "Nimbo/Toon"
             {
                 float4 positionOS : POSITION;
                 float3 normalOS   : NORMAL;
+                float2 uv         : TEXCOORD0;
+                half4  colour     : COLOR;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct ShadowVaryings
             {
                 float4 positionCS : SV_POSITION;
+                float2 uv         : TEXCOORD0;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
@@ -305,7 +307,12 @@ Shader "Nimbo/Toon"
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_TRANSFER_INSTANCE_ID(input, output);
 
+                // El mismo empujón que en el pase de color, o la sombra se queda
+                // quieta debajo de una hierba que se mueve.
                 float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                positionWS += NimboWind(positionWS, input.colour.g, _WindDirection.xy,
+                                        _WindScale, _WindSpeed, _WindStrength);
+
                 float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
 
                 #if _CASTING_PUNCTUAL_LIGHT_SHADOW
@@ -324,11 +331,16 @@ Shader "Nimbo/Toon"
                 #endif
 
                 output.positionCS = positionCS;
+                output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 return output;
             }
 
             half4 ShadowFrag(ShadowVaryings input) : SV_Target
             {
+                #ifdef _ALPHATEST_ON
+                    clip(SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a
+                         * _BaseColor.a - _Cutoff);
+                #endif
                 return 0;
             }
             ENDHLSL
@@ -341,24 +353,32 @@ Shader "Nimbo/Toon"
 
             ZWrite On
             ColorMask R
-            Cull Back
+            Cull Off
 
             HLSLPROGRAM
             #pragma vertex DepthVert
             #pragma fragment DepthFrag
             #pragma multi_compile_instancing
+            #pragma shader_feature_local_fragment _ALPHATEST_ON
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "NimboAnime.hlsl"
+
+            TEXTURE2D(_BaseMap);
+            SAMPLER(sampler_BaseMap);
 
             struct DepthAttributes
             {
                 float4 positionOS : POSITION;
+                float2 uv         : TEXCOORD0;
+                half4  colour     : COLOR;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct DepthVaryings
             {
                 float4 positionCS : SV_POSITION;
+                float2 uv         : TEXCOORD0;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
@@ -367,12 +387,22 @@ Shader "Nimbo/Toon"
                 DepthVaryings output = (DepthVaryings)0;
                 UNITY_SETUP_INSTANCE_ID(input);
                 UNITY_TRANSFER_INSTANCE_ID(input, output);
-                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+
+                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                positionWS += NimboWind(positionWS, input.colour.g, _WindDirection.xy,
+                                        _WindScale, _WindSpeed, _WindStrength);
+
+                output.positionCS = TransformWorldToHClip(positionWS);
+                output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 return output;
             }
 
             half4 DepthFrag(DepthVaryings input) : SV_Target
             {
+                #ifdef _ALPHATEST_ON
+                    clip(SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a
+                         * _BaseColor.a - _Cutoff);
+                #endif
                 return 0;
             }
             ENDHLSL

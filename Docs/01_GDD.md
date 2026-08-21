@@ -646,10 +646,54 @@ lo que haya en la nevera y se quejan al volver ("¡Te echamos de menos!").
 
 ### 11.4 Estética
 
-Chibi 3D con materiales suaves (sin PBR realista), sombreado cel, contornos
-finos (#2b1b35, heredado de la guía de estilo de Mystic Emporium). Paleta
-pastel con acentos vibrantes. Las nubes son personajes visuales: cambian de
-forma, color y densidad según el evento del día.
+Chibi 3D con **fondo pintado tipo anime**, al modo de Ghibli. Las nubes son
+personajes visuales: cambian de forma, color y densidad según el evento del día.
+
+La referencia son dos paquetes de Blender que hay en `~/Descargas/3D`:
+`AnimeGrass_Demo_3.0` para la hierba y el terreno, y `AnimeTree_GooEngine` para
+los árboles. **No se importó nada de ellos**: se midieron y se replicaron por
+código, que es la condición de todo el arte de este proyecto. Lo que se sacó:
+
+**La luz no ilumina, elige.** Los cuatro materiales de las dos referencias hacen
+lo mismo: `Diffuse BSDF → Shader to RGB → ColorRamp`. Cogen la cantidad de luz,
+se olvidan de que es luz y la usan de índice en una rampa de colores **pintados
+a mano**. No es el color del objeto multiplicado por la luz. Ésa es la
+diferencia entre una copa de árbol con cuatro verdes y una con un degradado:
+un degradado es una esfera de plástico, cuatro verdes es un dibujo.
+
+**Las cuatro bandas son una progresión regular**, y ése fue el hallazgo. Los
+cuatro verdes de la rampa del follaje, mirados en tono-saturación-claridad,
+resultaron estar a distancias fijas: el tono gira 23° hacia el cian en la
+sombra y 51° en el fondo, y 23° hacia el amarillo en el sol; la claridad va por
+0,695 · 0,790 · 1 · 1,284. Con esos seis números se reconstruyen los cuatro
+colores del original clavados —hay un test que lo comprueba— y se le pueden
+pedir a cualquier otro color de la isla. `ToonPalette.BandsOf`.
+
+El giro solo va hacia el frío si el color **es** verde. La corteza de la
+referencia va al revés, del 40° al 30°: son dos casos porque hay dos
+referencias, no porque haya una teoría.
+
+**Paleta.** Prado `#63B048`, copa `#4C9440`, mata `#3F8438`, corteza `#6B5A43`,
+roca `#7C7166`. Los pasteles de antes se parecían demasiado entre sí y la isla
+era una sola mancha verde clara; ahora el prado tira a amarillo y la copa a
+azul, y un árbol se recorta contra la hierba sin necesidad de contorno.
+
+**Las cinco piezas de la lámina de referencia**, y dónde están:
+
+| Lámina | Aquí |
+| --- | --- |
+| 1 · sombra pintada a mano | la rampa de cuatro bandas, `NimboAnime.hlsl` |
+| 2 · variación de color («choose the right pair») | la mancha, y la pareja sale de los extremos de la propia rampa |
+| 3 · terreno sincronizado con la hierba | misma mancha y misma escala en `Nimbo/Toon` y `Nimbo/Foliage`; hay un test |
+| 4 · capas de flores | rosetas de cinco pétalos, solo donde el ruido aclara el prado |
+| 5 · animación de viento | `NimboWind`, ruido sobre la posición del mundo, pesado por la máscara raíz-punta |
+
+**Lo que no se puede copiar y hay que resolver de otra manera.** La referencia
+resuelve la copa con cuarenta tarjetas de hojas recortadas y un modificador de
+transferencia de datos; aquí la copa es un racimo de lóbulos con **las normales
+reescritas apuntando a un solo corazón**. Es la misma idea —que el racimo se
+ilumine como *un* bulto— con la geometría que este proyecto puede permitirse.
+Sin eso se veían las tres bolas, cada una con su media luna oscura en la junta.
 
 ---
 
@@ -1659,6 +1703,29 @@ fallo**:
   pero su umbral está por debajo del mínimo que el sistema puede producir, así que
   nunca se cumple. Se caza midiendo el rango real —el peor caso posible contra el
   umbral— en vez de probar un caso concreto y darlo por bueno.
+
+Y el lavado de cara de §11.4 dejó tres más, todas de la misma familia: **cosas que
+no fallan, se ven mal, y ningún test puede mirarlas.**
+
+- **Retratar el antes.** Lo primero que se hizo no fue tocar un shader: fue escribir
+  `CapturaEstilo`, cuatro encuadres con la cámara en posiciones **escritas a mano**.
+  Un cambio de estilo solo se juzga comparando, y comparar exige que la cámara esté
+  en el mismo sitio las dos veces. Dos fotos parecidas desde ángulos distintos no
+  dicen nada. Costó veinte minutos y se usó ocho veces.
+- **Mirar el número, no la foto, cuando la foto no cuadra.** La copa del Árbol Nimbo
+  salió de un solo verde plano. Mirando la captura se podían inventar cinco causas;
+  midiendo el píxel —`#3C7767`, exactamente la banda profunda, idéntico en las cuatro
+  esquinas de la copa— quedó claro en un minuto que el nivel de luz estaba clavado en
+  cero, y de ahí a la causa (el pase de sombras guardaba la cara de delante y la copa
+  se sombreaba a sí misma) hubo un paso. **Un color plano es un valor saturado**, y un
+  valor saturado se puede razonar; un «se ve raro» no.
+- **La normal que no era la de la geometría.** El prado salió de briznas azules sobre
+  suelo verde. La causa: el código volteaba la normal en la cara de atrás, que es lo
+  que hay que hacer siempre… salvo que la normal esté escrita a mano y no sea la de la
+  cara. Aquí lo está a propósito —la brizna hereda la del suelo para que el césped se
+  ilumine como una superficie— así que voltearla la mandaba a mirar al suelo. **Cuando
+  un dato está falseado a propósito, todas las reglas que se apoyan en que fuera
+  verdadero dejan de valer**, y no hay aviso: siguen compilando.
 
 ---
 

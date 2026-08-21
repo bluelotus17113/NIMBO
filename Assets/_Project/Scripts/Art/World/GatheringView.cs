@@ -182,37 +182,40 @@ namespace Nimbo.Art.World
             {
                 case NodeKind.Tree:
                     AddPart(parent, "tronco", TreeTrunk(), ToonPalette.TrunkBrown);
-                    AddPart(parent, "copa", TreeCrown(), tint);
+                    AddPart(parent, "copa", TreeCrown(), tint,
+                            material: ToonPalette.Foliage(tint), receivesShadows: false);
                     break;
 
                 case NodeKind.Rock:
+                    // La piedra no se mueve con el viento ni se ve por dentro: va con
+                    // el material de rampa dura, que es el que le dibuja las aristas.
                     AddPart(parent, "bloque", Boulder(), tint,
-                            new Vector3(0f, Rest(Boulder(), 1.6f), 0f), Vector3.one * 1.6f);
-                    AddPart(parent, "esquirla", Boulder(), tint,
-                            new Vector3(0.8f, Rest(Boulder(), 0.75f), 0.35f), Vector3.one * 0.75f);
+                            new Vector3(0f, Rest(Boulder(), 1.6f), 0f), Vector3.one * 1.6f,
+                            material: ToonPalette.Stone(tint));
+                    AddPart(parent, "esquirla", Chip(), tint,
+                            new Vector3(0.8f, Rest(Chip(), 0.75f), 0.35f), Vector3.one * 0.75f,
+                            material: ToonPalette.Stone(tint));
                     break;
 
                 case NodeKind.Bush:
-                    AddPart(parent, "mata", Blob(), tint,
-                            new Vector3(0f, Rest(Blob(), 1.45f), 0f), Vector3.one * 1.45f);
-                    AddPart(parent, "brote", Blob(), tint,
-                            new Vector3(0.62f, Rest(Blob(), 0.62f), -0.34f), Vector3.one * 0.62f);
+                    // Una mata es una copa de árbol pequeña y sin tronco: el mismo
+                    // truco de las normales, así que se lee como un bulto y no como
+                    // dos bolas pegadas.
+                    // Sin levantarla: los lóbulos ya vienen tejidos apoyados en el
+                    // cero, y la mata se hunde un palmo a propósito para que no se le
+                    // vea la costura de abajo.
+                    AddPart(parent, "mata", BushClump(), tint,
+                            material: ToonPalette.Foliage(tint, windStrength: 0.16f),
+                            receivesShadows: false);
                     break;
 
                 case NodeKind.Herb:
-                    // Un manojo abierto. Cinco briznas gordas y no cinco láminas: la
-                    // primera versión eran cajas de dos centímetros de canto y desde
-                    // la cámara del juego no se veía absolutamente nada, solo un
-                    // rasguño en el prado.
-                    for (int i = 0; i < 7; i++)
-                    {
-                        float angle = i * 51f;
-                        var offset = Quaternion.Euler(0f, angle, 0f) * new Vector3(0.13f, 0f, 0f);
-                        offset.y = Rest(Blade(), 1f) * 0.9f;
-
-                        AddPart(parent, "brizna", Blade(), tint, offset,
-                                Vector3.one, Quaternion.Euler(0f, angle, 26f));
-                    }
+                    // El mismo manojo que el prado, pero más alto: una hierba de
+                    // recoger tiene que leerse como hierba, y ahora hay hierba de
+                    // verdad con la que parecerse. Los conos de antes eran un manojo
+                    // de púas al lado de un césped.
+                    AddPart(parent, "manojo", Herbs(), tint,
+                            material: ToonPalette.Foliage(tint, windStrength: 0.30f));
                     break;
 
                 case NodeKind.Flower:
@@ -253,7 +256,8 @@ namespace Nimbo.Art.World
                 case NodeKind.Rock:
                     AddPart(parent, "cascote", Boulder(), ToonPalette.RockDeep,
                             new Vector3(0f, Rest(Boulder(), 0.35f), 0f),
-                            new Vector3(0.9f, 0.35f, 0.9f));
+                            new Vector3(0.9f, 0.35f, 0.9f),
+                            material: ToonPalette.Stone(ToonPalette.RockDeep));
                     break;
             }
         }
@@ -270,9 +274,28 @@ namespace Nimbo.Art.World
         /// </remarks>
         private static float Rest(Mesh mesh, float scaleY) => mesh.bounds.extents.y * scaleY;
 
+        /// <summary>
+        /// Una pieza. Con <paramref name="receivesShadows"/> a falso, no le entra la
+        /// sombra proyectada de nadie.
+        /// </summary>
+        /// <remarks>
+        /// **Las copas y las matas no reciben sombras, a propósito.** Una copa es un
+        /// bulto cerrado y se hace sombra a sí misma: el envés cae dentro de su propio
+        /// mapa de sombras, y el mapa de sombras tiene resolución. En las capturas eso
+        /// se veía como una línea de dientes de sierra cruzando la copa por la mitad,
+        /// una escalera de píxeles gordos donde debería haber un envés. Lo que la
+        /// oscurece ahora es la oclusión escrita en el vértice, que no tiene bordes
+        /// porque se interpola: es también lo que hace la referencia, que resuelve el
+        /// envés con un nodo de oclusión ambiental y no con sombras.
+        ///
+        /// El prado sí las recibe. La sombra del árbol sobre la hierba es de las cosas
+        /// que más dicen «esto es un sitio», y ahí el borde cae sobre una superficie
+        /// grande y suave donde el dentado no se ve.
+        /// </remarks>
         private static void AddPart(Transform parent, string name, Mesh mesh, Color colour,
                                     Vector3 offset = default, Vector3 scale = default,
-                                    Quaternion rotation = default)
+                                    Quaternion rotation = default, Material material = null,
+                                    bool receivesShadows = true)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, worldPositionStays: false);
@@ -281,7 +304,10 @@ namespace Nimbo.Art.World
             go.transform.localScale = scale == default ? Vector3.one : scale;
 
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
-            go.AddComponent<MeshRenderer>().sharedMaterial = ToonPalette.Solid(colour);
+
+            var renderer = go.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = material ?? ToonPalette.Solid(colour);
+            renderer.receiveShadows = receivesShadows;
         }
 
         /// <summary>
@@ -324,26 +350,64 @@ namespace Nimbo.Art.World
         // Una por forma y compartida entre los ciento veinte nodos. Generar una malla
         // por árbol serían ciento veinte copias idénticas ocupando memoria para nada.
 
-        private static Mesh _trunk, _crown, _stump, _boulder, _blob, _blade, _stem;
+        private static Mesh _trunk, _crown, _stump, _boulder, _chip, _bush, _herbs, _blob, _stem;
 
         private static Mesh TreeTrunk() => _trunk ??= IslandMeshBuilder.BuildTree(4.6f, 1.5f).trunk;
         private static Mesh TreeCrown() => _crown ??= IslandMeshBuilder.BuildTree(4.6f, 1.5f).crown;
         private static Mesh Stump() => _stump ??= MeshShapes.Cylinder(8, 0.32f, 0.4f, 0.4f);
-        private static Mesh Boulder() => _boulder ??= MeshShapes.Sphere(8, 6, new Vector3(1f, 0.7f, 0.85f));
         private static Mesh Blob() => _blob ??= MeshShapes.Sphere(10, 7, new Vector3(1f, 0.82f, 1f));
-        // Un cono, no una aguja: con el remate en punta fina el manojo se leía como un
-        // andamio de alambre. Ancho abajo y corto es lo que parece una mata de hierba.
-        private static Mesh Blade() => _blade ??= MeshShapes.Cylinder(5, 0.008f, 0.11f, 0.62f);
         private static Mesh Stem() => _stem ??= MeshShapes.Cylinder(6, 0.035f, 0.05f, 0.72f);
+
+        // Dos pedruscos con semillas distintas: el bloque y su esquirla tienen que
+        // ser dos piedras, no la misma piedra dos veces de tamaños distintos.
+        private static Mesh Boulder() => _boulder ??= RockMeshBuilder.Boulder(11u);
+        private static Mesh Chip() => _chip ??= RockMeshBuilder.Boulder(29u, segments: 6, rings: 4,
+                                                                       squash: 0.82f, roughness: 0.34f);
+
+        /// <summary>Una mata: tres lóbulos con las normales de un solo bulto.</summary>
+        private static Mesh BushClump()
+        {
+            if (_bush != null) return _bush;
+
+            var lobes = new List<FoliageMeshBuilder.Lobe>
+            {
+                new(new Vector3(0f, 0.62f, 0f), new Vector3(0.95f, 0.72f, 0.95f)),
+                new(new Vector3(0.52f, 0.42f, 0.18f), new Vector3(0.60f, 0.50f, 0.60f)),
+                new(new Vector3(-0.38f, 0.40f, -0.34f), new Vector3(0.55f, 0.46f, 0.55f)),
+            };
+
+            return _bush = FoliageMeshBuilder.Weave(lobes, new Vector3(0f, 0.30f, 0f), 23u,
+                                                    "arbusto", segments: 12, rings: 8);
+        }
+
+        /// <summary>Un manojo de hierba alta, tejido con el mismo tejedor que el prado.</summary>
+        private static Mesh Herbs()
+        {
+            if (_herbs != null) return _herbs;
+
+            var tufts = new List<Meadow.Tuft>(5);
+            var rng = new Nimbo.Core.Util.Rng(97u);
+            for (int i = 0; i < 5; i++)
+            {
+                float angle = i * (Mathf.PI * 2f / 5f);
+                float distance = rng.Range(0f, 0.26f);
+                tufts.Add(new Meadow.Tuft(
+                    new Vector3(Mathf.Cos(angle) * distance, 0f, Mathf.Sin(angle) * distance),
+                    Vector3.up, rng.Range(0f, 360f), rng.Range(1.25f, 1.7f), rng.NextFloat()));
+            }
+
+            return _herbs = Meadow.Weave(tufts, 0, tufts.Count, "manojo_hierba");
+        }
 
         private void OnDestroy()
         {
-            foreach (var mesh in new[] { _trunk, _crown, _stump, _boulder, _blob, _blade, _stem })
+            foreach (var mesh in new[] { _trunk, _crown, _stump, _boulder, _chip, _bush, _herbs,
+                                         _blob, _stem })
             {
                 if (mesh == null) continue;
                 if (Application.isPlaying) Destroy(mesh); else DestroyImmediate(mesh);
             }
-            _trunk = _crown = _stump = _boulder = _blob = _blade = _stem = null;
+            _trunk = _crown = _stump = _boulder = _chip = _bush = _herbs = _blob = _stem = null;
         }
     }
 }

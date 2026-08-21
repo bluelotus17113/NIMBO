@@ -85,9 +85,7 @@ namespace Nimbo.Art.World
             var jagRng = new Rng(seed * 31 + 1);
             for (int i = 0; i < segments; i++) jag[i] = jagRng.Range(0.75f, 1.25f);
 
-            var vertices = new List<Vector3>();
-            var uv = new List<Vector2>();
-            var triangles = new List<int>();
+            var grid = new Vector3[rings * segments];
 
             for (int ring = 0; ring < rings; ring++)
             {
@@ -101,56 +99,113 @@ namespace Nimbo.Art.World
                 {
                     float angle = (float)seg / segments * Mathf.PI * 2f;
                     float r = radius * edge[seg] * shrink * Mathf.Lerp(1f, jag[seg], t * 0.55f);
-                    vertices.Add(new Vector3(Mathf.Cos(angle) * r, y, Mathf.Sin(angle) * r));
-                    uv.Add(new Vector2((float)seg / segments, 1f - t));
+
+                    // Estrías: la roca entra y sale por franjas verticales. Antes era
+                    // un cono liso y desde el aire la isla parecía apoyada en un aro
+                    // de cartón marrón; con las estrías y el sombreado plano se le ven
+                    // los planos, que es como se dibuja un peñasco.
+                    r *= 1f + (ValueNoise.At(seg * 0.63f + seed, t * 3.1f) - 0.5f) * 0.16f;
+                    y += (ValueNoise.At(seg * 0.41f - seed, t * 2.2f) - 0.5f) * depth * 0.06f;
+
+                    grid[ring * segments + seg] =
+                        new Vector3(Mathf.Cos(angle) * r, y, Mathf.Sin(angle) * r);
                 }
             }
 
-            int tip = vertices.Count;
-            vertices.Add(new Vector3(0f, -depth * 1.16f, 0f));
-            uv.Add(new Vector2(0.5f, 0f));
+            var tip = new Vector3(0f, -depth * 1.16f, 0f);
+
+            var vertices = new List<Vector3>();
+            var uv = new List<Vector2>();
+            var triangles = new List<int>();
+
+            // Cada cara con sus propios vértices: es lo que le da aristas. Ver
+            // RockMeshBuilder, que hace lo mismo con los pedruscos sueltos.
+            void Face(Vector3 a, Vector3 b, Vector3 c)
+            {
+                int start = vertices.Count;
+                vertices.Add(a); vertices.Add(b); vertices.Add(c);
+                uv.Add(new Vector2(0f, 0f)); uv.Add(new Vector2(1f, 0f)); uv.Add(new Vector2(0f, 1f));
+                triangles.Add(start); triangles.Add(start + 1); triangles.Add(start + 2);
+            }
 
             for (int ring = 0; ring < rings - 1; ring++)
             for (int seg = 0; seg < segments; seg++)
             {
                 int next = (seg + 1) % segments;
-                int upper = ring * segments, lower = (ring + 1) * segments;
+                var a = grid[ring * segments + seg];
+                var b = grid[(ring + 1) * segments + seg];
+                var c = grid[ring * segments + next];
+                var d = grid[(ring + 1) * segments + next];
 
-                triangles.Add(upper + seg); triangles.Add(lower + seg); triangles.Add(upper + next);
-                triangles.Add(upper + next); triangles.Add(lower + seg); triangles.Add(lower + next);
+                Face(a, b, c);
+                Face(c, b, d);
             }
 
             int last = (rings - 1) * segments;
             for (int seg = 0; seg < segments; seg++)
-            {
-                int next = (seg + 1) % segments;
-                triangles.Add(last + seg); triangles.Add(tip); triangles.Add(last + next);
-            }
+                Face(grid[last + seg], tip, grid[last + (seg + 1) % segments]);
 
             return Build("isla_roca", vertices, uv, triangles);
         }
 
-        /// <summary>Un árbol de copa redonda. El del centro de la plaza es el Árbol Nimbo.</summary>
-        public static (Mesh trunk, Mesh crown) BuildTree(float height, float crownRadius)
+        /// <summary>
+        /// Un árbol. El del centro de la plaza es el Árbol Nimbo.
+        /// </summary>
+        /// <remarks>
+        /// El tronco ya no es un tubo: se estrecha, se ensancha al pie y echa tres
+        /// ramas que se meten en la copa. Las ramas no se ven casi —la copa las
+        /// tapa— y hacen falta igual: sin ellas, la copa flota sobre un palo y se le
+        /// nota. Con ellas, el ojo da por hecho que hay un árbol debajo.
+        ///
+        /// La copa la teje <see cref="FoliageMeshBuilder"/>, que es quien sabe el
+        /// truco de las normales. Aquí solo se dice dónde va.
+        /// </remarks>
+        public static (Mesh trunk, Mesh crown) BuildTree(float height, float crownRadius,
+                                                         uint seed = 5u)
         {
-            var trunk = Chibi.MeshShapes.Cylinder(8, height * 0.05f, height * 0.08f, height * 0.55f);
-            var crown = Chibi.MeshShapes.Sphere(16, 12, new Vector3(1f, 0.86f, 1f));
+            var rng = new Rng(seed);
 
-            var scaled = new List<(Mesh, Matrix4x4)>
+            float crownHeight = height * 0.74f;
+            var parts = new List<(Mesh, Matrix4x4)>
             {
-                (crown, Matrix4x4.TRS(new Vector3(0f, height * 0.78f, 0f),
-                                      Quaternion.identity, Vector3.one * crownRadius * 2f)),
-                (crown, Matrix4x4.TRS(new Vector3(crownRadius * 0.55f, height * 0.6f, crownRadius * 0.2f),
-                                      Quaternion.identity, Vector3.one * crownRadius * 1.25f)),
-                (crown, Matrix4x4.TRS(new Vector3(-crownRadius * 0.5f, height * 0.62f, -crownRadius * 0.3f),
-                                      Quaternion.identity, Vector3.one * crownRadius * 1.35f)),
+                // El fuste, cónico.
+                (Chibi.MeshShapes.Cylinder(9, height * 0.030f, height * 0.058f, height * 0.66f),
+                 Matrix4x4.Translate(new Vector3(0f, height * 0.33f, 0f))),
+
+                // El pie: un árbol se ensancha donde toca el suelo, y ese ensanche es
+                // lo que le quita el aire de poste clavado.
+                (Chibi.MeshShapes.Cylinder(9, height * 0.058f, height * 0.098f, height * 0.11f),
+                 Matrix4x4.Translate(new Vector3(0f, height * 0.055f, 0f))),
             };
 
-            var trunkPlaced = Chibi.MeshShapes.Combine(
-                new List<(Mesh, Matrix4x4)> { (trunk, Matrix4x4.Translate(new Vector3(0f, height * 0.275f, 0f))) },
-                "arbol_tronco");
+            for (int i = 0; i < 3; i++)
+            {
+                float angle = i * (Mathf.PI * 2f / 3f) + rng.Range(-0.35f, 0.35f);
+                float lift = height * rng.Range(0.50f, 0.62f);
+                float reach = crownRadius * rng.Range(0.34f, 0.52f);
 
-            return (trunkPlaced, Chibi.MeshShapes.Combine(scaled, "arbol_copa"));
+                var direction = new Vector3(Mathf.Cos(angle), 1.15f, Mathf.Sin(angle)).normalized;
+                var branch = Chibi.MeshShapes.Cylinder(6, height * 0.010f, height * 0.026f,
+                                                       reach * 2f);
+
+                parts.Add((branch, Matrix4x4.TRS(
+                    new Vector3(direction.x * reach, lift + direction.y * reach, direction.z * reach),
+                    Quaternion.FromToRotation(Vector3.up, direction),
+                    Vector3.one)));
+            }
+
+            var lobes = FoliageMeshBuilder.CrownLobes(crownRadius, seed);
+            for (int i = 0; i < lobes.Count; i++)
+                lobes[i] = new FoliageMeshBuilder.Lobe(
+                    lobes[i].Centre + Vector3.up * crownHeight, lobes[i].Radii);
+
+            // El corazón, más abajo que el centro de la copa: las normales salen de
+            // aquí, y bajándolo la copa se ilumina por arriba y el envés queda en
+            // sombra, que es como se dibuja una copa.
+            var pivot = new Vector3(0f, crownHeight - crownRadius * 0.34f, 0f);
+
+            return (Chibi.MeshShapes.Combine(parts, "arbol_tronco"),
+                    FoliageMeshBuilder.Weave(lobes, pivot, seed, "arbol_copa"));
         }
 
         /// <summary>Suaviza el borde para que las irregularidades no queden a picos.</summary>

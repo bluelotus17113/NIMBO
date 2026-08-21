@@ -85,9 +85,10 @@ namespace Nimbo.EditorTools
                 "Universal Render Pipeline/Lit",
                 "Universal Render Pipeline/Unlit",
 
-                // El de la isla. Le pasa lo mismo que a los de URP y peor: no hay
-                // ni un material en disco que lo referencie.
+                // Los de la isla. Les pasa lo mismo que a los de URP y peor: no hay
+                // ni un material en disco que los referencie.
                 "Nimbo/Toon",
+                "Nimbo/Foliage",
             };
 
             var graphics = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset");
