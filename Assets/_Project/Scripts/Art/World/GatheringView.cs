@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Nimbo.Art.CameraWork;
 using Nimbo.Art.Chibi;
 using Nimbo.Art.Materials;
 using Nimbo.Core.Events;
@@ -31,6 +32,12 @@ namespace Nimbo.Art.World
     /// del roble que a ti te frena, y eso se nota más que atravesarlo. Meter los ciento
     /// veinte en la lista de bultos arreglaría la asimetría y convertiría cada paso de
     /// cada vecino en un recorrido de ciento veinte comprobaciones.
+    ///
+    /// Lo que sí tienen desde que la cámara va a ras de ojos es un bulto **solo para
+    /// la cámara** —tronco y roca, vía <see cref="CameraObstacles"/>—: no es física,
+    /// nadie choca contra él, y la cámara deja de meterse en el árbol justo cuando te
+    /// pones al lado a talar. El jugador y los vecinos siguen atravesando lo de
+    /// siempre, así que el motivo de arriba sigue valiendo intacto.
     ///
     /// (El motivo de antes —que podían caer encima de un edificio— ya no vale: la
     /// siembra esquiva las parcelas y colocar un edificio aparta lo que pille debajo.)
@@ -145,7 +152,13 @@ namespace Nimbo.Art.World
             if (_root == null || node == null) return;
             if (!_gathering.TryGetDefinition(node.NodeId, out var definition)) return;
 
-            if (_bodies.TryGetValue(node.InstanceId, out var old) && old != null) Destroy(old);
+            if (_bodies.TryGetValue(node.InstanceId, out var old) && old != null)
+            {
+                // El cuerpo anterior se lleva por delante su bulto de cámara: si el
+                // nodo se agotó, lo que queda es un tocón y ya no estorba a nadie.
+                CameraObstacles.Remove(old);
+                Destroy(old);
+            }
 
             var go = new GameObject(node.InstanceId);
             go.transform.SetParent(_root, worldPositionStays: false);
@@ -156,7 +169,76 @@ namespace Nimbo.Art.World
             if (node.IsDepleted) AddStump(go.transform, definition);
             else AddBody(go.transform, definition);
 
+            RegisterCameraBlocker(go, node, definition);
             _bodies[node.InstanceId] = go;
+        }
+
+        /// <summary>La altura con la que se construyen los árboles de esta vista.</summary>
+        /// <remarks>
+        /// Una sola fuente: las mallas de arriba y las esferas de cámara de abajo se
+        /// miden contra el mismo número. Escritos por duplicado ya salieron desfasados
+        /// una vez (ver <see cref="Rest"/>).
+        /// </remarks>
+        private const float AlturaArbol = 4.6f;
+
+        /// <summary>
+        /// Da a la cámara un bulto que rodear donde no hay colisionador ninguno.
+        /// </summary>
+        /// <remarks>
+        /// Solo tronco y roca. El segmento pivote→cámara nunca baja de ~1,5 m —el pivote
+        /// va a 1,2 m y la pose más baja que permiten los topes (3,5 m a 5°) deja la
+        /// cámara a 1,5—, así que una mata (1,34 m de alto), un banco o una valla ni
+        /// siquiera se cruzan con él: registrarlos sería coste sin un metro de cámara
+        /// ahorrado. Hierbas, flores y tocones, más bajos todavía, ni se plantean.
+        ///
+        /// Del árbol se apila el **fuste** en tres esferas y no se usa el bounds de la
+        /// malla porque el tronco lleva las ramas dentro: su bounds pide metro y medio
+        /// de radio donde el fuste tiene cuarenta centímetros, y con eso talar sería
+        /// imposible — la cámara se apartaría en cuanto te pusieras delante. La copa
+        /// tampoco: casi siempre queda por encima del recorrido, y bloquearla encogería
+        /// la cámara en cada arboleda con el tronco lejos.
+        /// </remarks>
+        private void RegisterCameraBlocker(GameObject body, ResourceNode node,
+                                           in NodeDefinition definition)
+        {
+            if (node.IsDepleted) return;
+
+            var t = body.transform;
+            switch (definition.Kind)
+            {
+                case NodeKind.Tree:
+                {
+                    // 0,35 m cubre el fuste cónico (0,14 abajo, 0,27 arriba) con margen
+                    // para el padding que la cámara descuenta al apartarse. Las tres
+                    // alturas van de la base a donde empieza la copa.
+                    float radius = AlturaArbol * 0.075f;
+                    float[] heights =
+                    {
+                        AlturaArbol * 0.13f,
+                        AlturaArbol * 0.35f,
+                        AlturaArbol * 0.57f,
+                    };
+                    foreach (float height in heights)
+                        CameraObstacles.Add(body,
+                                            t.TransformPoint(new Vector3(0f, height, 0f)),
+                                            radius);
+                    break;
+                }
+
+                case NodeKind.Rock:
+                {
+                    // La piedra sí sale de su malla: es un bulto redondo de verdad y el
+                    // bounds la describe bien, igual que hace Rest con la altura.
+                    var mesh = Boulder();
+                    const float Scale = 1.6f;
+                    var centre = new Vector3(0f, Rest(mesh, Scale), 0f)
+                               + Vector3.Scale(mesh.bounds.center, Vector3.one * Scale);
+                    float radius = Scale * Mathf.Max(mesh.bounds.extents.x,
+                                                     mesh.bounds.extents.z);
+                    CameraObstacles.Add(body, t.TransformPoint(centre), radius);
+                    break;
+                }
+            }
         }
 
         /// <summary>
@@ -352,8 +434,8 @@ namespace Nimbo.Art.World
 
         private static Mesh _trunk, _crown, _stump, _boulder, _chip, _bush, _herbs, _blob, _stem;
 
-        private static Mesh TreeTrunk() => _trunk ??= IslandMeshBuilder.BuildTree(4.6f, 1.5f).trunk;
-        private static Mesh TreeCrown() => _crown ??= IslandMeshBuilder.BuildTree(4.6f, 1.5f).crown;
+        private static Mesh TreeTrunk() => _trunk ??= IslandMeshBuilder.BuildTree(AlturaArbol, 1.5f).trunk;
+        private static Mesh TreeCrown() => _crown ??= IslandMeshBuilder.BuildTree(AlturaArbol, 1.5f).crown;
         private static Mesh Stump() => _stump ??= MeshShapes.Cylinder(8, 0.32f, 0.4f, 0.4f);
         private static Mesh Blob() => _blob ??= MeshShapes.Sphere(10, 7, new Vector3(1f, 0.82f, 1f));
         private static Mesh Stem() => _stem ??= MeshShapes.Cylinder(6, 0.035f, 0.05f, 0.72f);
@@ -401,6 +483,9 @@ namespace Nimbo.Art.World
 
         private void OnDestroy()
         {
+            foreach (var body in _bodies.Values)
+                if (body != null) CameraObstacles.Remove(body);
+
             foreach (var mesh in new[] { _trunk, _crown, _stump, _boulder, _chip, _bush, _herbs,
                                          _blob, _stem })
             {

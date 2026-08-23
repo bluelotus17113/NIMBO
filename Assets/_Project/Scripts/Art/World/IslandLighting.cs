@@ -46,16 +46,29 @@ namespace Nimbo.Art.World
         /// </summary>
         /// <remarks>
         /// Es lo que hace que una isla flotante se lea como una isla flotante y no
-        /// como una maqueta recortada contra un fondo liso. Empieza a sesenta
-        /// metros: dentro de la aldea no se nota, y en el mirador sí.
+        /// como una maqueta recortada contra un fondo liso.
+        ///
+        /// La escala es la de la cámara de ojos (5,5 m), no la del mirador. Arrancaba
+        /// a 60 m pensada para mirar la isla desde 150, y desde la tercera persona no
+        /// se activaba jamás: hasta la orilla lejana de la aldea —radio 100 m,
+        /// Archipelago.VillageRadius— solo cogía un 18 % y el prado se leía nítido de
+        /// orilla a orilla. Con el inicio a 30 m el campo de juego (<30 m) sale limpio
+        /// y la bruma aparece justo donde acaba: un 30 % en la orilla lejana. El
+        /// cierre a 260 m es el compromiso con las referencias de orientación: el
+        /// puente y la isla vecina (120–210 medidos desde el centro de la aldea)
+        /// quedan entre un 39 % y un 78 % de destiñe — silueta y masa, no fachadas.
+        /// Lo que se pierde por bajarlo: ver la superficie de la vecina desde la
+        /// aldea, y el panorama clásico sale con más bruma que antes (~47 % en su
+        /// centro frente al 36 %). Si eso molesta, el número a mover es el cierre,
+        /// no el inicio.
         /// </remarks>
         public static void ApplyHaze()
         {
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Linear;
             RenderSettings.fogColor = new Color(0.78f, 0.90f, 0.96f);
-            RenderSettings.fogStartDistance = 60f;
-            RenderSettings.fogEndDistance = 280f;
+            RenderSettings.fogStartDistance = 30f;
+            RenderSettings.fogEndDistance = 260f;
         }
 
         /// <summary>

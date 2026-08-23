@@ -9,7 +9,7 @@ using UnityEngine.TestTools;
 namespace Nimbo.PlayTests
 {
     /// <summary>
-    /// Los mismos cuatro encuadres, siempre. Es la vara de medir del estilo.
+    /// Los mismos encuadres, siempre. Es la vara de medir del estilo.
     /// </summary>
     /// <remarks>
     /// Un lavado de cara solo se juzga comparando, y comparar exige que la cámara esté
@@ -36,6 +36,21 @@ namespace Nimbo.PlayTests
             // desde arriba el césped es una alfombra verde y no se ve una brizna.
             ("prado", new Vector3(34f, 1.9f, 30f), new Vector3(76f, 3.2f, 66f)),
 
+            // A la altura de los ojos mirando un macizo de flores. El macizo no se
+            // elige a ojo: es un rodal denso del campo de ruido que siembra las
+            // flores (ValueNoise.Variation ≥ 0,70 en el 87 % de su radio de 5 m,
+            // media 0,849, centro 54.5, -11.5), así que sigue siendo un macizo
+            // aunque cambie la semilla del prado. No es el pico del campo —ese cae
+            // en la pradera oeste, (-65.3, 0.0), con 0,991— pero su vecindad es
+            // más espesa que la del pico: el círculo de 5 m alrededor de aquel
+            // solo tiene un 76 % por encima del umbral, y aquí el macizo manda.
+            // Cámara casi horizontal a 12,5 m: es el encuadre
+            // que delata una flor tumbada —de horizonte una roseta proyecta
+            // sen(inclinación)— y que juzga que el macizo enseñe la cara llena.
+            // Detrás quedan ~45 m de prado descendiendo hacia la orilla este, para
+            // leer la bruma a esta escala.
+            ("flores_a_ras", new Vector3(44f, 1.34f, -9.5f), new Vector3(56f, 0.23f, -13f)),
+
             // El Árbol Nimbo entero, desde el sur y a media altura.
             ("arbol", new Vector3(0f, 13f, -38f), new Vector3(0f, 17f, 0f)),
 
@@ -48,6 +63,13 @@ namespace Nimbo.PlayTests
             // costura; a esta altura, si los dos bordes no coinciden, se ve el cielo
             // a través de la isla. La falda se juzga aquí o no se juzga.
             ("bajo_el_borde", new Vector3(150f, -18f, 118f), new Vector3(72f, -6f, 56f)),
+
+            // A ras de prado, con un árbol del linde entre el objetivo y la cámara:
+            // es el encuadre que delata si la cámara se mete en tronco o copa cuando
+            // va a ras de ojos. Desde arriba ningún árbol estorba; a esta altura,
+            // si el antiobstáculos no rodea el fuste, la foto sale llena de hoja
+            // por dentro.
+            ("tras_el_arbol", new Vector3(-47f, 2.2f, 43f), new Vector3(-56f, 3.0f, 52f)),
         };
 
         [UnityTest]

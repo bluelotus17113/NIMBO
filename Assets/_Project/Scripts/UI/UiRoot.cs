@@ -72,6 +72,7 @@ namespace Nimbo.UI
             EventBus.Unsubscribe<FurnishModeChanged>(OnFurnishModeChanged);
             EventBus.Unsubscribe<InteriorEntered>(OnInteriorEntered);
             EventBus.Unsubscribe<InteriorExited>(OnInteriorExited);
+            EventBus.Unsubscribe<TreeSpoke>(OnTreeSpoke);
             _toast?.Unsubscribe();
             _furnish?.Unsubscribe();
             _hotbar?.Unsubscribe();
@@ -212,6 +213,7 @@ namespace Nimbo.UI
             EventBus.Subscribe<FurnishModeChanged>(OnFurnishModeChanged);
             EventBus.Subscribe<InteriorEntered>(OnInteriorEntered);
             EventBus.Subscribe<InteriorExited>(OnInteriorExited);
+            EventBus.Subscribe<TreeSpoke>(OnTreeSpoke);
 
             RebuildStrip();
             _mounted = true;
@@ -409,6 +411,16 @@ namespace Nimbo.UI
         }
 
         /// <summary>Ha leído el tablón de la plaza: se abre la misma pantalla que el botón.</summary>
+        /// <summary>
+        /// El Árbol Nimbo ha hablado: el mismo cartelito que los logros.
+        /// </summary>
+        /// <remarks>
+        /// El toast va en cola y de uno en uno (AchievementToast.cs), que es justo lo
+        /// que un ritual de apertura del día necesita: una frase que se lee de pasada,
+        /// no una pantalla que hay que cerrar.
+        /// </remarks>
+        private void OnTreeSpoke(TreeSpoke evt) => _toast.Push("El Árbol Nimbo", evt.Text);
+
         private void OnRequestBoardRead(RequestBoardRead _)
         {
             if (_board == null) return;

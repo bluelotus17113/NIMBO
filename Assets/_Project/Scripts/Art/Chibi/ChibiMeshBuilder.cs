@@ -11,11 +11,36 @@ namespace Nimbo.Art.Chibi
         public readonly Mesh Clothes;
         public readonly Mesh Hair;
         public readonly Mesh Face;
+
+        /// <summary>
+        /// La pieza de la prenda equipada que lleva color propio —capucha, capa,
+        /// sombrero—. Null si no toca ninguna: no se crea ni el GameObject.
+        /// </summary>
+        public readonly Mesh Extra;
         public readonly float Height;
 
-        public ChibiMeshes(Mesh skin, Mesh clothes, Mesh hair, Mesh face, float height)
+        public ChibiMeshes(Mesh skin, Mesh clothes, Mesh hair, Mesh face, float height,
+                           Mesh extra = null)
         {
-            Skin = skin; Clothes = clothes; Hair = hair; Face = face; Height = height;
+            Skin = skin; Clothes = clothes; Hair = hair; Face = face; Extra = extra;
+            Height = height;
+        }
+    }
+
+    /// <summary>Solo el cuerpo: piel, ropa y prenda, sin pelo ni cara.</summary>
+    /// <remarks>
+    /// Existe para vestir a alguien que ya está en escena sin rehacerle la cara ni
+    /// el pelo, que es lo caro (textura incluida) y lo que no cambia nunca.
+    /// </remarks>
+    public readonly struct ChibiBodyMeshes
+    {
+        public readonly Mesh Skin;
+        public readonly Mesh Clothes;
+        public readonly Mesh Extra;
+
+        public ChibiBodyMeshes(Mesh skin, Mesh clothes, Mesh extra)
+        {
+            Skin = skin; Clothes = clothes; Extra = extra;
         }
     }
 
@@ -28,14 +53,62 @@ namespace Nimbo.Art.Chibi
     /// de la isla — con proporciones realistas, a esa distancia no se distingue quién
     /// es quién, y el juego entero va de reconocer a la gente.
     ///
-    /// Se devuelven cuatro mallas y no una porque cada una lleva su material: piel,
-    /// ropa, pelo y la cara, que es la única con textura.
+    /// Se devuelven hasta cinco mallas y no una porque cada una lleva su material:
+    /// piel, ropa, pelo, la cara —la única con textura— y la prenda equipada, que
+    /// solo existe cuando lo que se lleva pide pieza propia.
     /// </remarks>
     public static class ChibiMeshBuilder
     {
         private const float HeadShare = 0.42f;
 
-        public static ChibiMeshes Build(in AppearanceData appearance)
+        public static ChibiMeshes Build(in AppearanceData appearance) =>
+            Build(appearance, OutfitLook.Bare());
+
+        /// <summary>
+        /// El cuerpo completo con la prenda equipada puesta.
+        /// </summary>
+        /// <remarks>
+        /// La prenda no es una malla importada: es el color de la ropa y, si la familia
+        /// lo pide, una pieza más generada. Con un pantalón las piernas pasan de la
+        /// malla de piel a la de ropa —dejan de ser piernas desnudas—; con un vestido
+        /// la campana sustituye a la cadera y las piernas se quedan en piel, que es
+        /// como se lee «vestido» y no «pantalón ancho».
+        /// </remarks>
+        public static ChibiMeshes Build(in AppearanceData appearance, in OutfitLook look)
+        {
+            var body = BuildBody(appearance, look);
+
+            var hair = BuildHair(appearance,
+                                 HeadCentreOf(appearance, out var headWidth, out var headHeight),
+                                 headWidth, headHeight);
+            var face = BuildFaceQuad(HeadCentreOf(appearance, out headWidth, out headHeight),
+                                     headWidth, headHeight);
+
+            return new ChibiMeshes(body.Skin, body.Clothes, hair, face,
+                                   HeightOf(appearance), body.Extra);
+        }
+
+        /// <summary>La altura total del muñeco para estos rasgos.</summary>
+        private static float HeightOf(in AppearanceData appearance) =>
+            Mathf.Lerp(0.95f, 1.35f, appearance.BodyHeight);
+
+        /// <summary>Dónde queda el centro de la cabeza y cuánto mide.</summary>
+        private static float HeadCentreOf(in AppearanceData appearance,
+                                          out float headWidth, out float headHeight)
+        {
+            float headSize = HeightOf(appearance) * HeadShare;
+            headWidth = headSize * Mathf.Lerp(0.9f, 1.12f, appearance.HeadWidth);
+            headHeight = headSize * Mathf.Lerp(0.92f, 1.1f, appearance.HeadHeight);
+
+            float height = HeightOf(appearance);
+            return height * 0.24f + height * 0.30f + headHeight * 0.44f;
+        }
+
+        /// <summary>
+        /// Piel, ropa y prenda de un cuerpo con esa prenda puesta. Es la mitad del
+        /// muñeco que cambia al vestir: pelo y cara se quedan como estaban.
+        /// </summary>
+        public static ChibiBodyMeshes BuildBody(in AppearanceData appearance, in OutfitLook look)
         {
             float height = Mathf.Lerp(0.95f, 1.35f, appearance.BodyHeight);
             float girth = Mathf.Lerp(0.78f, 1.22f, appearance.BodyBuild);
@@ -54,6 +127,14 @@ namespace Nimbo.Art.Chibi
 
             var skin = new List<(Mesh, Matrix4x4)>();
             var clothes = new List<(Mesh, Matrix4x4)>();
+            var extra = new List<(Mesh, Matrix4x4)>();
+
+            // Un sombrero no viste el cuerpo: quien solo lleva gorra sigue con su ropa
+            // y sus piernas de siempre. Y un vestido deja las piernas en piel, que es
+            // lo que lo separa de un pantalón a simple vista.
+            bool esSombrero = look.Piece == GarmentPiece.HatBrimmed ||
+                              look.Piece == GarmentPiece.HatBeanie;
+            bool pantalon = look.HasGarment && !esSombrero && look.Piece != GarmentPiece.Skirt;
 
             // --- cabeza ---
             var headMesh = MeshShapes.Sphere(20, 16);
@@ -126,22 +207,37 @@ namespace Nimbo.Art.Chibi
                     tilt, Vector3.one * armThick * 1.18f)));
             }
 
-            // --- caderas ---
-            // Un pantalón corto sobre el arranque de las piernas. Sin él salían dos
-            // tubos de piel directamente del borde del torso, y el muñeco parecía ir
-            // en camiseta y nada más.
-            clothes.Add((MeshShapes.Cylinder(20, 0.5f, 0.54f, 1f), Matrix4x4.TRS(
-                new Vector3(0f, legHeight * 0.82f, 0f), Quaternion.identity,
-                new Vector3(bodyWidth * 0.88f, legHeight * 0.40f, bodyWidth * 0.78f))));
+            // --- caderas o falda ---
+            if (look.Piece == GarmentPiece.Skirt)
+            {
+                // La campana nace donde acababa la cadera y se abre hasta la rodilla
+                // alta. El bajo dobla al radio del torso: es lo que hace que se lea
+                // «falda» y no «pantalón ancho».
+                clothes.Add((MeshShapes.Cylinder(20, 0.5f, 1f, 1f), Matrix4x4.TRS(
+                    new Vector3(0f, legHeight * 0.72f, 0f), Quaternion.identity,
+                    new Vector3(bodyWidth * 0.95f, legHeight * 0.85f, bodyWidth * 0.85f))));
+            }
+            else
+            {
+                // Un pantalón corto sobre el arranque de las piernas. Sin él salían dos
+                // tubos de piel directamente del borde del torso, y el muñeco parecía
+                // ir en camiseta y nada más.
+                clothes.Add((MeshShapes.Cylinder(20, 0.5f, 0.54f, 1f), Matrix4x4.TRS(
+                    new Vector3(0f, legHeight * 0.82f, 0f), Quaternion.identity,
+                    new Vector3(bodyWidth * 0.88f, legHeight * 0.40f, bodyWidth * 0.78f))));
+            }
 
             // --- piernas ---
+            // Con pantalón dejan de ser piel: se dibujan en la malla de ropa y toman
+            // su color. Es el cambio más barato que más se nota al vestir a alguien.
             float legThick = height * 0.085f * girth;
             float legX = bodyWidth * 0.26f;
+            var piernas = pantalon ? clothes : skin;
 
             for (int side = -1; side <= 1; side += 2)
             {
                 var leg = MeshShapes.Capsule(12, 5, legHeight, legThick * 0.5f);
-                skin.Add((leg, Matrix4x4.TRS(
+                piernas.Add((leg, Matrix4x4.TRS(
                     new Vector3(side * legX, legHeight * 0.5f, 0f),
                     Quaternion.identity, Vector3.one)));
 
@@ -154,15 +250,70 @@ namespace Nimbo.Art.Chibi
                     Quaternion.identity, Vector3.one * legThick * 1.6f)));
             }
 
-            var hair = BuildHair(appearance, headCentre, headWidth, headHeight);
-            var face = BuildFaceQuad(headCentre, headWidth, headHeight);
+            // --- la pieza de la prenda, con color propio ---
+            switch (look.Piece)
+            {
+                case GarmentPiece.Hood:
+                    // Casquete más grande que el pelo y corrido hacia atrás: la cara
+                    // queda fuera y desde detrás —que es desde donde se mira a un
+                    // vecino— se lee capucha clara.
+                    extra.Add((MeshShapes.SphericalCap(20, 10, 0.62f), Matrix4x4.TRS(
+                        new Vector3(0f, headCentre + headHeight * 0.02f, -headWidth * 0.12f),
+                        Quaternion.identity,
+                        new Vector3(headWidth * 1.18f, headHeight * 1.16f,
+                                    headWidth * 1.22f))));
 
-            return new ChibiMeshes(
+                    // La gola al cuello, para que la capucha no parezca flotar.
+                    extra.Add((MeshShapes.Cylinder(14, 0.9f, 1f, 1f), Matrix4x4.TRS(
+                        new Vector3(0f, torsoTop - headHeight * 0.02f, -headWidth * 0.02f),
+                        Quaternion.identity,
+                        new Vector3(headWidth * 0.42f, headHeight * 0.18f,
+                                    headWidth * 0.40f))));
+                    break;
+
+                case GarmentPiece.Cape:
+                    // Una tabla a la espalda, ligeramente girada para que la base se
+                    // abra. Desde la cámara, que los ve de espaldas casi siempre, es
+                    // literalmente lo único que se ve de una capa.
+                    extra.Add((MeshShapes.Box(new Vector3(bodyWidth * 1.05f,
+                                                          bodyHeight * 1.35f, 0.07f)),
+                               Matrix4x4.TRS(
+                                   new Vector3(0f, shoulder - bodyHeight * 0.50f,
+                                               -bodyWidth * 0.58f),
+                                   Quaternion.Euler(6f, 0f, 0f), Vector3.one)));
+                    break;
+
+                case GarmentPiece.HatBrimmed:
+                    // Ala de disco y copa de cilindro: dos piezas y se lee sombrero.
+                    float ala = headCentre + headHeight * 0.50f;
+                    extra.Add((MeshShapes.Cylinder(16, 1f, 1f, 1f), Matrix4x4.TRS(
+                        new Vector3(0f, ala, 0f), Quaternion.identity,
+                        new Vector3(headWidth * 1.02f, headHeight * 0.045f,
+                                    headWidth * 1.02f))));
+                    extra.Add((MeshShapes.Cylinder(14, 0.82f, 0.92f, 1f), Matrix4x4.TRS(
+                        new Vector3(0f, ala + headHeight * 0.17f, 0f), Quaternion.identity,
+                        new Vector3(headWidth * 0.56f, headHeight * 0.34f,
+                                    headWidth * 0.56f))));
+                    break;
+
+                case GarmentPiece.HatBeanie:
+                    // Gorro ceñido con pompón: el casquete del pelo pero más cerrado
+                    // y una bola arriba, que es toda la personalidad de un gorro.
+                    extra.Add((MeshShapes.SphericalCap(18, 8, 0.55f), Matrix4x4.TRS(
+                        new Vector3(0f, headCentre + headHeight * 0.03f, -headWidth * 0.04f),
+                        Quaternion.identity,
+                        new Vector3(headWidth * 1.12f, headHeight * 1.10f,
+                                    headWidth * 1.14f))));
+                    extra.Add((MeshShapes.Sphere(10, 8), Matrix4x4.TRS(
+                        new Vector3(0f, headCentre + headHeight * 0.60f, 0f),
+                        Quaternion.identity, Vector3.one * headWidth * 0.15f)));
+                    break;
+            }
+
+            return new ChibiBodyMeshes(
                 MeshShapes.Combine(skin, "chibi_piel"),
                 MeshShapes.Combine(clothes, "chibi_ropa"),
-                hair,
-                face,
-                height);
+                extra.Count > 0 ? MeshShapes.Combine(extra, "chibi_prenda") : null);
         }
 
         /// <summary>

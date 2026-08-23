@@ -277,7 +277,7 @@ namespace Nimbo.Art.World
         private const int Petals = 5;
 
         /// <summary>
-        /// Las flores: una roseta de cinco pétalos, pequeña y casi tumbada.
+        /// Las flores: una roseta de cinco pétalos, pequeña y de lado.
         /// </summary>
         /// <remarks>
         /// **Solo donde el prado se aclara.** El sitio se decide con el mismo ruido
@@ -288,8 +288,8 @@ namespace Nimbo.Art.World
         /// **Roseta y no tarjeta cuadrada.** El primer intento eran cuadrados grandes
         /// inclinados casi de canto, y de cerca el prado parecía sembrado de papelitos
         /// de colores: un rectángulo girado al azar no se lee como una flor desde
-        /// ningún ángulo. Con cinco pétalos y casi tumbada, la silueta dice «flor» aun
-        /// midiendo cinco centímetros, que es lo que mide.
+        /// ningún ángulo. Con cinco pétalos y puestas de lado, la silueta dice «flor»
+        /// aun midiendo cinco centímetros, que es lo que mide.
         /// </remarks>
         public static Mesh Bloom(IReadOnlyList<Tuft> tufts, Vector3 worldOffset,
                                  float threshold, float variationScale, uint seed, string name)
@@ -313,9 +313,17 @@ namespace Nimbo.Art.World
                 var right = new Vector3(Mathf.Cos(spin), 0f, Mathf.Sin(spin));
                 var ahead = Vector3.Cross(up, right).normalized;
 
-                // Casi mirando al cielo. Inclinarla más la hacía desaparecer de canto
-                // desde la cámara del juego, que mira desde arriba.
-                var tilt = Quaternion.AngleAxis(rng.Range(4f, 22f), right);
+                // De lado, no tumbada: la cámara dejó de mirar desde arriba. La
+                // premisa vieja —«inclinarla más la hacía desaparecer de canto»—
+                // valía para el picado de 15 m / 48°; con la tercera persona a
+                // 5,5 m / 18° una roseta casi horizontal ES lo que desaparece de
+                // canto: vista del horizonte proyecta sen(inclinación), y el 13°
+                // medio de antes son la cuarta parte de su cara. El rango 55–85°
+                // le da a la cámara baja entre el 82 % y el 100 %. El techo no
+                // llega a 90° porque el plano general (150 m / 45°) sigue existiendo
+                // mientras no hay protagonista, y desde arriba una vertical caería
+                // a cos(90°) = 0.
+                var tilt = Quaternion.AngleAxis(rng.Range(55f, 85f), right);
                 var faceUp = tilt * up;
                 right = tilt * right;
                 ahead = tilt * ahead;

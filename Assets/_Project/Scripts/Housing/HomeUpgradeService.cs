@@ -271,7 +271,10 @@ namespace Nimbo.Housing
             int newCellCount = newSize * newSize;
             var newTiles = new List<string>(newCellCount);
 
-            const string defaultFinish = "floor_madera_clara";
+            // El acabado de serie vive en RoomLayout y es un id real del catálogo:
+            // rellenar con un id inventado pintaba las casillas nuevas de un suelo
+            // que nadie puede comprar ni ver.
+            string defaultFinish = RoomLayout.DefaultFloor;
 
             // Rellenar todo con el acabado por defecto y luego sobreescribir con lo viejo
             for (int i = 0; i < newCellCount; i++)

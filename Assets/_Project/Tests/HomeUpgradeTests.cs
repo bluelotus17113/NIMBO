@@ -186,9 +186,12 @@ namespace Nimbo.Tests
             }
 
             // Verificación extra: la fila 0 de las 3 columnas nuevas también debe ser B
-            // (no se hereda A porque esas columnas no existían)
+            // (no se hereda A porque esas columnas no existían). Las casillas que
+            // estaban ya pintadas conservan su acabado; las que se estrenan traen el
+            // acabado de serie, que es un id real del catálogo y no tiene por qué
+            // coincidir con el B de este montaje.
             for (int x = 8; x < 11; x++)
-                Assert.AreEqual(finishB, _home.Layout.FloorAt(new GridCoord(x, 0)));
+                Assert.AreEqual(RoomLayout.DefaultFloor, _home.Layout.FloorAt(new GridCoord(x, 0)));
         }
 
         // ── 7. Los muebles siguen en las mismas coordenadas ────────────────────────

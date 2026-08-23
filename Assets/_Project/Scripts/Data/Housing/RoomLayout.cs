@@ -58,6 +58,24 @@ namespace Nimbo.Data.Housing
         public const int MinSize = 6;
         public const int MaxSize = 16;
 
+        /// <summary>
+        /// El papel pintado con el que se estrena cualquier casa.
+        /// </summary>
+        /// <remarks>
+        /// Tiene que ser un id real de <c>catalogo_acabados.json</c>. Antes había aquí
+        /// un <c>wall_liso_crema</c> que no existía en ningún catálogo: no rompía nada
+        /// porque quien pintaba ignoraba el id, pero era la razón silenciosa de que
+        /// cuarenta acabados comprables no se pudieran ni elegir ni ver.
+        /// </remarks>
+        public const string DefaultWallpaper = "wall_nube_blanca";
+
+        /// <summary>
+        /// El suelo de serie. El más barato del catálogo y del color de madera clara
+        /// que siempre tuvo la cabaña, para que una casa vieja no cambie de aspecto
+        /// al cargar.
+        /// </summary>
+        public const string DefaultFloor = "floor_suelo_de_vinilo_imitacion_madera";
+
         public int Width = 8;
         public int Height = 8;
 
@@ -65,8 +83,8 @@ namespace Nimbo.Data.Housing
         public List<string> FloorTiles = new List<string>();
 
         /// <summary>Acabado de las paredes norte y oeste, las dos que se ven en cámara.</summary>
-        public string WallpaperNorth = "wall_liso_crema";
-        public string WallpaperWest = "wall_liso_crema";
+        public string WallpaperNorth = DefaultWallpaper;
+        public string WallpaperWest = DefaultWallpaper;
 
         public List<PlacedObject> Objects = new List<PlacedObject>();
 
@@ -93,7 +111,7 @@ namespace Nimbo.Data.Housing
         public static RoomLayout Starter()
         {
             var room = new RoomLayout { Width = 8, Height = 8 };
-            room.FillFloor("floor_madera_clara");
+            room.FillFloor(DefaultFloor);
             return room;
         }
     }

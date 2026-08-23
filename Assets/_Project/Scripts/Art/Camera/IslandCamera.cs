@@ -1,5 +1,6 @@
 using Nimbo.Art.World;
 using Nimbo.Core.Events;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Nimbo.Art.CameraWork
@@ -134,6 +135,18 @@ namespace Nimbo.Art.CameraWork
             EventBus.Subscribe<IslanderFocused>(OnIslanderFocused);
             EventBus.Subscribe<GamePaused>(OnGamePaused);
             EventBus.Subscribe<PointerNeeded>(OnPointerNeeded);
+            EventBus.Subscribe<DecorPlaced>(OnDecorPlaced);
+            EventBus.Subscribe<DecorRemoved>(OnDecorRemoved);
+            EventBus.Subscribe<DecorMoved>(OnDecorMoved);
+
+            // Reencender a mitad de sesión dejó los adornos fuera del registro: el
+            // modo construcción apaga este componente mientras dura (la vista aérea
+            // de BuildModeView manda), OnDisable suelta los bultos y los avisos de
+            // adorno que saltaron durante el apagón se perdieron con la cámara
+            // desuscrita. Remarcar aquí repone al fotograma siguiente todo lo vivo,
+            // colocado durante el apagón incluido. En el primer arranque no hace
+            // nada: _world aún es null y GameLoaded remarca cuando hay partida.
+            MarcarBarridoDeAdornos();
         }
 
         private void OnDisable()
@@ -144,6 +157,14 @@ namespace Nimbo.Art.CameraWork
             EventBus.Unsubscribe<IslanderFocused>(OnIslanderFocused);
             EventBus.Unsubscribe<GamePaused>(OnGamePaused);
             EventBus.Unsubscribe<PointerNeeded>(OnPointerNeeded);
+            EventBus.Unsubscribe<DecorPlaced>(OnDecorPlaced);
+            EventBus.Unsubscribe<DecorRemoved>(OnDecorRemoved);
+            EventBus.Unsubscribe<DecorMoved>(OnDecorMoved);
+
+            // Y lo mismo vale para los bultos de cámara: una lista estática sobrevive
+            // a la escena, y dejar los de esta partida sería barrer fantasmas en la
+            // siguiente.
+            SoltarAdornos();
 
             // Devolver el ratón al salir. Si no, apagar este componente —volver al
             // menú, recargar la escena— deja el cursor capturado y sin nadie que lo
@@ -161,6 +182,11 @@ namespace Nimbo.Art.CameraWork
             _focusedBody = null;
             _followingFocus = false;
             _playerPitch = null;
+
+            // Los adornos de esta partida se acaban de colocar o van a colocarse en
+            // este mismo aviso —el orden entre el mundo y la cámara no está garantizado—,
+            // así que el barrido se hace al fotograma siguiente, cuando ya están todos.
+            MarcarBarridoDeAdornos();
 
             // Si ya hay protagonista, se le encuadra a él y no al plano general.
             //
@@ -237,6 +263,64 @@ namespace Nimbo.Art.CameraWork
             ApplyPointerState();
         }
 
+        // ── bultos de cámara para los adornos ──────────────────────────────
+        //
+        // Los adornos los coloca WorldView y no es cosa de esta cámara pedirle un
+        // enganche nuevo: se reconocen solos porque su malla sale del catálogo de
+        // DecorMeshBuilder. El barrido es diferido un fotograma a propósito —quien
+        // coloca y quien escucha el mismo aviso no tienen orden garantizado entre sí,
+        // y al fotograma siguiente lo colocado ya está, lo movido ya está en su sitio
+        // y lo quitado ya no está—.
+
+        private void OnDecorPlaced(DecorPlaced _) => MarcarBarridoDeAdornos();
+        private void OnDecorRemoved(DecorRemoved _) => MarcarBarridoDeAdornos();
+        private void OnDecorMoved(DecorMoved _) => MarcarBarridoDeAdornos();
+
+        private readonly List<Transform> _adornosRegistrados = new();
+        private bool _barridoPendiente;
+        private int _fotogramaDelAviso;
+
+        private void MarcarBarridoDeAdornos()
+        {
+            _barridoPendiente = true;
+            _fotogramaDelAviso = Time.frameCount;
+        }
+
+        private void SoltarAdornos()
+        {
+            foreach (var cuerpo in _adornosRegistrados)
+                if (cuerpo != null) CameraObstacles.Remove(cuerpo);
+            _adornosRegistrados.Clear();
+        }
+
+        /// <summary>
+        /// Vuelve a leer los adornos puestos y registra sus esferas de cámara.
+        /// </summary>
+        /// <remarks>
+        /// Un pase por la jerarquía del mundo por aviso —colocar, quitar o mover un
+        /// adorno— y no por fotograma: son unos cientos de filtros una vez cada tanto,
+        /// no cada frame. Quitar y volver a poner todo, en vez de ajustar solo la pieza
+        /// tocada, mantiene el registro idéntico a lo que hay pintado sin tener que
+        /// confiar en que los tres eventos traigan siempre lo mismo.
+        /// </remarks>
+        private void BarridoDeAdornos()
+        {
+            SoltarAdornos();
+            if (_world == null) return;
+
+            foreach (var filter in _world.GetComponentsInChildren<MeshFilter>(false))
+            {
+                var mesh = filter.sharedMesh;
+                if (mesh == null || !DecorMeshBuilder.TryKindOf(mesh, out var kind)) continue;
+                if (!DecorMeshBuilder.TryCameraSpheres(kind, out var spheres)) continue;
+
+                foreach (var (centre, radius) in spheres)
+                    CameraObstacles.Add(filter.transform,
+                                        filter.transform.TransformPoint(centre), radius);
+                _adornosRegistrados.Add(filter.transform);
+            }
+        }
+
         /// <summary>
         /// Girar con el ratón solo cuando no haga falta el ratón para otra cosa.
         /// </summary>
@@ -297,6 +381,13 @@ namespace Nimbo.Art.CameraWork
         private void LateUpdate()
         {
             if (_rig == null) return;
+
+            // El barrido prometido: al fotograma siguiente del aviso, no en él.
+            if (_barridoPendiente && Time.frameCount > _fotogramaDelAviso)
+            {
+                _barridoPendiente = false;
+                BarridoDeAdornos();
+            }
 
             // Cruzar una puerta son quinientos metros de golpe. Sin pegar la cámara a
             // su sitio, entrar en casa sería un picado de dos segundos desde el prado
@@ -566,6 +657,13 @@ namespace Nimbo.Art.CameraWork
         ///
         /// El suelo mínimo de <c>CameraRig</c> no basta: aquel evita hundirse en el
         /// prado, y esto evita meterse en lo que hay de pie sobre él.
+        ///
+        /// Hay dos fuentes de choque y se toma la más cercana. El rayo físico ve lo que
+        /// tiene colisionador —muros, puentes, el Árbol Nimbo—; las esferas de
+        /// <see cref="CameraObstacles"/> ven lo que va sin colisionador a propósito —
+        /// troncos, rocas, adornos altos—. La segunda pasada va acotada por la primera:
+        /// si el muro ya acercó la cámara a dos metros, no hace falta mirar bultos más
+        /// allá de dos metros.
         /// </remarks>
         private Vector3 Unobstructed(Vector3 pivot, Vector3 desired)
         {
@@ -573,14 +671,19 @@ namespace Nimbo.Art.CameraWork
             float distance = offset.magnitude;
             if (distance < 0.01f) return desired;
 
+            var direction = offset / distance;
+            float pulled = distance;
+
             // QueryTriggerInteraction.Ignore para que un disparador —una puerta, una
             // zona de aviso— no tire de la cámara hacia delante como si fuera un muro.
-            if (!Physics.Raycast(pivot, offset / distance, out var hit, distance,
-                                 ~0, QueryTriggerInteraction.Ignore))
-                return desired;
+            if (Physics.Raycast(pivot, direction, out var hit, distance,
+                                ~0, QueryTriggerInteraction.Ignore))
+                pulled = Mathf.Max(hit.distance - _cameraPadding, 1.5f);
 
-            float pulled = Mathf.Max(hit.distance - _cameraPadding, 1.5f);
-            return pivot + offset / distance * pulled;
+            if (CameraObstacles.TryHit(pivot, direction, pulled, out float sphere))
+                pulled = Mathf.Max(sphere - _cameraPadding, 1.5f);
+
+            return pulled < distance ? pivot + direction * pulled : desired;
         }
     }
 }

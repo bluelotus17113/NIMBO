@@ -22,6 +22,16 @@ namespace Nimbo.Simulation.Wardrobe
     /// </remarks>
     public sealed class WardrobeService
     {
+        /// <summary>
+        /// Probabilidad de que un vecino con más de una prenda se cambie cada día.
+        /// </summary>
+        /// <remarks>
+        /// Un tercio, medido contra lo que aguanta el jugador: con uno de cada dos,
+        /// media isla cambia de ropa a la vez y el cambio deja de significar nada;
+        /// con uno de cada diez, quien regala ropa no llega a verla puesta nunca.
+        /// </remarks>
+        private const float ChangeChance = 1f / 3f;
+
         private readonly IIslanderRegistry _registry;
         private readonly ISimulationService _simulation;
         private readonly IPersonalityService _personalities;
@@ -32,6 +42,45 @@ namespace Nimbo.Simulation.Wardrobe
             _registry = registry;
             _simulation = simulation;
             _personalities = personalities;
+
+            EventBus.Subscribe<DayPassed>(OnDayPassed);
+        }
+
+        /// <summary>Suelta la suscripción al calendario. La llama el arranque al morir.</summary>
+        public void Dispose() => EventBus.Unsubscribe<DayPassed>(OnDayPassed);
+
+        /// <summary>
+        /// Cada día, quien tiene más de una prenda puede plantarse delante del
+        /// armario y ponerse otra cosa.
+        /// </summary>
+        /// <remarks>
+        /// El sorteo lleva el día en la semilla: el mismo vecino, el mismo día,
+        /// decide lo mismo en cualquier partida. Si saliera de un reloj, cargar una
+        /// partida guardada cambiaría lo que llevan puesto los vecinos.
+        ///
+        /// La mitad de las veces se pone su favorita —para eso existe
+        /// <see cref="FavouriteOf"/>— y la otra mitad experimenta con cualquiera del
+        /// armario: si siempre ganara la favorita, el armario se congelaría en cuanto
+        /// entrara la mejor prenda y el cambio dejaría de contar historia.
+        /// </remarks>
+        private void OnDayPassed(DayPassed day)
+        {
+            for (int i = 0; i < _registry.All.Count; i++)
+            {
+                var islander = _registry.All[i];
+                int prendas = islander.Wardrobe.Count;
+                if (prendas < 2) continue;
+
+                var rng = Rng.FromSeed($"{islander.Id}|cambio-ropa|{day.Day}");
+                if (rng.NextFloat() > ChangeChance) continue;
+
+                string elegida = rng.NextFloat() < 0.5f
+                    ? FavouriteOf(islander.Id)
+                    : islander.Wardrobe[(int)rng.Range(0f, prendas)];
+
+                if (!string.IsNullOrEmpty(elegida) && elegida != islander.EquippedOutfit)
+                    Wear(islander.Id, elegida);
+            }
         }
 
         /// <summary>
@@ -140,8 +189,8 @@ namespace Nimbo.Simulation.Wardrobe
         }
 
         /// <summary>
-        /// La prenda que más le gusta de las que tiene. La usa la IA para que se
-        /// cambie solo de vez en cuando.
+        /// La prenda que más le gusta de las que tiene. La usa el cambio diario de
+        /// ropa: la mitad de las veces el vecino se pone su favorita.
         /// </summary>
         public string FavouriteOf(string islanderId)
         {

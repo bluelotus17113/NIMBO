@@ -56,6 +56,9 @@ namespace Nimbo.Tests
             public int HungerRestore => 0;
             public ToolKind Tool { get; }
             public int ToolTier => 1;
+            public string Slot => "";
+            public string Style => "";
+            public string[] Palette => null;
 
             public FakeItemDef(string catalogId, ItemCategory category,
                                ToolKind tool = ToolKind.None)

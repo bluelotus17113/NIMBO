@@ -9,7 +9,8 @@ namespace Nimbo.Art.PlayerView
     public enum TargetKind { None = 0, Islander = 1, Node = 2, FarmTile = 3,
                              Hammock = 4, Bench = 5, ShippingBox = 6,
                              Door = 7, Exit = 8, Food = 9, Board = 10,
-                             FishingSpot = 11, Stage = 12, Stove = 13 }
+                             FishingSpot = 11, Stage = 12, Stove = 13,
+                             Tree = 14 }
 
     /// <summary>
     /// Lo que el jugador tiene delante y qué pasa si pulsa.
@@ -171,6 +172,13 @@ namespace Nimbo.Art.PlayerView
             // El concierto por delante de la caña: si hay fiesta en la plaza y estás
             // ahí, lo que quieres es subirte, no ponerte a pescar de espaldas.
             if (TryTargetStage()) return;
+
+            // El árbol antes que la caña y el huerto: está en mitad de la plaza, por
+            // donde se pasa siempre, y su ritual es de las primeras cosas que hay que
+            // poder hacer en una partida nueva. Después del escenario a propósito:
+            // durante el concierto el escenario ocupa este mismo sitio —los dos están
+            // en el origen— y subir a tocar tiene que ganar.
+            if (TryTargetTree()) return;
             if (TryTargetFishingSpot()) return;
 
             if (TryTargetFarmTile()) return;
@@ -456,6 +464,31 @@ namespace Nimbo.Art.PlayerView
         /// leer, y si no lo hay uno sigue andando sin haber abierto una pantalla para
         /// nada.
         /// </remarks>
+        /// <summary>
+        /// ¿Está delante del Árbol Nimbo?
+        /// </summary>
+        /// <remarks>
+        /// El radio cubre el bulto que rodea el tronco en WorldView (4,5 m) con margen
+        /// para no pelearse con el colisionador del pie, que ensancha metro y medio.
+        ///
+        /// El cartel distingue si queda regalo hoy. Saber que «ya ha hablado hoy» **sin
+        /// haber pulsado** es lo que evita convertir el intento fallido en fastidio: el
+        /// mismo criterio que el tablón, que dice de lejos cuántos encargos hay.
+        /// </remarks>
+        private bool TryTargetTree()
+        {
+            if (!Near(transform.position, Vector3.zero, 6f)) return false;
+
+            Kind = TargetKind.Tree;
+            TargetId = "";
+
+            bool queda = ServiceRegistry.TryGet<ITreeService>(out var arbol)
+                         && arbol.CanTalkToday;
+            Prompt = queda ? "Hablar con el Árbol Nimbo"
+                           : "El Árbol Nimbo ya ha hablado hoy";
+            return true;
+        }
+
         private bool TryTargetBoard()
         {
             if (!Near(transform.position, Data.World.Archipelago.RequestBoard,
@@ -849,6 +882,15 @@ namespace Nimbo.Art.PlayerView
                 case TargetKind.ShippingBox:
                     EventBus.Publish(new StationUsed(CraftStationKind.Shipping));
                     break;
+
+                case TargetKind.Tree:
+                    {
+                        // El texto que responde el árbol viaja por el bus (TreeSpoke) y
+                        // lo pinta la interfaz; aquí no hay nada que enseñar.
+                        if (ServiceRegistry.TryGet<ITreeService>(out var arbol))
+                            arbol.TryTalk(out _);
+                        break;
+                    }
 
                 case TargetKind.Board:
                     EventBus.Publish(new RequestBoardRead());

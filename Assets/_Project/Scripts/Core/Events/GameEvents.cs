@@ -612,6 +612,20 @@ namespace Nimbo.Core.Events
     /// Con el identificador vacío significa que ha dejado de mirar y se vuelve al
     /// plano general de la isla.
     /// </summary>
+    /// <summary>
+    /// El Árbol Nimbo ha hablado, haya dado lo suyo o ya lo hayan cobrado. El texto va
+    /// compuesto porque quien lo publica ve tipos que la interfaz no conoce.
+    /// </summary>
+    public readonly struct TreeSpoke
+    {
+        public readonly string Text;
+        public readonly int Coins;
+        public readonly string ItemId;
+
+        public TreeSpoke(string text, int coins, string itemId)
+        { Text = text; Coins = coins; ItemId = itemId; }
+    }
+
     public readonly struct IslanderFocused
     {
         public readonly string IslanderId;

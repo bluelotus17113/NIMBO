@@ -35,6 +35,87 @@ namespace Nimbo.Art.World
         }
 
         /// <summary>
+        /// A qué tipo de adorno pertenece una malla, si es que pertenece a alguno.
+        /// </summary>
+        /// <remarks>
+        /// La mirilla inversa del catálogo. La usa el barrido de adornos de la cámara
+        /// (<c>IslandCamera</c>) para reconocer los cuerpos colocados sin depender de
+        /// nombres de objeto: la igualdad es de referencia contra esta misma caché, así
+        /// que una malla nueva con forma de adorno no cuela y un adorno renombrado no
+        /// se pierde.
+        /// </remarks>
+        public static bool TryKindOf(Mesh mesh, out DecorKind kind)
+        {
+            foreach (var pair in Cache)
+            {
+                if (pair.Value != mesh) continue;
+                kind = pair.Key;
+                return true;
+            }
+
+            kind = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Las esferas con las que la cámara rodea ese tipo de adorno, en coordenadas
+        /// locales (el origen es la hierba, como en las mallas).
+        /// </summary>
+        /// <remarks>
+        /// Solo lo que sobresale del recorrido pivote→cámara. Ese segmento nunca baja
+        /// de ~1,5 m —el pivote va a 1,2 m (la cabeza del protagonista) y la pose más
+        /// baja que permiten los topes del rig (3,5 m a 5°) deja la cámara a 1,5—, así
+        /// que asiento (1,30 m de alto), planta (1,42) y valla (1,00) devuelven falso:
+        /// registrarlas sería una entrada más que mirar para no apartar nunca la
+        /// cámara.
+        ///
+        /// Las que sí van llevan sus esferas escritas a mano y no salen del bounds:
+        /// farola y estatua son un palo fino con una bola arriba, y su bounds pide una
+        /// esfera de radio medio metro centrada a media altura que ni toca la bola —
+        /// justo la parte en la que la cámara se mete al pasar pegado.
+        /// </remarks>
+        public static bool TryCameraSpheres(DecorKind kind,
+                                            out (Vector3 centre, float radius)[] spheres)
+        {
+            switch (kind)
+            {
+                case DecorKind.Light:
+                    spheres = new[]
+                    {
+                        (new Vector3(0f, 1.65f, 0f), 0.30f),   // el mástil (0,12 de radio)
+                        (new Vector3(0f, 3.35f, 0f), 0.34f),   // la bola de la lámpara
+                    };
+                    return true;
+
+                case DecorKind.Statue:
+                    spheres = new[]
+                    {
+                        (new Vector3(0f, 1.65f, 0f), 0.55f),   // la columna (0,42 abajo)
+                        (new Vector3(0f, 2.72f, 0f), 0.52f),   // el remate
+                    };
+                    return true;
+
+                case DecorKind.Sign:
+                    spheres = new[]
+                    {
+                        (new Vector3(0f, 1.75f, 0f), 0.75f),   // la tabla
+                        (new Vector3(0f, 0.75f, 0f), 0.20f),   // el poste
+                    };
+                    return true;
+
+                case DecorKind.Water:
+                    // Fuente: columna y plato alto; la taza ancha queda por debajo del
+                    // recorrido y no hace falta.
+                    spheres = new[] { (new Vector3(0f, 1.10f, 0f), 0.85f) };
+                    return true;
+
+                default:
+                    spheres = null;
+                    return false;
+            }
+        }
+
+        /// <summary>
         /// El color de un adorno concreto. Sale de su identificador, así que el
         /// mismo banco es del mismo color en todas las partidas y en todas las islas.
         /// </summary>

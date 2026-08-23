@@ -365,6 +365,7 @@ namespace Nimbo.Game.Bootstrap
             ServiceRegistry.Register<IIslanderFactory>(factory);
             ServiceRegistry.Register<IJobService>(_jobs);
             ServiceRegistry.Register<NimboTree>(_tree);
+            ServiceRegistry.Register<ITreeService>(_tree);
             ServiceRegistry.Register<WardrobeService>(_wardrobe);
             ServiceRegistry.Register<IGiftService>(_gifts);
 

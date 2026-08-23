@@ -134,6 +134,23 @@ namespace Nimbo.Art.World
             var (trunk, crown) = IslandMeshBuilder.BuildTree(26f, 9f);
             var tree = new GameObject("Árbol Nimbo").transform;
             tree.SetParent(island, worldPositionStays: false);
+
+            // Crece con el nivel de la isla. **Es la misma fórmula que
+            // NimboTree.GrowthScale (NimboTree.cs:79) escrita dos veces**, y no por
+            // pereza: Nimbo.Art no ve Nimbo.Island y el contrato ITreeService no expone
+            // la escala porque a la vista no le hace falta preguntarla, le hace falta
+            // aplicarla. Lo que impide que las dos copias se separen es
+            // ArbolNimboTests.LaEscalaDelArteSigueALaDelServicio, que replica las dos y
+            // las compara nivel por nivel. Si tocas los números de aquí, esa prueba se
+            // pone roja — y si la borras, nadie te avisará nunca más.
+            //
+            // Se escala el árbol entero y no solo la copa: la copa lleva los vértices
+            // cocidos a la altura que sale del tronco (IslandMeshBuilder.BuildTree), así
+            // que encoger solo al hijo la hundiría contra un tronco que sigue igual de
+            // alto. Desde el pie, el conjunto lee como un árbol más joven.
+            int nivel = Mathf.Clamp(_island != null ? _island.State.Level : 1,
+                                    1, Data.World.IslandState.MaxLevel);
+            tree.localScale = Vector3.one * Mathf.Lerp(0.35f, 1f, (nivel - 1) / 9f);
             AddMesh(tree, "tronco", trunk, ToonPalette.Solid(ToonPalette.TrunkBrown), solid: true);
 
             // La copa se mueve menos que una mata: un árbol de veintiséis metros que

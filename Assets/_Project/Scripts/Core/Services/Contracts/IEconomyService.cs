@@ -74,6 +74,20 @@ namespace Nimbo.Core.Services.Contracts
         /// nodos de la isla. Todo lo que no sea herramienta vale 1.
         /// </remarks>
         int ToolTier { get; }
+
+        // ── ropa ──
+        // El arte tiene que poder vestir al muñeco con la prenda equipada, y Nimbo.Art
+        // no ve Nimbo.Economy: sin estos tres en el contrato, la paleta autorizada del
+        // catálogo era un dato muerto que nadie fuera de la economía podía leer.
+
+        /// <summary>Ranura que ocupa si es ropa: outfit, hat o accessory. Vacía en lo demás.</summary>
+        string Slot { get; }
+
+        /// <summary>Familia estética si es ropa: casual, formal, fantasia… Vacía en lo demás.</summary>
+        string Style { get; }
+
+        /// <summary>Colores de la prenda en hexadecimal («#AABBCC»), tal como vienen del JSON.</summary>
+        string[] Palette { get; }
     }
 
     /// <summary>Monedas, tiendas, catálogo e inventario del jugador.</summary>

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Nimbo.Art.Chibi;
 using Nimbo.Art.Materials;
 using Nimbo.Core.Events;
@@ -62,12 +64,30 @@ namespace Nimbo.Art.World
         {
             EventBus.Subscribe<InteriorEntered>(OnEntered);
             EventBus.Subscribe<InteriorExited>(OnExited);
+            EventBus.Subscribe<RoomEdited>(OnRoomEdited);
         }
 
         private void OnDisable()
         {
             EventBus.Unsubscribe<InteriorEntered>(OnEntered);
             EventBus.Unsubscribe<InteriorExited>(OnExited);
+            EventBus.Unsubscribe<RoomEdited>(OnRoomEdited);
+        }
+
+        /// <summary>
+        /// Alguien ha reformado una habitación: si es la que se está mirando, se repinta.
+        /// </summary>
+        /// <remarks>
+        /// Los acabados no pasan por el modo amueblar ni por su fantasma: el panel de
+        /// amueblar los aplica sobre la habitación y avisa por aquí. Se rehace la
+        /// habitación entera y no solo suelo y paredes porque ocurre una vez por
+        /// reforma y no cada fotograma; partirlo en dos contenedores sería guardar
+        /// estado de más para ahorrar seis mallas.
+        /// </remarks>
+        private void OnRoomEdited(RoomEdited _)
+        {
+            if (!Inside || CurrentRoom == null) return;
+            Rebuild(CurrentRoom);
         }
 
         private void OnEntered(InteriorEntered evt)
@@ -124,7 +144,7 @@ namespace Nimbo.Art.World
                 // Una cabaña recién estrenada viene sin suelo puesto: se rellena la
                 // primera vez, o entrarías a un agujero negro con muebles flotando.
                 var home = player.State.Home;
-                if (home.FloorTiles.Count == 0) home.FillFloor("floor_madera_clara");
+                if (home.FloorTiles.Count == 0) home.FillFloor(RoomLayout.DefaultFloor);
                 return home;
             }
 
@@ -189,29 +209,87 @@ namespace Nimbo.Art.World
             // llevar un acabado distinto, y el editor pinta el suelo entero.
             var floor = MeshShapes.Box(new Vector3(layout.Width * Tile, 0.2f, layout.Height * Tile));
 
-            AddMesh(_room, "suelo", floor, ToonPalette.Solid(new Color32(0xC8, 0xA6, 0x7C, 255)),
+            AddMesh(_room, "suelo", floor, ToonPalette.Solid(FloorColour(layout)),
                     new Vector3(layout.Width * Tile * 0.5f, -0.1f, layout.Height * Tile * 0.5f),
                     solid: true);
         }
 
+        /// <summary>
+        /// El color del suelo: el del acabado que más casillas tiene de las guardadas.
+        /// </summary>
+        /// <remarks>
+        /// La losa es una sola y el acabado va casilla a casilla, así que uno de los
+        /// ids tiene que representarlas todas. Gana el más repetido y no el primero:
+        /// al ampliar la cabaña las casillas nuevas se estrenan con el acabado de
+        /// serie, y con «el primero» un suelo pintado entero pasaría a verse del color
+        /// de serie porque la casilla (0,0) es vieja pero la mayoría ya no lo es.
+        ///
+        /// Si el id no está en el catálogo —partidas viejas guardadas con ids que ya
+        /// no existen— se cae al acabado por defecto en vez de a un color de error.
+        /// </remarks>
+        private static Color32 FloorColour(RoomLayout layout)
+        {
+            string dominant = DominantFinish(layout.FloorTiles);
+            if (dominant != null && FinishColours.TryGet(dominant, out var colour)) return colour;
+            return FinishColours.Get(RoomLayout.DefaultFloor);
+        }
+
+        /// <summary>El id que más veces aparece en la lista; empate lo gana el primero.</summary>
+        private static string DominantFinish(List<string> tiles)
+        {
+            if (tiles == null || tiles.Count == 0) return null;
+
+            var counts = new Dictionary<string, int>();
+            foreach (var tile in tiles)
+            {
+                if (string.IsNullOrEmpty(tile)) continue;
+                counts.TryGetValue(tile, out int seen);
+                counts[tile] = seen + 1;
+            }
+
+            if (counts.Count == 0) return null;
+
+            // Segunda pasada sobre la lista y no sobre el diccionario: el orden de un
+            // Dictionary no está garantizado y el desempate tiene que ser estable.
+            string best = null;
+            int bestCount = 0;
+            foreach (var tile in tiles)
+            {
+                if (string.IsNullOrEmpty(tile)) continue;
+                if (counts[tile] > bestCount) { bestCount = counts[tile]; best = tile; }
+            }
+            return best;
+        }
+
+        /// <summary>El color de un papel pintado guardado, o el de serie si el id ya no existe.</summary>
+        private static Color32 WallColour(string wallpaperId) =>
+            wallpaperId != null && FinishColours.TryGet(wallpaperId, out var colour)
+                ? colour
+                : FinishColours.Get(RoomLayout.DefaultWallpaper);
+
         private void BuildWalls(RoomLayout layout)
         {
             const float Height = 3.2f;
-            var paper = ToonPalette.Solid(new Color32(0xF4, 0xE7, 0xD2, 255));
+            var paperNorth = ToonPalette.Solid(WallColour(layout.WallpaperNorth));
+            var paperWest = ToonPalette.Solid(WallColour(layout.WallpaperWest));
 
             float w = layout.Width * Tile;
             float h = layout.Height * Tile;
 
             // Las cuatro paredes son sólidas: sin ellas el jugador sale andando de su
             // propia casa por el lado y aparece en la nada de debajo del mundo.
-            AddMesh(_room, "pared_n", WallMesh(w, Height), paper,
+            //
+            // Solo norte y oeste tienen acabado propio porque son las que mira la
+            // cámara; sur y este heredan el de su pareja para que ningún canto se
+            // asome de otro color al girar la vista.
+            AddMesh(_room, "pared_n", WallMesh(w, Height), paperNorth,
                     new Vector3(w * 0.5f, Height * 0.5f, h), solid: true);
-            AddMesh(_room, "pared_s", WallMesh(w, Height), paper,
+            AddMesh(_room, "pared_s", WallMesh(w, Height), paperNorth,
                     new Vector3(w * 0.5f, Height * 0.5f, 0f), solid: true);
-            AddMesh(_room, "pared_o", WallMesh(h, Height), paper,
+            AddMesh(_room, "pared_o", WallMesh(h, Height), paperWest,
                     new Vector3(0f, Height * 0.5f, h * 0.5f),
                     Quaternion.Euler(0f, 90f, 0f), solid: true);
-            AddMesh(_room, "pared_e", WallMesh(h, Height), paper,
+            AddMesh(_room, "pared_e", WallMesh(h, Height), paperWest,
                     new Vector3(w, Height * 0.5f, h * 0.5f),
                     Quaternion.Euler(0f, 90f, 0f), solid: true);
 
@@ -373,6 +451,67 @@ namespace Nimbo.Art.World
             go.AddComponent<MeshRenderer>().sharedMaterial = material;
 
             if (solid) go.AddComponent<BoxCollider>();
+        }
+
+        /// <summary>
+        /// Colores base de los acabados, leídos de <c>Resources/Config/catalogo_acabados</c>.
+        /// </summary>
+        /// <remarks>
+        /// Este lector vive aquí y no en el catálogo de vivienda porque Nimbo.Art no ve
+        /// Nimbo.Housing, y el contrato <c>IItemDefinition</c> expone la categoría de
+        /// un acabado pero no su color. Es el tercer lector del mismo JSON —lo cargan
+        /// igual la economía y la vivienda—; el día que el contrato de housing gane una
+        /// consulta de acabados, esto se sustituye por ella y sobra.
+        /// </remarks>
+        private static class FinishColours
+        {
+            static Dictionary<string, Color32> _colours;
+
+            public static bool TryGet(string id, out Color32 colour)
+            {
+                if (_colours == null) Load();
+                return _colours.TryGetValue(id, out colour);
+            }
+
+            /// <summary>
+            /// El color de un id que debería existir. Si no existe, magenta a gritos:
+            /// es el fallo que la prueba de ids por defecto tiene que haber cazado.
+            /// </summary>
+            public static Color32 Get(string id)
+            {
+                if (TryGet(id, out var colour)) return colour;
+                Debug.LogWarning($"InteriorView: el acabado '{id}' no está en el catálogo; se pinta magenta para que se vea.");
+                return new Color32(255, 0, 228, 255);
+            }
+
+            static void Load()
+            {
+                _colours = new Dictionary<string, Color32>();
+
+                var asset = Resources.Load<TextAsset>("Config/catalogo_acabados");
+                if (asset == null)
+                {
+                    Debug.LogWarning("InteriorView: no se encontró Resources/Config/catalogo_acabados");
+                    return;
+                }
+
+                var data = JsonUtility.FromJson<FinishList>(asset.text);
+                if (data?.items == null) return;
+
+                foreach (var raw in data.items)
+                    if (ColorUtility.TryParseHtmlString(raw.baseColor, out var colour))
+                        _colours[raw.catalogId] = colour;
+            }
+
+            [Serializable]
+            class FinishList { public List<FinishRaw> items; }
+
+            [Serializable]
+            class FinishRaw
+            {
+                public string catalogId;
+                public string baseColor;
+            }
         }
 
         private void OnDestroy()
