@@ -219,9 +219,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e86a6bbba2fc0452fa771607b21c2c3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Nimbo.Art::Nimbo.Art.CameraWork.IslandCamera
-  _followDistance: 15
-  _followPitch: 48
-  _followHeight: 1.1
+  _followDistance: 5.5
+  _followPitch: 18
+  _followHeight: 1.2
   _cameraPadding: 0.6
 --- !u!81 &657536700
 AudioListener:

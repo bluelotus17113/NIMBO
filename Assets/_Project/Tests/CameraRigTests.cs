@@ -135,10 +135,10 @@ namespace Nimbo.Tests
             Assert.AreEqual(a.Yaw, b.Yaw, tol, "Yaw debería coincidir.");
         }
 
-        // ── 4. Pitch entre 12° y 78° ───────────────────────────────────────
+        // ── 4. Pitch entre 5° y 78° ────────────────────────────────────────
 
         [Test]
-        public void Target_Pitch_ClampedBetween12And78()
+        public void Target_Pitch_ClampedBetween5And78()
         {
             var rig = NewRig();
 
@@ -146,10 +146,10 @@ namespace Nimbo.Tests
             Assert.AreEqual(78f, rig.Target.Pitch, "Pitch 500 debería quedarse en 78.");
 
             rig.Target = new CameraPose { Pitch = -90f };
-            Assert.AreEqual(12f, rig.Target.Pitch, "Pitch -90 debería quedarse en 12.");
+            Assert.AreEqual(5f, rig.Target.Pitch, "Pitch -90 debería quedarse en 5.");
 
             rig.Target = new CameraPose { Pitch = 0f };
-            Assert.AreEqual(12f, rig.Target.Pitch, "Pitch 0 debería quedarse en 12.");
+            Assert.AreEqual(5f, rig.Target.Pitch, "Pitch 0 debería quedarse en 5.");
 
             rig.Target = new CameraPose { Pitch = 45f };
             Assert.AreEqual(45f, rig.Target.Pitch, "Pitch 45 debería quedarse en 45.");
@@ -164,17 +164,17 @@ namespace Nimbo.Tests
             var rig = NewRig();
             // Empezamos en 45 y bajamos mucho.
             rig.Orbit(0f, -100f);
-            Assert.AreEqual(12f, rig.Target.Pitch, "Bajar 100° desde 45 debería quedarse en 12.");
+            Assert.AreEqual(5f, rig.Target.Pitch, "Bajar 100° desde 45 debería quedarse en 5.");
 
             // Subimos mucho.
             rig.Orbit(0f, 200f);
             Assert.AreEqual(78f, rig.Target.Pitch, "Subir 200° debería quedarse en 78.");
         }
 
-        // ── 5. Distancia entre 8 y 220 ─────────────────────────────────────
+        // ── 5. Distancia entre 3,5 y 220 ───────────────────────────────────
 
         [Test]
-        public void Target_Distance_ClampedBetween8And220()
+        public void Target_Distance_ClampedBetween3_5And220()
         {
             var rig = NewRig();
 
@@ -182,10 +182,10 @@ namespace Nimbo.Tests
             Assert.AreEqual(220f, rig.Target.Distance, "Distance 500 debería quedarse en 220.");
 
             rig.Target = new CameraPose { Distance = 0f };
-            Assert.AreEqual(8f, rig.Target.Distance, "Distance 0 debería quedarse en 8.");
+            Assert.AreEqual(3.5f, rig.Target.Distance, "Distance 0 debería quedarse en 3,5.");
 
             rig.Target = new CameraPose { Distance = -10f };
-            Assert.AreEqual(8f, rig.Target.Distance, "Distance -10 debería quedarse en 8.");
+            Assert.AreEqual(3.5f, rig.Target.Distance, "Distance -10 debería quedarse en 3,5.");
 
             rig.Target = new CameraPose { Distance = 100f };
             Assert.AreEqual(100f, rig.Target.Distance, "Distance 100 debería quedarse en 100.");
@@ -198,10 +198,28 @@ namespace Nimbo.Tests
             rig.Target = new CameraPose { Distance = 20f };
 
             rig.Zoom(200f); // acerca mucho
-            Assert.AreEqual(8f, rig.Target.Distance, "Acercar 200 desde 20 debería quedarse en 8.");
+            Assert.AreEqual(3.5f, rig.Target.Distance, "Acercar 200 desde 20 debería quedarse en 3,5.");
 
             rig.Zoom(-500f); // aleja mucho
             Assert.AreEqual(220f, rig.Target.Distance, "Alejar 500 debería quedarse en 220.");
+        }
+
+        [Test]
+        public void LaPoseDeTerceraPersonaCabeEnLosTopes()
+        {
+            // La pose de seguimiento en tercera persona —la que IslandCamera pide cada
+            // fotograma— tiene que sobrevivir intacta al ClampPose. Con los topes
+            // antiguos (distancia mínima 8 m) los 5,5 m de la pose se recortaban a 8:
+            // el encuadre pedido nunca llegó a existir. Si alguien vuelve a subir los
+            // mínimos, esta prueba es la que avisa de que se está comiendo la pose.
+            var rig = NewRig();
+
+            rig.Target = new CameraPose { Pivot = Vector3.zero, Distance = 5.5f, Pitch = 18f, Yaw = 0f };
+
+            Assert.AreEqual(5.5f, rig.Target.Distance,
+                "el mínimo de distancia se come la pose de tercera persona");
+            Assert.AreEqual(18f, rig.Target.Pitch,
+                "el mínimo de pitch se come la pose de tercera persona");
         }
 
         // ── 6. El pivote no sale del círculo ───────────────────────────────
@@ -391,12 +409,13 @@ namespace Nimbo.Tests
         public void LaCamaraNoSeMeteDentroDelSuelo()
         {
             // Los topes de pitch y distancia se cumplían y aun así la cámara acababa
-            // dentro del césped: con pitch 12° y distancia 8, la altura sobre el
-            // pivote es 8·sen(12°) = 1,66 m, más bajo que un tejado. Esto se vio
-            // jugando, no en una prueba, que es lo que suele pasar con la cámara.
+            // dentro del césped. El escenario son los mínimos VIGENTES de pitch y
+            // distancia —hoy 5° y 3,5 m—, porque ahí es donde el suelo tiene que
+            // sostenerla: 3,5·sen(5°) = 0,30 m sobre el pivote. Esto se vio jugando,
+            // no en una prueba, que es lo que suele pasar con la cámara.
             var rig = NewRig();
 
-            rig.Target = new CameraPose { Pivot = Vector3.zero, Distance = 8f, Pitch = 12f, Yaw = 0f };
+            rig.Target = new CameraPose { Pivot = Vector3.zero, Distance = 3.5f, Pitch = 5f, Yaw = 0f };
             rig.SnapToTarget();
 
             Assert.GreaterOrEqual(rig.Position.y, CameraRig.MinHeight - 0.001f,
@@ -408,14 +427,14 @@ namespace Nimbo.Tests
         {
             // Enfocar a alguien que está en una zona hundida no puede colar la cámara
             // por debajo del prado: el suelo es el del mundo, no una altura relativa
-            // al punto que se esté mirando.
+            // al punto que se esté mirando. Mínimos vigentes otra vez (3,5 m / 5°).
             var rig = NewRig();
 
             rig.Target = new CameraPose
             {
                 Pivot = new Vector3(10f, -6f, 10f),
-                Distance = 8f,
-                Pitch = 12f,
+                Distance = 3.5f,
+                Pitch = 5f,
                 Yaw = 45f,
             };
             rig.SnapToTarget();
@@ -458,7 +477,7 @@ namespace Nimbo.Tests
             var rig = NewRig();
 
             var pivot = new Vector3(4f, 0f, -3f);
-            rig.Target = new CameraPose { Pivot = pivot, Distance = 8f, Pitch = 12f, Yaw = 30f };
+            rig.Target = new CameraPose { Pivot = pivot, Distance = 3.5f, Pitch = 5f, Yaw = 30f };
             rig.SnapToTarget();
 
             var toPivot = (pivot - rig.Position).normalized;

@@ -42,6 +42,12 @@ namespace Nimbo.PlayTests
             // El linde del noroeste, donde caen los nodos de recoger: árboles pequeños,
             // rocas y matas juntos en un mismo plano.
             ("linde", new Vector3(-44f, 7f, 40f), new Vector3(-62f, 2.5f, 58f)),
+
+            // El borde desde fuera y por debajo del labio: es el encuadre que delata
+            // una rendija entre prado y roca. Desde arriba la hierba doblada tapa la
+            // costura; a esta altura, si los dos bordes no coinciden, se ve el cielo
+            // a través de la isla. La falda se juzga aquí o no se juzga.
+            ("bajo_el_borde", new Vector3(150f, -18f, 118f), new Vector3(72f, -6f, 56f)),
         };
 
         [UnityTest]
@@ -73,6 +79,24 @@ namespace Nimbo.PlayTests
 
                 yield return null;
                 yield return Foto(camera, $"estilo_{nombre}_{sufijo}.png");
+            }
+
+            // El quinto encuadre no va escrito porque no retrata un escenario: retrata
+            // la propia cámara de seguimiento. Se le enciende de verdad y se le deja
+            // ponerse sola detrás del protagonista, con su pose y su antiobstáculos;
+            // si mañana cambia la pose, la foto cambia con ella sin tocar aquí nada.
+            // Es la excepción deliberada a la regla de posiciones escritas de arriba.
+            if (seguimiento != null)
+            {
+                seguimiento.enabled = true;
+
+                // Al publicar ProtagonistCreated el mundo llamó a Follow y la cámara
+                // se pegó a su pose de golpe; estos fotogramas son por si el suavizado
+                // tuviera que terminar y para que el fondo asiente.
+                for (int i = 0; i < 20; i++) yield return null;
+
+                yield return Foto(camera, $"estilo_tercera_persona_{sufijo}.png");
+                seguimiento.enabled = false;
             }
 
             Assert.Pass();

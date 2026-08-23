@@ -1,3 +1,4 @@
+using System.Text;
 using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
 using Nimbo.Data.Islanders;
@@ -19,6 +20,14 @@ namespace Nimbo.UI.Islander
         private readonly Label _current;
         private readonly Label _wage;
         private readonly VisualElement _options;
+
+        /// <summary>
+        /// Lo que mandaba la última vez que se levantaron las opciones. El refresco de
+        /// la ficha corre cada 0,4 s y derribar estos botones bajo el cursor se comía
+        /// los clics: solo se reconstruyen cuando cambia la puerta, el catálogo, el
+        /// oficio actual o lo que diría o rendiría cada uno.
+        /// </summary>
+        private string _optionsSignature;
 
         private string _islanderId;
 
@@ -43,11 +52,16 @@ namespace Nimbo.UI.Islander
         public void Refresh(string islanderId)
         {
             _islanderId = islanderId;
-            _options.Clear();
 
-            if (!ServiceRegistry.TryGet<IJobService>(out var jobs)) return;
-            if (!ServiceRegistry.TryGet<IIslanderRegistry>(out var registry)) return;
-            if (!registry.TryGet(islanderId, out var islander)) return;
+            if (!ServiceRegistry.TryGet<IJobService>(out var jobs) ||
+                !ServiceRegistry.TryGet<IIslanderRegistry>(out var registry) ||
+                !registry.TryGet(islanderId, out var islander))
+            {
+                // Sin servicio no hay opciones honestas que enseñar; se invalida la
+                // firma para que la próxima pasada con servicio reconstruya de verdad.
+                _optionsSignature = null;
+                return;
+            }
 
             var job = islander.Job;
 
@@ -63,7 +77,34 @@ namespace Nimbo.UI.Islander
                 _wage.text = "No entra nada por aquí.";
             }
 
+            string signature = OptionsSignature(jobs, islanderId, job.Kind);
+            if (signature == _optionsSignature) return;
+            _optionsSignature = signature;
+
+            _options.Clear();
             BuildOptions(jobs, job.Kind);
+        }
+
+        /// <summary>
+        /// La puerta de repartir, el catálogo y el veredicto por oficio, en una cadena.
+        /// </summary>
+        private static string OptionsSignature(IJobService jobs, string islanderId, JobKind current)
+        {
+            bool open = Gates.Allows(Unlock.AssignJobs);
+            var firma = new StringBuilder($"{islanderId}|{current}|{open}");
+            if (!open) return firma.ToString();
+
+            var available = jobs.AvailableJobs;
+            firma.Append('|').Append(available.Count);
+
+            for (int i = 0; i < available.Count; i++)
+            {
+                var kind = available[i];
+                firma.Append('|').Append(kind)
+                     .Append(jobs.WouldAccept(islanderId, kind))
+                     .Append(Mathf.RoundToInt(jobs.AffinityFor(islanderId, kind) * 100f));
+            }
+            return firma.ToString();
         }
 
         private void BuildOptions(IJobService jobs, JobKind current)

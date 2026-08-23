@@ -1,1 +1,95 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Tema de interfaz de Isla Nimbo.
+
+   El default de Unity trae :hover, :active y :focus para sus botones, pero
+   cualquier estilo inline los pisa: en UI Toolkit el inline gana a toda regla
+   de hoja de estilos, pseudoclase incluida. Por eso los fondos y bordes de los
+   botones viven AQUÍ y no en UiTheme.cs — si vuelven a pintarse inline desde
+   código, los tres estados dejan de existir para toda la interfaz.
+
+   Por qué los selectores de estado llevan los tres ingredientes (tipo, clase
+   y :enabled encadenado): desde Unity 2023.2 el default define sus estados
+   como .unity-button:hover:enabled — DOS pseudoclases, especificidad mayor
+   que cualquier .mi-clase:hover por muy nuestra que sea la clase. Medido en
+   juego: con .nimbo-btn-action:hover el hover resolvía al gris #D1D1D1 del
+   default; con tipo + clase + :enabled (misma forma que el default más el
+   tipo delante) nuestra regla gana siempre. Sin :enabled ni con tipo basta,
+   porque el empate lo sigue ganando el default.
+
+   Los colores salen de Docs/Contratos/estilo_ui.md §1 y de ningún otro lado.
+   ══════════════════════════════════════════════════════════════════════════ */
+
 @import url("unity-theme://default");
+
+/* ── Botón principal ────────────────────────────────────────────────────────
+   Fondo Peach; al pasar o pulsar se hunde a PeachDeep, que §1 define como «esa
+   misma acción pulsada». El borde va siempre a 2 px, transparente en reposo:
+   si solo se pusiera al enfocar, el texto daría un salto de 2 px justo cuando
+   el jugador está mirando el teclado. El anillo de foco lleva Ink y no el
+   InkFaint que §2 pide para bordes decorativos porque el foco tiene que seguir
+   viéndose encima del relleno InkFaint del botón secundario pulsado. */
+
+Button.nimbo-btn-action {
+    background-color: #FFC7A8;
+    border-width: 2px;
+    border-color: rgba(0, 0, 0, 0);
+}
+
+Button.nimbo-btn-action:hover:enabled {
+    background-color: #F0A47D;
+}
+
+Button.nimbo-btn-action:active:enabled {
+    background-color: #F0A47D;
+}
+
+Button.nimbo-btn-action:focus:enabled {
+    border-color: #5C4A42;
+}
+
+/* ── Botón secundario ───────────────────────────────────────────────────────
+   Mismo esquema sobre la rampa neutra CreamDeep → InkFaint: es el escalón que
+   ya existe entre el crema profundo y la tinta apagada, así que el hundido se
+   lee sin inventar un color nuevo. */
+
+Button.nimbo-btn-secondary {
+    background-color: #F6ECE0;
+    border-width: 2px;
+    border-color: rgba(0, 0, 0, 0);
+}
+
+Button.nimbo-btn-secondary:hover:enabled {
+    background-color: #C9BDB4;
+}
+
+Button.nimbo-btn-secondary:active:enabled {
+    background-color: #C9BDB4;
+}
+
+Button.nimbo-btn-secondary:focus:enabled {
+    border-color: #5C4A42;
+}
+
+/* ── Botón apagado ──────────────────────────────────────────────────────────
+   Sin estados de interacción: un botón que no se puede pulsar no promete que
+   se pueda. La regla con :disabled existe porque el default pinta SUS botones
+   apagados con .unity-button:disabled y nos ganaba el reposo (medido: gris
+   0.584 en vez de CreamDeep); con el tipo delante, nuestra forma es estricta-
+   mente mayor. El :hover encadenado a :disabled es el cinturón para el día en
+   que Unity decida colgar pseudoclases de puntero sobre elementos apagados:
+   hoy no llegan ni por accidente. */
+
+Button.nimbo-btn-disabled {
+    background-color: #F6ECE0;
+    border-width: 2px;
+    border-color: rgba(0, 0, 0, 0);
+}
+
+Button.nimbo-btn-disabled:disabled {
+    background-color: #F6ECE0;
+    border-color: rgba(0, 0, 0, 0);
+}
+
+Button.nimbo-btn-disabled:hover:disabled {
+    background-color: #F6ECE0;
+}

@@ -10,6 +10,7 @@ using Nimbo.Data.Islanders;
 using Nimbo.Data.Save;
 using Nimbo.Economy;
 using Nimbo.Economy.Items;
+using Nimbo.Economy.Shops;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
@@ -332,8 +333,12 @@ namespace Nimbo.Tests
         [Test]
         public void StockOf_SameDay_ReturnsSameStock()
         {
-            var a = _service.StockOf("NimboMart");
-            var b = _service.StockOf("NimboMart");
+            // El id sale de la declaración y no de una copia: esta prueba estuvo
+            // años preguntando por «NimboMart» mientras la interfaz abría
+            // «tienda_comida», y el surtido vacío que contestaba el servicio no
+            // dolía en ningún rojo.
+            var a = _service.StockOf(ShopDefinition.NimboMart.ShopId);
+            var b = _service.StockOf(ShopDefinition.NimboMart.ShopId);
             Assert.AreEqual(a.Count, b.Count);
             for (int i = 0; i < a.Count; i++)
                 Assert.AreEqual(a[i], b[i], $"posición {i}: mismo día → mismo item");
@@ -342,13 +347,13 @@ namespace Nimbo.Tests
         [Test]
         public void StockOf_DifferentDay_ReturnsDifferentStock()
         {
-            var day1 = _service.StockOf("NimboMart");
+            var day1 = _service.StockOf(ShopDefinition.NimboMart.ShopId);
 
             // Avanzar al día siguiente
             _save.ElapsedMinutes += GameClock.MinutesPerDay;
             EventBus.Publish(new DayPassed(2));
 
-            var day2 = _service.StockOf("NimboMart");
+            var day2 = _service.StockOf(ShopDefinition.NimboMart.ShopId);
 
             // Con 2 items Food × 12 slots y shuffle determinista por día,
             // el orden DEBERÍA cambiar (probabilidad de coincidencia ≈ 0).
@@ -365,8 +370,17 @@ namespace Nimbo.Tests
         }
 
         [Test]
-        public void StockOf_UnknownShop_ReturnsEmpty()
+        public void StockOf_UnknownShop_LogsErrorAndReturnsEmpty()
         {
+            // El contrato cambió, y este test es el que lo escribía al revés: antes
+            // afirmaba que un id desconocido devolvía vacío «sin error», y ese era
+            // justo el modo de fallo que escondió semanas la costura rota — la
+            // interfaz pedía «tienda_comida», aquí solo se conocía «NimboMart», y
+            // el silencio hacía indistinguible una tienda mal enchufada de una sin
+            // surtido. Ahora un id desconocido es un fallo de datos y se grita,
+            // igual que hace ItemCatalog.GetItem; el vacío se mantiene para que el
+            // juego siga en pie mientras el error queda visto en consola.
+            LogAssert.Expect(LogType.Error, new Regex("TiendaQueNoExiste"));
             var stock = _service.StockOf("TiendaQueNoExiste");
             Assert.AreEqual(0, stock.Count);
         }

@@ -283,9 +283,12 @@ namespace Nimbo.PlayTests
         [UnityTest]
         public IEnumerator LaCamaraEmpiezaEncuadrandoAlProtagonista()
         {
-            // Antes del giro a aldea esta prueba exigía el plano general, y estaba
-            // bien entonces: no había a quien seguir. Ahora lo primero que se ve es tu
-            // muñeco, y el plano general quedó para cuando todavía no existe.
+            // Antes del giro a tercera persona esta prueba exigía cámara cinco metros
+            // por encima del muñeco, que era cierto con el picado de 48° y dejó de
+            // serlo a la altura de los ojos. Lo que de verdad importa no es la altura
+            // sino el encuadre —cerca de él y con él delante—: fijar una altura aquí
+            // rompe la prueba cada vez que se retoca la pose, que ya le pasó a esta
+            // misma afirmación una vez.
             yield return CargarYEmpezar();
             yield return null;
 
@@ -294,8 +297,10 @@ namespace Nimbo.PlayTests
             Assert.IsNotNull(camera, "no hay cámara principal en la escena");
             Assert.IsNotNull(body, "no hay protagonista al que encuadrar");
 
-            Assert.Greater(camera.transform.position.y, body.transform.position.y + 5f,
-                           "la cámara arranca a la altura del suelo");
+            float distance = Vector3.Distance(camera.transform.position,
+                                              body.transform.position);
+            Assert.Less(distance, 8f,
+                        $"la cámara arranca a {distance:0} m: eso no es tercera persona");
 
             float aim = Vector3.Dot(camera.transform.forward,
                                     (body.transform.position - camera.transform.position).normalized);

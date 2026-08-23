@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Nimbo.Core.Services.Contracts;
+using UnityEngine;
 
 namespace Nimbo.Economy.Shops
 {
@@ -24,6 +25,16 @@ namespace Nimbo.Economy.Shops
         }
 
         // ── Las cinco tiendas del contrato ──────────────────────────────────────
+        //
+        // Los identificadores de las tres primeras son los mismos que declara el
+        // plano de la isla (`IslandLayout.FirstIsland`, campo `ShopId`) y los que
+        // pasa la interfaz al abrir la tienda. Estuvo semanas roto por hablar cada
+        // capa un idioma distinto: la interfaz pedía «tienda_comida», aquí solo se
+        // conocía «NimboMart», `StockOf` devolvía vacío sin error ni aviso, y nadie
+        // podía comprar nada en ninguna partida. El idioma lo pone el mundo —la zona
+        // es lo que existe primero— y el catálogo lo habla; el nombre bonito va en
+        // `DisplayName` y no en el id, igual que `zona_*` y `seed_*` en el resto del
+        // proyecto.
 
         /// <remarks>
         /// Vende también semillas, y esto no es un adorno: **no había forma de comprar
@@ -36,17 +47,20 @@ namespace Nimbo.Economy.Shops
         /// dejarían el huerto parado igual pero más tarde.
         /// </remarks>
         public static readonly ShopDefinition NimboMart = new ShopDefinition(
-            "NimboMart", "NimboMart", 12,
+            "tienda_comida", "NimboMart", 12,
             ItemCategory.Food, ItemCategory.Consumable, ItemCategory.Gift, ItemCategory.Seed);
 
         public static readonly ShopDefinition MueblesNimbo = new ShopDefinition(
-            "Muebles Nimbo", "Muebles Nimbo", 8,
+            "tienda_muebles", "Muebles Nimbo", 8,
             ItemCategory.Furniture);
 
         public static readonly ShopDefinition BoutiqueCeleste = new ShopDefinition(
-            "Boutique Celeste", "Boutique Celeste", 10,
+            "tienda_ropa", "Boutique Celeste", 10,
             ItemCategory.Clothing);
 
+        // Sin zona todavía: abren en fases 3 y 4 (Docs/Contratos/progresion.md) y no
+        // hay sitio donde caer en la primera isla. Cuando la tengan, su id tendrá que
+        // ser el que esa zona declare, como las tres de arriba.
         public static readonly ShopDefinition AntiguedadesNimbo = new ShopDefinition(
             "Antigüedades Nimbo", "Antigüedades Nimbo", 4,
             ItemCategory.Decoration, ItemCategory.Wallpaper, ItemCategory.Flooring);
@@ -62,10 +76,23 @@ namespace Nimbo.Economy.Shops
             NimboMart, MueblesNimbo, BoutiqueCeleste, AntiguedadesNimbo, MercadoFlotante,
         };
 
+        /// <summary>
+        /// Devuelve null y registra error si el id no existe.
+        /// </summary>
+        /// <remarks>
+        /// Antes devolvía null en silencio, y ese silencio es exactamente por lo que
+        /// la costura rota con la interfaz pasó semanas sin doler: una tienda pedida
+        /// con un id desconocido se veía igual que una tienda sin surtido. Un id
+        /// inventado es un fallo de datos, no un caso normal — misma respuesta que
+        /// <c>ItemCatalog.GetItem</c>—. Se devuelve null igualmente para que el juego
+        /// siga en pie mientras el error queda visto en consola.
+        /// </remarks>
         public static ShopDefinition Get(string shopId)
         {
             for (int i = 0; i < All.Count; i++)
                 if (All[i].ShopId == shopId) return All[i];
+
+            Debug.LogError($"ShopDefinition: '{shopId}' no es ninguna tienda conocida");
             return null;
         }
     }

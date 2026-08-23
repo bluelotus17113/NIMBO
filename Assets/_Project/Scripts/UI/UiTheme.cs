@@ -77,6 +77,14 @@ namespace Nimbo.UI
         public const int Gap    = 10;
 
         // ═══════════════════════════════════════════════════════════════════
+        //  Clases de los botones — las pinta NimboRuntimeTheme.tss
+        // ═══════════════════════════════════════════════════════════════════
+
+        public const string ClassAction    = "nimbo-btn-action";
+        public const string ClassSecondary = "nimbo-btn-secondary";
+        public const string ClassDisabled  = "nimbo-btn-disabled";
+
+        // ═══════════════════════════════════════════════════════════════════
         //  Métodos públicos — mismas firmas que antes
         // ═══════════════════════════════════════════════════════════════════
 
@@ -124,17 +132,26 @@ namespace Nimbo.UI
             return label;
         }
 
+        /// <summary>El botón principal: fondo melocotón, texto tinta. Uno por pantalla.</summary>
+        /// <remarks>
+        /// El fondo y el borde NO se fijan aquí a propósito. En UI Toolkit un estilo
+        /// inline gana a cualquier pseudoclase de la hoja de estilos, así que pintar
+        /// aquí el fondo mataría el <c>:hover</c>, el <c>:active</c> y el
+        /// <c>:focus</c> que define <c>NimboRuntimeTheme.tss</c> — y con ello los
+        /// estados de todos los botones del juego, porque todos salen de esta
+        /// fábrica. La clase manda; lo que no cambia con el estado (texto, relleno,
+        /// radio) sí puede quedar inline.
+        /// </remarks>
         public static Button Action(string text, System.Action onClick)
         {
             var button = new Button(onClick) { text = text };
+            button.AddToClassList(ClassAction);
             var s = button.style;
-            s.backgroundColor = Peach;
             s.color = Ink;
             s.fontSize = 15;
             s.unityFontStyleAndWeight = FontStyle.Bold;
             s.paddingTop = s.paddingBottom = 8;
             s.paddingLeft = s.paddingRight = 16;
-            s.borderTopWidth = s.borderBottomWidth = s.borderLeftWidth = s.borderRightWidth = 0;
             s.marginLeft = s.marginRight = 0;
             SetRadius(button, Radius);
             return button;
@@ -198,17 +215,20 @@ namespace Nimbo.UI
         // ═══════════════════════════════════════════════════════════════════
 
         /// <summary>Botón secundario: fondo crema profundo, texto tinta. El resto de las acciones.</summary>
+        /// <remarks>
+        /// Mismo porqué que <see cref="Action"/>: el fondo lo pone la clase en
+        /// <c>NimboRuntimeTheme.tss</c>, no el inline, o no habrá estados.
+        /// </remarks>
         public static Button Secondary(string text, System.Action onClick)
         {
             var button = new Button(onClick) { text = text };
+            button.AddToClassList(ClassSecondary);
             var s = button.style;
-            s.backgroundColor = CreamDeep;
             s.color = Ink;
             s.fontSize = 15;
             s.unityFontStyleAndWeight = FontStyle.Bold;
             s.paddingTop = s.paddingBottom = 8;
             s.paddingLeft = s.paddingRight = 16;
-            s.borderTopWidth = s.borderBottomWidth = s.borderLeftWidth = s.borderRightWidth = 0;
             s.marginLeft = s.marginRight = 0;
             SetRadius(button, Radius);
             return button;
@@ -218,17 +238,23 @@ namespace Nimbo.UI
         /// Botón apagado: se queda en su sitio pero no se puede pulsar.
         /// Ver lo que aún no puedes hacer es información, y esconderlo la borra.
         /// </summary>
+        /// <remarks>
+        /// Lleva clase propia y no las de los botones vivos: aunque hoy un elemento
+        /// deshabilitado no recibe puntero ni foco, si algún día Unity cambiara eso,
+        /// un botón apagado con clase de vivo volvería a prometer que se le puede
+        /// pulsar. El texto apagado sí queda inline porque ninguna pseudoclase lo
+        /// toca — y es lo que hace que se lea como apagado.
+        /// </remarks>
         public static Button Disabled(string text)
         {
             var button = new Button() { text = text };
+            button.AddToClassList(ClassDisabled);
             var s = button.style;
-            s.backgroundColor = CreamDeep;
             s.color = InkFaint;
             s.fontSize = 15;
             s.unityFontStyleAndWeight = FontStyle.Bold;
             s.paddingTop = s.paddingBottom = 8;
             s.paddingLeft = s.paddingRight = 16;
-            s.borderTopWidth = s.borderBottomWidth = s.borderLeftWidth = s.borderRightWidth = 0;
             s.marginLeft = s.marginRight = 0;
             SetRadius(button, Radius);
             button.SetEnabled(false);

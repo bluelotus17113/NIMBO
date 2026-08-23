@@ -50,8 +50,22 @@ namespace Nimbo.UI.Shop
             Root.Add(card);
 
             var listCard = UiTheme.Card();
+
+            // La lista va en un ScrollView y no suelta: el hueco que UiRoot da al
+            // panel tiene altura fija, y un surtido de doce filas no cabe. Sin
+            // scroll, flexbox reparte el poco espacio aplastando las filas
+            // (flexShrink=1 por defecto): el título de cada una colapsa a cero, la
+            // descripción de la fila siguiente cae encima del botón «Comprar» de la
+            // anterior, y pulsar compra el objeto equivocado o no compra nada.
+            // Estuvo escondido desde siempre porque con la costura de ids rota este
+            // código jamás llegó a ejecutarse: el surtido era vacío y se salía por
+            // «Hoy no queda nada» antes de construir la primera fila.
             _list = new VisualElement();
-            listCard.Add(_list);
+            var scroll = new ScrollView(ScrollViewMode.Vertical);
+            scroll.style.flexGrow = 1;
+            scroll.Add(_list);
+            listCard.style.flexGrow = 1;
+            listCard.Add(scroll);
             Root.Add(listCard);
 
             var close = UiTheme.Action("Cerrar", Hide);

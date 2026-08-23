@@ -3,6 +3,7 @@ using Nimbo.Core.Services.Contracts;
 using Nimbo.Economy.Items;
 using Nimbo.Economy.Shops;
 using Nimbo.Farming;
+using Nimbo.Island.Zones;
 using NUnit.Framework;
 
 namespace Nimbo.Tests
@@ -100,7 +101,12 @@ namespace Nimbo.Tests
             // Con un sorteo plano, doce semillas contra cuarenta y cinco comidas salían
             // dos días de cada tres sin una sola semilla, y el huerto se quedaba parado
             // esperando surtido.
-            var tienda = ShopDefinition.Get("NimboMart");
+            //
+            // El identificador se pregunta al plano y no se copia a mano: esta prueba
+            // estuvo años preguntando por «NimboMart» mientras la interfaz abría
+            // «tienda_comida», y las dos hablaban de tiendas distintas sin que ningún
+            // verde se enterara.
+            var tienda = ShopDefinition.Get(TiendaDeComidaDelPlano());
             Assert.That(tienda, Is.Not.Null);
 
             for (int dia = 1; dia <= 30; dia++)
@@ -170,6 +176,21 @@ namespace Nimbo.Tests
         }
 
         // ── ayudas ──────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// El identificador de la tienda de comida tal y como lo declara el plano de
+        /// la isla. Si el mundo renombra la zona, esta prueba sigue al mundo en vez de
+        /// quedarse verde mirando un idioma que ya no existe.
+        /// </summary>
+        private static string TiendaDeComidaDelPlano()
+        {
+            foreach (var zona in IslandLayout.FirstIsland())
+                if (zona.Purpose == ZonePurpose.Food && !string.IsNullOrEmpty(zona.ShopId))
+                    return zona.ShopId;
+
+            Assert.Fail("el plano ya no tiene ninguna zona de comida con tienda");
+            return null;
+        }
 
         /// <summary>
         /// Lo que renta una casilla al día con ese cultivo, a la larga.

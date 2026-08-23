@@ -28,13 +28,17 @@ namespace Nimbo.Art.CameraWork
         private InteriorView _interior;
 
         [Header("Seguimiento del protagonista")]
-        // A 26 metros el muñeco era un punto en mitad del prado: valía para mirar la
-        // isla, que es para lo que estaba hecha esta cámara, pero no para jugar. A 15
-        // se le ve la cara y se distingue hacia dónde mira, que es lo que hace falta
-        // para saber con qué vas a interactuar.
-        [SerializeField] private float _followDistance = 15f;
-        [SerializeField] private float _followPitch = 48f;
-        [SerializeField] private float _followHeight = 1.1f;
+        // Tercera persona a la altura de los ojos: pivote en la cabeza del muñeco y
+        // cámara detrás, un poco por encima. La terna anterior (15 m / 48°) era una
+        // cámara de seguimiento ALTA: se veía la cara, pero la isla se leía como una
+        // maqueta, no había forma de mirar lo que había al fondo ni de pararse junto a
+        // algo y verlo de frente. A 5,5 m y 18° el muñeco ocupa pantalla, el mundo
+        // recupera escala de persona y el antiobstáculos puede esquivar lo que se cruce
+        // entre él y la cámara. Son punto de partida por comparación con lo que había,
+        // no una medida: retócalos mirando el juego.
+        [SerializeField] private float _followDistance = 5.5f;
+        [SerializeField] private float _followPitch = 18f;
+        [SerializeField] private float _followHeight = 1.2f;
 
         [Header("Mirar con el ratón")]
         [Tooltip("Grados de giro por unidad de movimiento del ratón.")]
@@ -59,16 +63,29 @@ namespace Nimbo.Art.CameraWork
 
             if (player != null)
             {
+                // Aparecer es empezar de nuevo: pitch de serie, no el que dejara la
+                // partida anterior.
+                _playerPitch = null;
                 _rig.Target = FollowPose(_rig.Target.Yaw);
                 _rig.SnapToTarget();
             }
         }
 
+        // El pitch que el jugador eligió mirando arriba/abajo con el ratón. El
+        // seguimiento reapunta la pose cada fotograma; si esa pose llevara el pitch
+        // clavado de serie, cualquier mirada elegida se desharía sola antes de mover un
+        // metro —y pasaba de verdad: el arrastre con botón derecho cambiaba el pitch y
+        // el seguimiento lo pisaba en el mismo LateUpdate, así que la «única forma de
+        // cambiar la altura» que anunciaba el comentario no hacía nada—. Va a null en
+        // los cambios de mundo (cargar, aparecer, cruzar una puerta), donde lo que
+        // valía fuera no tiene por qué valer dentro.
+        private float? _playerPitch;
+
         private CameraPose FollowPose(float yaw) => new CameraPose
         {
             Pivot = _player.position + Vector3.up * _followHeight,
             Distance = _followDistance,
-            Pitch = _followPitch,
+            Pitch = _playerPitch ?? _followPitch,
             Yaw = yaw,
         };
 
@@ -143,6 +160,7 @@ namespace Nimbo.Art.CameraWork
 
             _focusedBody = null;
             _followingFocus = false;
+            _playerPitch = null;
 
             // Si ya hay protagonista, se le encuadra a él y no al plano general.
             //
@@ -287,6 +305,12 @@ namespace Nimbo.Art.CameraWork
             bool crossedADoor = indoors != _wasIndoors;
             _wasIndoors = indoors;
 
+            // Cambiar de mundo devuelve el pitch a la pose de serie: el ángulo con el
+            // que se mira un prado no es el que quiere un cuarto cerrado, ni al revés.
+            // Lo que eligió el jugador vale hasta la puerta, y detrás de la puerta
+            // vuelve a empezar.
+            if (crossedADoor) _playerPitch = null;
+
             if (crossedADoor) _cam.backgroundColor = indoors ? IndoorBackdrop : _outdoorBackdrop;
 
             if (indoors)
@@ -365,24 +389,37 @@ namespace Nimbo.Art.CameraWork
                 if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) panInput.x += 1f;
             }
 
-            // Mirar libre: mover el ratón a los lados gira la cámara alrededor del
-            // protagonista, sin apretar nada.
+            // Mirar libre: mover el ratón gira la cámara alrededor del protagonista,
+            // sin apretar nada. Los dos ejes: el horizontal orbita, el vertical sube o
+            // baja la mirada entre los topes del rig (5°–78°).
             //
-            // Solo el eje horizontal. La altura de la cámara la decide el juego —un
-            // picado de cuarenta y ocho grados, que es el que deja ver a la vez al
-            // muñeco y lo que tiene delante— y dejar que el ratón la moviera sin querer
-            // convertiría cada giro en una pelea por recuperar el encuadre. Quien
-            // quiera cambiarla, con el botón derecho sigue estando.
+            // El eje vertical estuvo clavado a propósito cuando la cámara iba a 48°:
+            // ese picado veía a la vez al muñeco y lo que tenía delante, y un pitch
+            // movido por accidente estropeaba el único encuadre que funcionaba. En
+            // tercera persona la decisión se revierte sola: sin mirada vertical no se
+            // puede ver el Árbol Nimbo, ni lo que hay en una repisa, ni la cara de
+            // quien tienes delante. Quedó descartado el auto-alineado (volver solo a
+            // 18° tras unos segundos quieto): pelea con el jugador justo cuando está
+            // mirando algo, añade un temporizador más que afinar, y este código ya
+            // documenta la filosofía contraria —recolocar la cámara sin que nadie la
+            // pida es lo que hace que un seguimiento se sienta como un forcejeo—. El
+            // pitch elegido se recuerda en `_playerPitch` y dura hasta que el mundo
+            // cambia; volver al ángulo de serie siempre cuesta una puerta.
             //
-            // `Mouse X` ya viene como diferencia por fotograma: multiplicarlo por
-            // deltaTime lo dejaría el doble de lento a sesenta fotogramas que a ciento
-            // veinte, que es justo lo contrario de lo que se busca.
+            // `Mouse X`/`Mouse Y` ya vienen como diferencia por fotograma: multiplicarlos
+            // por deltaTime los dejaría el doble de lentos a sesenta fotogramas que a
+            // ciento veinte, que es justo lo contrario de lo que se busca.
             if (ShouldLook)
             {
-                float look = Input.GetAxis("Mouse X");
-                if (Mathf.Abs(look) > 0.0001f)
+                float lookX = Input.GetAxis("Mouse X");
+                float lookY = Input.GetAxis("Mouse Y");
+                if (Mathf.Abs(lookX) > 0.0001f || Mathf.Abs(lookY) > 0.0001f)
                 {
-                    _rig.Orbit(look * _lookSensitivity, 0f);
+                    // Ratón hacia arriba = mirar arriba = menos pitch (el pitch
+                    // positivo mira hacia abajo); la misma convención del arrastre
+                    // de más abajo.
+                    _rig.Orbit(lookX * _lookSensitivity, -lookY * _lookSensitivity);
+                    _playerPitch = _rig.Target.Pitch;
                     _followingFocus = false;
                 }
             }
@@ -421,8 +458,9 @@ namespace Nimbo.Art.CameraWork
                 _rig.Pan(worldDelta);
             }
 
-            // Arrastrar con el derecho sigue existiendo, y es la única forma de
-            // cambiar la altura de la cámara.
+            // Arrastrar con el derecho sigue existiendo para quien no use la mirada
+            // libre, aunque para cambiar la altura ya no hace falta: el eje Y del
+            // ratón suelto la mueve desde arriba.
             //
             // Va por ejes del ratón y no por diferencias de `mousePosition`, que es
             // como estaba: con el cursor capturado para mirar libre, `mousePosition` se
@@ -432,6 +470,7 @@ namespace Nimbo.Art.CameraWork
             {
                 _rig.Orbit(Input.GetAxis("Mouse X") * _lookSensitivity,
                            -Input.GetAxis("Mouse Y") * _lookSensitivity);
+                _playerPitch = _rig.Target.Pitch;
             }
 
             if (Mathf.Abs(scroll) > 0.001f)

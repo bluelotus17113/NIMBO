@@ -21,6 +21,14 @@ namespace Nimbo.UI.Islander
         private readonly Label _cost;
         private readonly VisualElement _action;
 
+        /// <summary>
+        /// Lo que mandaba la última vez que se levantó la fila de obra. El refresco
+        /// corre cada 0,4 s y el botón «Ampliársela» se reconstruía bajo el cursor en
+        /// cada pasada; ahora solo cambia cuando cambia el veredicto, la puerta o lo
+        /// que te falta de verdad.
+        /// </summary>
+        private string _actionSignature;
+
         public VisualElement Root { get; }
 
         public HomeSection()
@@ -41,11 +49,14 @@ namespace Nimbo.UI.Islander
 
         public void Refresh(string islanderId)
         {
-            _action.Clear();
-
             if (!ServiceRegistry.TryGet<IHomeUpgradeService>(out var upgrades))
             {
                 Root.style.display = DisplayStyle.None;
+                // Se invalida la firma para que la próxima pasada con servicio
+                // reconstruya de verdad, igual que JobSection.Refresh. Sin esto,
+                // una pasada sin servicio deja la firma vieja y la siguiente cree
+                // que no ha cambiado nada.
+                _actionSignature = null;
                 return;
             }
             Root.style.display = DisplayStyle.Flex;
@@ -54,37 +65,49 @@ namespace Nimbo.UI.Islander
             int size = upgrades.SizeOfLevel(level);
             var verdict = upgrades.CanUpgrade(islanderId);
 
+            // Las etiquetas se tocan siempre: escribir texto no derriba nada.
             _current.text = level >= upgrades.MaxLevel
                 ? $"{size}×{size} baldosas · no se puede ampliar más"
                 : $"{size}×{size} baldosas · nivel {level} de {upgrades.MaxLevel}";
+
+            string notice = null;
+            bool withRow = false;
 
             if (verdict == UpgradeRejection.NoHome || verdict == UpgradeRejection.UnknownIslander)
             {
                 _current.text = "Todavía no vive en ningún sitio.";
                 _cost.text = "";
-                return;
             }
-
-            if (verdict == UpgradeRejection.MaxedOut)
+            else if (verdict == UpgradeRejection.MaxedOut)
             {
                 _cost.text = "Tiene la casa más grande de la isla.";
-                return;
             }
-
-            int next = upgrades.SizeOfLevel(level + 1);
-            _cost.text = $"Ampliar a {next}×{next}: {upgrades.PriceOf(level)} nimbos " +
-                         $"y {CostText(upgrades.MaterialsFor(level))}.";
-
-            // Pagar la obra de la casa de otro es de las cosas que hace quien lleva la
-            // aldea, y se gana (Aldea 3, §12.3). El coste se sigue enseñando: saber a
-            // dónde vas es la mitad de la razón para llegar.
-            if (!Gates.Allows(Unlock.UpgradeHomes, out string falta))
+            else
             {
-                _action.Add(UiTheme.Body(falta, soft: true));
-                return;
+                int next = upgrades.SizeOfLevel(level + 1);
+                _cost.text = $"Ampliar a {next}×{next}: {upgrades.PriceOf(level)} nimbos " +
+                             $"y {CostText(upgrades.MaterialsFor(level))}.";
+
+                // Pagar la obra de la casa de otro es de las cosas que hace quien lleva
+                // la aldea, y se gana (Aldea 3, §12.3). El coste se sigue enseñando:
+                // saber a dónde vas es la mitad de la razón para llegar.
+                if (Gates.Allows(Unlock.UpgradeHomes, out string falta)) withRow = true;
+                else notice = falta;
             }
 
-            _action.Add(BuildRow(upgrades, islanderId, verdict));
+            // Lo que te falta entra en la firma: si recoges madera con la ficha abierta,
+            // la fila tiene que cambiar aunque el veredicto siga siendo el mismo.
+            string missing = withRow && verdict == UpgradeRejection.NotEnoughMaterials
+                ? Missing(upgrades, islanderId)
+                : "";
+
+            string signature = $"{islanderId}|{verdict}|{notice}|{withRow}|{missing}";
+            if (signature == _actionSignature) return;
+            _actionSignature = signature;
+
+            _action.Clear();
+            if (withRow) _action.Add(BuildRow(upgrades, islanderId, verdict));
+            else if (notice != null) _action.Add(UiTheme.Body(notice, soft: true));
         }
 
         private VisualElement BuildRow(IHomeUpgradeService upgrades, string islanderId,

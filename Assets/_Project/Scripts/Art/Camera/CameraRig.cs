@@ -20,20 +20,31 @@ namespace Nimbo.Art.CameraWork
     /// </summary>
     public class CameraRig
     {
-        private const float MinPitch = 12f;
+        // Los topes tienen que dejar DENTRO la pose de seguimiento en tercera persona
+        // (~5,5 m / ~18°) y margen para que el jugador se acerque y alinee a mano: si el
+        // mínimo de distancia o de pitch estuviera por encima de la pose, el ClampPose la
+        // corregiría cada fotograma y el encuadre pedido nunca existiría.
+        private const float MinPitch = 5f;
         private const float MaxPitch = 78f;
-        private const float MinDistance = 8f;
+        private const float MinDistance = 3.5f;
         private const float MaxDistance = 220f;
 
         /// <summary>
         /// Altura mínima de la cámara sobre el nivel del prado, en metros.
         /// </summary>
         /// <remarks>
-        /// Tres metros porque es lo que mide de alto una casa de la isla: por debajo
-        /// de eso, acercarse a alguien que esté junto a un edificio mete la cámara
-        /// dentro del tejado y se ve el interior de la malla.
+        /// Cuarenta centímetros: lo justo para que ni la pose más baja que permiten los
+        /// topes (3,5 m a 5° caen a 0,30 m sobre el pivote) roce la malla del prado
+        /// cuando el pivote va a ras de suelo. Los tres metros de antes existían porque
+        /// los tejados no tienen colisionador y una cámara alta se metía en ellos al
+        /// acercarse a una casa; a la altura de los ojos ese argumento se cae —la cámara
+        /// va DETRÁS del jugador, no encima— y quien evita los tejados es ahora el
+        /// antiobstáculos con las cajas de muro, que sí tienen colisionador. Queda un
+        /// cabo suelto declarado: un tejado sin colisionador puede tragarse la cámara si
+        /// el rayo pasa por encima del muro; cerrarlo exige capa propia para tejados y
+        /// está fuera de esta conversión.
         /// </remarks>
-        public const float MinHeight = 3f;
+        public const float MinHeight = 0.4f;
 
         /// <summary>
         /// A qué altura está el suelo de lo que se está mirando. Cero es el prado.

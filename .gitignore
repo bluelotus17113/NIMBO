@@ -45,3 +45,5 @@ sysinfo.txt
 /Assets/InitTestScene*.unity
 /Assets/InitTestScene*.unity.meta
 /mono_crash.*.blob
+Informes/pruebas/
+Informes/borradores/

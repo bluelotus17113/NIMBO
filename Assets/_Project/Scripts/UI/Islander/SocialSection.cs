@@ -1,5 +1,6 @@
 using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
+using Nimbo.Core.Time;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -19,6 +20,13 @@ namespace Nimbo.UI.Islander
     ///
     /// Los botones que aún no tienes salen igual, apagados y con lo que falta escrito.
     /// Esconderlos dejaría una fila que crece sola sin que nadie sepa por qué.
+    ///
+    /// Sobre el refresco: <c>UiRoot</c> llama a <see cref="Refresh"/> cada 0,4 s pase
+    /// lo que pase. Derribar los botones en cada pasada se comía los clics —el puntero
+    /// quedaba sobre un elemento que acababa de dejar de existir— y resetear el aviso
+    /// mataba «Por hoy ya está bien» antes de medio segundo. Ahora los botones solo se
+    /// levantan cuando algo de lo que manda ha cambiado, y el aviso aguanta hasta que
+    /// cambies de persona o amanezca.
     /// </remarks>
     public sealed class SocialSection
     {
@@ -26,6 +34,18 @@ namespace Nimbo.UI.Islander
         private readonly Label _hint;
 
         private string _islanderId;
+
+        /// <summary>El habitante para quien están levantados los botones de ahora.</summary>
+        private string _builtFor;
+
+        /// <summary>
+        /// Lo que mandaba la última vez que se construyeron los botones: etapas del
+        /// romance, veredictos del cortejo y puertas de la vía. Si no cambia, no se toca.
+        /// </summary>
+        private string _signature;
+
+        /// <summary>El día en que se escribió el aviso que ahora mismo se lee.</summary>
+        private int _hintDay = -1;
 
         public VisualElement Root { get; }
 
@@ -58,8 +78,6 @@ namespace Nimbo.UI.Islander
         public void Refresh(string islanderId)
         {
             _islanderId = islanderId;
-            _actions.Clear();
-            _hint.text = "";
 
             if (!ServiceRegistry.TryGet<ISocialService>(out var social))
             {
@@ -68,6 +86,52 @@ namespace Nimbo.UI.Islander
             }
             Root.style.display = DisplayStyle.Flex;
 
+            int day = Today();
+            string signature = Signature(social, islanderId);
+
+            if (islanderId == _builtFor && signature == _signature && day == _hintDay) return;
+
+            // El aviso habla de hoy y de esta persona: si cambia cualquiera de las dos
+            // cosas, se va. Que cambien los botones —te has declarado, ha subido la
+            // vía— no lo toca: «ya está dicho» es justo lo que hay que seguir leyendo
+            // después de declararse.
+            if (islanderId != _builtFor || day != _hintDay) _hint.text = "";
+
+            _actions.Clear();
+            BuildButtons(social, islanderId);
+
+            _builtFor = islanderId;
+            _signature = signature;
+            _hintDay = day;
+        }
+
+        /// <summary>Lo que la sección le dice al jugador tras un gesto suyo.</summary>
+        /// <remarks>
+        /// Va en un método y no a pelo en cada botón para que el contrato quede en un
+        /// sitio: lo escrito aquí aguanta los refrescos mientras no cambies de persona
+        /// ni de día. Es internal para que la prueba pueda clavar ese contrato sin
+        /// simular clics.
+        /// </remarks>
+        internal void Say(string message) => _hint.text = message ?? "";
+
+        /// <summary>
+        /// Todo lo que decide qué botones existen y cómo están, en una cadena. Si la
+        /// cadena no cambia, la fila de botones tampoco tiene por qué.
+        /// </summary>
+        private static string Signature(ISocialService social, string islanderId)
+        {
+            var stage = social.PlayerRelationship(islanderId).Romance;
+            return $"{stage}|{social.CanConfess(islanderId)}|{social.CanPropose(islanderId)}"
+                 + $"|{Gates.Allows(Unlock.Compliment)}|{Gates.Allows(Unlock.WarmGestures)}"
+                 + $"|{Gates.Allows(Unlock.AskFavour)}|{Gates.Allows(Unlock.Mediate)}";
+        }
+
+        /// <summary>Sin reloj registrado no hay día que mirar; vale cero, que es hoy.</summary>
+        private static int Today() =>
+            ServiceRegistry.TryGet<GameClock>(out var clock) ? clock.Day : 0;
+
+        private void BuildButtons(ISocialService social, string islanderId)
+        {
             for (int i = 0; i < Gestures.Length; i++) _actions.Add(Gesture(social, Gestures[i]));
 
             _actions.Add(FavourButton(social));
@@ -103,9 +167,9 @@ namespace Nimbo.UI.Islander
                 // hoy. Los límites diarios existen para que no se pueda subir una
                 // amistad a tope repitiendo «charlar» cuarenta veces seguidas.
                 if (!social.PlayerInteract(_islanderId, gesture.Interaction))
-                    _hint.text = "Por hoy ya está bien. Mañana más.";
+                    Say("Por hoy ya está bien. Mañana más.");
                 else
-                    _hint.text = "";
+                    Say("");
             });
 
             button.style.marginRight = 6;
@@ -129,7 +193,7 @@ namespace Nimbo.UI.Islander
                 var button = UiTheme.Action("Declararte", () =>
                 {
                     if (social.PlayerConfess(_islanderId))
-                        _hint.text = "Ya está dicho. Te contestará mañana.";
+                        Say("Ya está dicho. Te contestará mañana.");
                 });
                 button.style.backgroundColor = UiTheme.Rose;
                 button.style.marginRight = 6;
@@ -153,9 +217,9 @@ namespace Nimbo.UI.Islander
             return Small("Pedir un favor", () =>
             {
                 string traido = social.PlayerAskFavour(_islanderId);
-                _hint.text = traido == null
+                Say(traido == null
                     ? "Hoy ya te ha hecho uno. Mañana más."
-                    : $"Te ha traído {ItemNames.Of(traido)}.";
+                    : $"Te ha traído {ItemNames.Of(traido)}.");
             });
         }
 
@@ -167,9 +231,9 @@ namespace Nimbo.UI.Islander
             return Small("Mediar", () =>
             {
                 string conQuien = social.PlayerMediate(_islanderId);
-                _hint.text = conQuien == null
+                Say(conQuien == null
                     ? "No está reñido con nadie."
-                    : "Has hablado con los dos. Se les ha bajado un poco el enfado.";
+                    : "Has hablado con los dos. Se les ha bajado un poco el enfado.");
             });
         }
 
@@ -208,7 +272,7 @@ namespace Nimbo.UI.Islander
                 var button = UiTheme.Action("Pedirle la mano", () =>
                 {
                     if (social.PlayerPropose(_islanderId))
-                        _hint.text = "Ha dicho que sí. La aldea ya está poniendo fecha.";
+                        Say("Ha dicho que sí. La aldea ya está poniendo fecha.");
                 });
                 button.style.backgroundColor = UiTheme.Rose;
                 button.style.marginRight = 6;
