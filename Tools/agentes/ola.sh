@@ -35,7 +35,13 @@ for agente in "$@"; do
   # Se espera a que baje de la tanda antes de meter otro. `wait -n` no vale: los
   # opencode los arranca herdr en su panel, no este script, así que no son hijos
   # nuestros y hay que contarlos por fuera.
-  while [ "$(pgrep -fc 'opencode run' 2>/dev/null || echo 0)" -ge "$tanda" ]; do
+  #
+  # Se cuenta con `pgrep | wc -l` y no con `pgrep -fc`: cuando no hay ninguno, `-fc`
+  # imprime 0 **y sale con 1**, así que el `|| echo 0` de respaldo añadía un segundo
+  # cero y `[` recibía «0\n0». No llegó a romper nada —la comparación fallaba y el
+  # agente entraba igual, que es el lado bueno del error— pero es la clase de fallo
+  # que espera a que haya prisa.
+  while [ "$(pgrep -f 'opencode run' | wc -l)" -ge "$tanda" ]; do
     sleep 30
   done
 
