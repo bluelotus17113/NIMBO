@@ -93,8 +93,31 @@ namespace Nimbo.Art.PlayerView
             _world = GetComponentInParent<World.WorldView>();
         }
 
+        /// <summary>Cierto mientras manda la interfaz: el menú, o el modo decorar.</summary>
+        private bool _uiInControl;
+
+        private void OnEnable()
+        {
+            EventBus.Subscribe<MenuOpened>(OnMenuOpened);
+            EventBus.Subscribe<DecorModeChanged>(OnDecorMode);
+        }
+
+        private void OnDisable()
+        {
+            EventBus.Unsubscribe<MenuOpened>(OnMenuOpened);
+            EventBus.Unsubscribe<DecorModeChanged>(OnDecorMode);
+        }
+
+        private void OnMenuOpened(MenuOpened evt) => _uiInControl = evt.Open;
+
+        private void OnDecorMode(DecorModeChanged evt) => _uiInControl = evt.Decorating;
+
         private void Update()
         {
+            // Con una pantalla delante no se busca nada ni se actúa: el espacio es
+            // para pulsar lo que tengas señalado, y regar el huerto sin verlo, no.
+            if (_uiInControl) return;
+
             _sinceRefresh += Time.deltaTime;
             if (_sinceRefresh >= _refreshInterval)
             {

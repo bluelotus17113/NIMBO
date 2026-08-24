@@ -9,17 +9,19 @@ using UnityEngine.UIElements;
 namespace Nimbo.UI.Hud
 {
     /// <summary>
-    /// La barra de arriba: reloj, monedas y cuántas peticiones esperan respuesta.
+    /// Lo único que se queda encima de la isla: la hora a un lado, las monedas y el
+    /// menú al otro.
     /// </summary>
     /// <remarks>
     /// El reloj se refresca por fotograma pero el resto solo cuando llega su aviso.
     /// Reconstruir la interfaz entera cada fotograma es la forma más rápida de que un
     /// juego tranquilo se coma una batería de portátil.
     ///
-    /// Las tres esquinas derechas son atajos, no solo lectura: el badge abre el
-    /// tablón —por el mismo aviso que ya usa el tablón de la plaza— y los otros dos
-    /// avisan por callback porque el HUD no conoce paneles y no puede abrirlos él
-    /// solo. Quien los enchufa es UiRoot, que es quien tiene las ventanas.
+    /// Era una barra crema de lado a lado con tres bloques repartidos. Ahora son dos
+    /// cápsulas sueltas sobre el cielo: ocupan la mitad y, sobre todo, dejan ver la
+    /// isla por el medio, que es lo que uno ha venido a mirar. El contador de
+    /// peticiones no se enseña cuando está a cero: un cero permanente es ruido, y lo
+    /// que hay que ver es cuándo deja de serlo.
     /// </remarks>
     public sealed class HudView : System.IDisposable
     {
@@ -28,126 +30,148 @@ namespace Nimbo.UI.Hud
         private readonly Label _dayLabel;
         private readonly Label _coinsLabel;
         private readonly Label _requestBadge;
-        private readonly Label _levelLabel;
         private readonly VisualElement _badgeHolder;
 
         public VisualElement Root { get; }
 
-        /// <summary>
-        /// Pulsar los nimbos quiere decir «quiero gastarlos». Lo abre UiRoot.
-        /// </summary>
-        /// <remarks>
-        /// Queda en nada hasta que UiRoot le ponga función: el HUD va antes en el
-        /// montaje que las tiendas, así que ni siquiera podría pedirle la referencia.
-        /// </remarks>
-        public System.Action OnCoinsClicked;
-
-        /// <summary>Pulsar el nivel de aldeano abre las cinco vías. Lo abre UiRoot.</summary>
-        public System.Action OnLevelClicked;
-
-        public HudView(GameClock clock)
+        public HudView(GameClock clock, System.Action onMenu)
         {
             _clock = clock;
 
             Root = new VisualElement { name = "hud" };
             var s = Root.style;
             s.flexDirection = FlexDirection.Row;
-            s.alignItems = Align.Center;
+            s.alignItems = Align.FlexStart;
             s.justifyContent = Justify.SpaceBetween;
-            s.paddingLeft = s.paddingRight = 18;
-            s.paddingTop = s.paddingBottom = 10;
-            s.backgroundColor = UiTheme.Panel;
-            s.marginLeft = s.marginRight = s.marginTop = UiTheme.Gap;
-            UiTheme.SetRadius(Root, UiTheme.Radius);
+            s.marginLeft = s.marginRight = s.marginTop = UiTheme.SpaceL;
 
             // --- reloj ---
-            var timeBlock = new VisualElement();
-            timeBlock.style.flexDirection = FlexDirection.Row;
-            timeBlock.style.alignItems = Align.Center;
+            var timeBlock = Capsule();
+            timeBlock.style.flexDirection = FlexDirection.Column;
+            timeBlock.style.alignItems = Align.FlexStart;
 
             _clockLabel = new Label("00:00");
-            _clockLabel.style.fontSize = 24;
+            _clockLabel.style.fontSize = 26;
             _clockLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _clockLabel.style.color = UiTheme.Ink;
             timeBlock.Add(_clockLabel);
 
             _dayLabel = UiTheme.Body("Día 1", soft: true);
-            _dayLabel.style.marginLeft = 10;
+            _dayLabel.style.marginTop = 1;
             timeBlock.Add(_dayLabel);
             Root.Add(timeBlock);
 
-            // --- monedas ---
-            //
-            // Clicable a propósito: el número que se está mirando es también el
-            // botón de «quiero gastarlos».
+            // --- monedas, peticiones y menú, todo a la derecha ---
+            var right = new VisualElement();
+            right.style.flexDirection = FlexDirection.Row;
+            right.style.alignItems = Align.Center;
+
+            var coinBlock = Capsule();
+            coinBlock.style.flexDirection = FlexDirection.Row;
+            coinBlock.style.alignItems = Align.Center;
+            coinBlock.style.marginRight = UiTheme.SpaceS;
+
+            // La moneda es un círculo mantequilla con el borde melocotón: un icono de
+            // formas, como manda el contrato, y no un emoji que cambia con el sistema.
+            var coin = UiTheme.Dot(UiTheme.Butter, 16);
+            coin.style.borderTopWidth = coin.style.borderBottomWidth =
+                coin.style.borderLeftWidth = coin.style.borderRightWidth = 2;
+            coin.style.borderTopColor = coin.style.borderBottomColor =
+                coin.style.borderLeftColor = coin.style.borderRightColor = UiTheme.PeachDeep;
+            coin.style.marginRight = UiTheme.SpaceS;
+            coinBlock.Add(coin);
+
             _coinsLabel = new Label("0");
             _coinsLabel.style.fontSize = 18;
             _coinsLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
-            _coinsLabel.style.color = UiTheme.AccentDeep;
-
-            var coinBlock = new VisualElement { name = "hud-nimbos" };
-            // Sin tooltip a propósito: la franja de avisos (GateNotice) recoge
-            // cualquier tooltip visible como explicación de bloqueo, y un texto
-            // informativo siempre visible le ganaría el pase a lo que sí está cerrado.
-            coinBlock.RegisterCallback<ClickEvent>(_ => OnCoinsClicked?.Invoke());
-            coinBlock.style.flexDirection = FlexDirection.Row;
-            coinBlock.style.alignItems = Align.Center;
-            var coinName = UiTheme.Body("nimbos", soft: true);
-            coinName.style.marginRight = 8;
-            coinBlock.Add(coinName);
+            _coinsLabel.style.color = UiTheme.Ink;
             coinBlock.Add(_coinsLabel);
-            Root.Add(coinBlock);
-
-            // --- nivel de aldeano ---
-            //
-            // La media de las cinco vías (§12.1). No se gana por su cuenta y no
-            // desbloquea nada: está aquí porque hace falta un número que diga «voy por
-            // aquí» sin abrir ninguna pantalla. Lo que abre cosas son las vías, y esas
-            // se miran a propósito.
-            var levelBlock = new VisualElement { name = "hud-aldeano" };
-            // Sin tooltip: mismo porqué que hud-nimbos.
-            levelBlock.RegisterCallback<ClickEvent>(_ => OnLevelClicked?.Invoke());
-            levelBlock.style.flexDirection = FlexDirection.Row;
-            levelBlock.style.alignItems = Align.Center;
-            var levelName = UiTheme.Body("aldeano", soft: true);
-            levelName.style.marginRight = 8;
-            levelBlock.Add(levelName);
-            _levelLabel = UiTheme.Chip("1", UiTheme.Lavender);
-            _levelLabel.style.marginRight = 0;
-            levelBlock.Add(_levelLabel);
-            Root.Add(levelBlock);
+            right.Add(coinBlock);
 
             // --- peticiones ---
-            //
-            // El badge publica el mismo aviso que el tablón de la plaza
-            // (PlayerInteractor, TargetKind.Board): UiRoot ya lo escucha y lo convierte
-            // en abrir la pantalla. Un canal nuevo para el mismo gesto sería un segundo
-            // sitio que mantener sincronizado.
-            _badgeHolder = new VisualElement { name = "hud-peticiones" };
-            // Sin tooltip: mismo porqué que hud-nimbos.
-            _badgeHolder.RegisterCallback<ClickEvent>(_ =>
-                EventBus.Publish(new RequestBoardRead()));
+            _badgeHolder = Capsule();
             _badgeHolder.style.flexDirection = FlexDirection.Row;
             _badgeHolder.style.alignItems = Align.Center;
+            _badgeHolder.style.marginRight = UiTheme.SpaceS;
+            _badgeHolder.style.display = DisplayStyle.None;
 
-            var label = UiTheme.Body("peticiones", soft: true);
-            label.style.marginRight = 8;
-            _badgeHolder.Add(label);
-
-            _requestBadge = UiTheme.Chip("0", UiTheme.InkSoft);
-            _requestBadge.style.marginRight = 0;
+            _requestBadge = UiTheme.Pill("0", UiTheme.Peach);
+            _requestBadge.style.marginRight = UiTheme.SpaceS;
             _badgeHolder.Add(_requestBadge);
-            Root.Add(_badgeHolder);
+
+            var label = UiTheme.Body("piden algo", soft: true);
+            _badgeHolder.Add(label);
+            right.Add(_badgeHolder);
+
+            right.Add(MenuButton(onMenu));
+            Root.Add(right);
 
             EventBus.Subscribe<CoinsChanged>(OnCoins);
             EventBus.Subscribe<RequestRaised>(OnRequestsChanged);
             EventBus.Subscribe<RequestResolved>(OnRequestsChanged);
             EventBus.Subscribe<RequestExpired>(OnRequestsChanged);
-            EventBus.Subscribe<SkillLeveledUp>(OnSkillLeveledUp);
 
             RefreshCoins();
             RefreshBadge();
-            RefreshLevel();
+        }
+
+        /// <summary>Una cápsula crema suelta sobre el cielo. El bloque del HUD.</summary>
+        private static VisualElement Capsule()
+        {
+            var capsule = new VisualElement();
+            var s = capsule.style;
+            s.backgroundColor = UiTheme.Cream;
+            s.paddingLeft = s.paddingRight = UiTheme.SpaceL;
+            s.paddingTop = s.paddingBottom = UiTheme.SpaceS;
+            UiTheme.SetRadius(capsule, UiTheme.RadiusPill);
+            return capsule;
+        }
+
+        /// <summary>
+        /// La puerta al menú. Es el único botón que se queda en pantalla, y lleva
+        /// escrita su tecla: quien la aprenda no vuelve a pulsarlo.
+        /// </summary>
+        private static VisualElement MenuButton(System.Action onMenu)
+        {
+            var button = new VisualElement { name = "boton-menu" };
+            var s = button.style;
+            s.flexDirection = FlexDirection.Row;
+            s.alignItems = Align.Center;
+            s.backgroundColor = UiTheme.Cream;
+            s.paddingLeft = s.paddingRight = UiTheme.SpaceL;
+            s.paddingTop = s.paddingBottom = UiTheme.SpaceS;
+            UiTheme.SetRadius(button, UiTheme.RadiusPill);
+            UiTheme.Animate(button, 120);
+            UiTheme.Hoverable(button, UiTheme.Cream, UiTheme.CreamPress);
+            UiTheme.Pressable(button);
+
+            // Tres rayas apiladas: el icono de menú de toda la vida, hecho de formas.
+            var lines = new VisualElement();
+            lines.style.marginRight = UiTheme.SpaceS;
+            for (int i = 0; i < 3; i++)
+            {
+                var line = new VisualElement();
+                line.style.width = 15;
+                line.style.height = 2;
+                line.style.marginBottom = i < 2 ? 3 : 0;
+                line.style.backgroundColor = UiTheme.InkSoft;
+                UiTheme.SetRadius(line, 1);
+                lines.Add(line);
+            }
+            button.Add(lines);
+
+            var text = new Label("Menú");
+            text.style.fontSize = 15;
+            text.style.unityFontStyleAndWeight = FontStyle.Bold;
+            text.style.color = UiTheme.Ink;
+            button.Add(text);
+
+            var key = UiTheme.Caption("Tab");
+            key.style.marginLeft = UiTheme.SpaceS;
+            button.Add(key);
+
+            button.RegisterCallback<ClickEvent>(_ => onMenu());
+            return button;
         }
 
         public void Dispose()
@@ -156,7 +180,6 @@ namespace Nimbo.UI.Hud
             EventBus.Unsubscribe<RequestRaised>(OnRequestsChanged);
             EventBus.Unsubscribe<RequestResolved>(OnRequestsChanged);
             EventBus.Unsubscribe<RequestExpired>(OnRequestsChanged);
-            EventBus.Unsubscribe<SkillLeveledUp>(OnSkillLeveledUp);
         }
 
         /// <summary>Solo el reloj: es lo único que cambia sin que pase nada más.</summary>
@@ -184,21 +207,16 @@ namespace Nimbo.UI.Hud
                 _coinsLabel.text = economy.Wallet.Coins.ToString();
         }
 
-        private void OnSkillLeveledUp(SkillLeveledUp _) => RefreshLevel();
-
-        private void RefreshLevel()
-        {
-            if (ServiceRegistry.TryGet<IPlayerProgression>(out var progression))
-                _levelLabel.text = progression.VillagerLevel.ToString();
-        }
-
         private void RefreshBadge()
         {
             if (!ServiceRegistry.TryGet<IRequestService>(out var requests)) return;
 
             int open = requests.OpenCount;
             _requestBadge.text = open.ToString();
-            _requestBadge.style.backgroundColor = open == 0 ? UiTheme.InkSoft : UiTheme.Accent;
+
+            // A cero desaparece entero. Un contador que siempre dice cero deja de
+            // mirarse, y entonces tampoco se ve el día que dice dos.
+            _badgeHolder.style.display = open == 0 ? DisplayStyle.None : DisplayStyle.Flex;
         }
     }
 }

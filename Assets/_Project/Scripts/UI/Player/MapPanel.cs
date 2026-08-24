@@ -36,13 +36,7 @@ namespace Nimbo.UI.Player
             Root.style.display = DisplayStyle.None;
             Root.style.width = Size + 32f;
 
-            var head = new VisualElement();
-            head.style.flexDirection = FlexDirection.Row;
-            head.style.justifyContent = Justify.SpaceBetween;
-            head.style.alignItems = Align.Center;
-            head.Add(UiTheme.Title("Mapa"));
-            head.Add(UiTheme.Secondary("Cerrar", Hide));
-            Root.Add(head);
+            Root.Add(UiTheme.Header("Mapa", Hide));
 
             _where = UiTheme.Body("", soft: true);
             _where.style.marginBottom = 8;

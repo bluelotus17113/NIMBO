@@ -58,6 +58,36 @@ namespace Nimbo.Art.PlayerView
         /// <summary>Lo pone quien tenga que quitarle el mando: un diálogo, un menú.</summary>
         public void Freeze(bool frozen) => _frozen = frozen;
 
+        /// <summary>
+        /// Cierto mientras manda la interfaz: el menú abierto, o el modo decorar.
+        /// </summary>
+        /// <remarks>
+        /// Es una bandera aparte de <c>_frozen</c> y no la misma: amueblar congela por
+        /// un lado y la interfaz por otro, y con una sola el que se soltara primero
+        /// devolvería el mando estando el otro todavía puesto.
+        ///
+        /// Los dos avisos escriben aquí y no se pisan porque entrar en decorar cierra
+        /// el menú primero —el aviso de cierre llega antes que el del modo—, y salir
+        /// del modo no abre nada.
+        /// </remarks>
+        private bool _uiInControl;
+
+        private void OnEnable()
+        {
+            EventBus.Subscribe<MenuOpened>(OnMenuOpened);
+            EventBus.Subscribe<DecorModeChanged>(OnDecorMode);
+        }
+
+        private void OnDisable()
+        {
+            EventBus.Unsubscribe<MenuOpened>(OnMenuOpened);
+            EventBus.Unsubscribe<DecorModeChanged>(OnDecorMode);
+        }
+
+        private void OnMenuOpened(MenuOpened evt) => _uiInControl = evt.Open;
+
+        private void OnDecorMode(DecorModeChanged evt) => _uiInControl = evt.Decorating;
+
         public static PlayerBody Create(in AppearanceData appearance, Vector3 position,
                                         float yaw, Transform parent = null)
         {
@@ -174,7 +204,7 @@ namespace Nimbo.Art.PlayerView
         {
             if (_controller == null) return;
 
-            var move = _frozen ? Vector3.zero : ReadMove();
+            var move = _frozen || _uiInControl ? Vector3.zero : ReadMove();
             IsMoving = move.sqrMagnitude > 0.0001f;
 
             bool running = Input.GetKey(KeyCode.LeftShift);

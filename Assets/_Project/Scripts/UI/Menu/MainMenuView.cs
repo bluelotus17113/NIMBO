@@ -122,12 +122,15 @@ namespace Nimbo.UI.Menu
             _root.style.display = DisplayStyle.Flex;
             _content.Clear();
 
-            // Sin partida detrás, el fondo es cielo liso. Con partida detrás, es un
-            // velo: se sigue viendo la isla, que es lo que hace que la pausa se
-            // sienta un alto y no otra pantalla.
-            _root.style.backgroundColor = _gameRunning
-                ? new Color(UiTheme.Sky.r, UiTheme.Sky.g, UiTheme.Sky.b, 0.82f)
-                : UiTheme.Sky;
+            // Sin partida detrás, el fondo es cielo liso. Con partida detrás, es el
+            // mismo velo que echa el menú: se sigue viendo la isla, que es lo que hace
+            // que la pausa se sienta un alto y no otra pantalla.
+            //
+            // Era cielo al 82 %, y de translúcido tenía poco: tapaba la isla casi
+            // entera, justo lo contrario de lo que decía buscar. Y con el menú echando
+            // un velo de tinta, había dos superposiciones con dos velos distintos en el
+            // mismo juego. El de tinta al 55 % deja ver más isla que el azul al 82 %.
+            _root.style.backgroundColor = _gameRunning ? UiTheme.Scrim : UiTheme.Sky;
 
             _clouds.style.display = _gameRunning || screen == Screen.Creator
                 ? DisplayStyle.None : DisplayStyle.Flex;
@@ -205,6 +208,11 @@ namespace Nimbo.UI.Menu
             // Escape es el único mando del menú. El proyecto va con el sistema de
             // entrada antiguo (activeInputHandler: 0), así que Keyboard.current no
             // existe aquí y tiene que ser Input.GetKeyDown.
+            // **Un solo lector de Escape, y por eso no hay árbitro.** La rama del
+            // rediseño repartía la tecla entre esta capa y UiRoot con un `EscapeGuard`,
+            // porque Unity no promete el orden de dos `Update` y la pausa se abría y se
+            // cerraba en el mismo fotograma. Aquí la lee solo esta capa y pregunta hacia
+            // abajo (`IEscapeCloser`): el fallo que el árbitro resolvía no puede ocurrir.
             if (_gameRunning && Input.GetKeyDown(GameKeys.Pause)) HandleEscape();
 
             if (_screen == Screen.Hidden || _gameRunning) return;

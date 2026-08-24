@@ -44,13 +44,7 @@ namespace Nimbo.UI.Achievements
             Root.style.width = 560;
             Root.style.maxHeight = Length.Percent(92);
 
-            var head = new VisualElement();
-            head.style.flexDirection = FlexDirection.Row;
-            head.style.justifyContent = Justify.SpaceBetween;
-            head.style.alignItems = Align.Center;
-            head.Add(UiTheme.Title("Lo que llevas hecho"));
-            head.Add(UiTheme.Secondary("Cerrar", Hide));
-            Root.Add(head);
+            Root.Add(UiTheme.Header("Lo que llevas hecho", Hide));
 
             _headline = UiTheme.Body("", soft: true);
             _headline.style.marginBottom = 10;
@@ -67,6 +61,7 @@ namespace Nimbo.UI.Achievements
             BuildFilters();
 
             _list = new ScrollView();
+            UiTheme.StyleScroll(_list);
             _list.style.flexGrow = 1;
             Root.Add(_list);
         }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -66,6 +67,19 @@ namespace Nimbo.UI
         public static readonly Color Low      = Butter;
 
         // ═══════════════════════════════════════════════════════════════════
+        //  Superficies que reaccionan y velo — §1
+        // ═══════════════════════════════════════════════════════════════════
+
+        /// <summary>Crema un punto más hundido: el ratón encima o el dedo apretando.</summary>
+        public static readonly Color CreamPress = (Color)new Color32(0xEA, 0xDF, 0xD1, 255);
+
+        /// <summary>
+        /// El velo que se echa sobre la isla cuando se abre el menú. Es tinta, no negro:
+        /// apaga el 3D sin ensuciarlo de gris.
+        /// </summary>
+        public static readonly Color Scrim = new Color(0.23f, 0.18f, 0.16f, 0.55f);
+
+        // ═══════════════════════════════════════════════════════════════════
         //  Radios — §2
         // ═══════════════════════════════════════════════════════════════════
 
@@ -77,6 +91,18 @@ namespace Nimbo.UI
         public const int Gap    = 10;
 
         // ═══════════════════════════════════════════════════════════════════
+        //  Escala de espacio — §3
+        //  Todo margen y todo relleno sale de aquí. Media docena de números en
+        //  vez de un valor inventado por pantalla: es lo que hace que quince
+        //  pantallas distintas parezcan la misma mano.
+        // ═══════════════════════════════════════════════════════════════════
+
+        public const int SpaceXS = 4;
+        public const int SpaceS  = 8;
+        public const int SpaceM  = 12;
+        public const int SpaceL  = 16;
+        public const int SpaceXL = 24;
+        public const int Space2XL = 32;
         //  Clases de los botones — las pinta NimboRuntimeTheme.tss
         // ═══════════════════════════════════════════════════════════════════
 
@@ -111,6 +137,122 @@ namespace Nimbo.UI
             var s = element.style;
             s.borderTopLeftRadius = s.borderTopRightRadius =
                 s.borderBottomLeftRadius = s.borderBottomRightRadius = radius;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        //  Movimiento y estados — §7
+        // ═══════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Deja que el elemento llegue a su color, su tamaño y su sitio en vez de
+        /// aparecer ya puesto. Es lo único que distingue una interfaz que responde de
+        /// una que da saltos: nada se mueve más de lo que dura un parpadeo.
+        /// </summary>
+        public static void Animate(VisualElement element, int milliseconds = 140)
+        {
+            var s = element.style;
+            s.transitionProperty = new List<StylePropertyName>
+            {
+                "background-color", "color", "opacity", "scale", "translate",
+            };
+            s.transitionDuration = new List<TimeValue>
+            {
+                new TimeValue(milliseconds, TimeUnit.Millisecond),
+            };
+            s.transitionTimingFunction = new List<EasingFunction>
+            {
+                new EasingFunction(EasingMode.EaseOutCubic),
+            };
+        }
+
+        /// <summary>El ratón encima cambia el fondo, y al salir vuelve.</summary>
+        public static void Hoverable(VisualElement element, Color rest, Color hover)
+        {
+            element.RegisterCallback<MouseEnterEvent>(_ => element.style.backgroundColor = hover);
+            element.RegisterCallback<MouseLeaveEvent>(_ => element.style.backgroundColor = rest);
+        }
+
+        /// <summary>
+        /// Al apretar, el elemento se hunde un poco. Sin esto un botón de UI Toolkit no
+        /// acusa el clic de ninguna manera y parece que la pulsación se ha perdido.
+        /// </summary>
+        public static void Pressable(VisualElement element, float scale = 0.96f)
+        {
+            var small = new Scale(new Vector3(scale, scale, 1f));
+            var normal = new Scale(Vector3.one);
+
+            element.RegisterCallback<PointerDownEvent>(_ => element.style.scale = small);
+            element.RegisterCallback<PointerUpEvent>(_ => element.style.scale = normal);
+            element.RegisterCallback<PointerLeaveEvent>(_ => element.style.scale = normal);
+        }
+
+        /// <summary>Las tres cosas juntas: es lo que lleva cualquier cosa pulsable.</summary>
+        private static void MakeInteractive(VisualElement element, Color rest, Color hover)
+        {
+            Animate(element, 120);
+            Hoverable(element, rest, hover);
+            Pressable(element);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        //  Piezas compartidas
+        // ═══════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// La cabecera de un panel: su título y la cruz de cerrar.
+        /// </summary>
+        /// <remarks>
+        /// Existe para que las ocho pantallas la tengan idéntica —antes cada una se
+        /// pintaba la suya a mano y se iban separando— y para que el menú pueda
+        /// esconder la cruz cuando el panel va dentro de él y no suelto por ahí: la
+        /// busca por el nombre <c>cerrar</c>.
+        /// </remarks>
+        public static VisualElement Header(string title, System.Action onClose)
+        {
+            var head = new VisualElement { name = "cabecera" };
+            var s = head.style;
+            s.flexDirection = FlexDirection.Row;
+            s.justifyContent = Justify.SpaceBetween;
+            s.alignItems = Align.Center;
+            s.marginBottom = SpaceM;
+
+            head.Add(Title(title));
+            if (onClose != null) head.Add(Close(onClose));
+            return head;
+        }
+
+        /// <summary>La cruz de cerrar: redonda, discreta y siempre en el mismo sitio.</summary>
+        public static Button Close(System.Action onClose)
+        {
+            var button = new Button(onClose) { text = "×", name = "cerrar" };
+            var s = button.style;
+            s.width = s.height = 30;
+            s.backgroundColor = CreamDeep;
+            s.color = InkSoft;
+            s.fontSize = 20;
+            s.unityFontStyleAndWeight = FontStyle.Bold;
+            s.paddingTop = s.paddingBottom = s.paddingLeft = s.paddingRight = 0;
+            s.marginLeft = s.marginRight = s.marginTop = s.marginBottom = 0;
+            s.borderTopWidth = s.borderBottomWidth = s.borderLeftWidth = s.borderRightWidth = 0;
+            s.unityTextAlign = TextAnchor.MiddleCenter;
+            SetRadius(button, RadiusPill);
+            MakeInteractive(button, CreamDeep, CreamPress);
+            return button;
+        }
+
+        /// <summary>
+        /// Un punto de color: el icono de una sección. Formas geométricas de la paleta,
+        /// que es lo que manda el contrato — un emoji se ve distinto en cada sistema.
+        /// </summary>
+        public static VisualElement Dot(Color color, int size = 12, bool round = true)
+        {
+            var dot = new VisualElement();
+            var s = dot.style;
+            s.width = s.height = size;
+            s.backgroundColor = color;
+            s.flexShrink = 0;
+            SetRadius(dot, round ? RadiusPill : 4);
+            return dot;
         }
 
         public static Label Title(string text)
@@ -154,6 +296,7 @@ namespace Nimbo.UI
             s.paddingLeft = s.paddingRight = 16;
             s.marginLeft = s.marginRight = 0;
             SetRadius(button, Radius);
+            MakeInteractive(button, Peach, PeachDeep);
             return button;
         }
 
@@ -231,6 +374,7 @@ namespace Nimbo.UI
             s.paddingLeft = s.paddingRight = 16;
             s.marginLeft = s.marginRight = 0;
             SetRadius(button, Radius);
+            MakeInteractive(button, CreamDeep, CreamPress);
             return button;
         }
 
@@ -292,6 +436,160 @@ namespace Nimbo.UI
             s.marginRight = 6;
             SetRadius(pill, RadiusPill);
             return pill;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        //  Piezas del menú — §8
+        // ═══════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Deja la barra de desplazamiento en la paleta del juego.
+        /// </summary>
+        /// <remarks>
+        /// La que trae UI Toolkit de fábrica es gris de editor, con sus dos flechitas y
+        /// su borde: en una pantalla de crema y melocotón canta como una uña rota. Y no
+        /// se puede arreglar con estilos sueltos porque las piezas de dentro tienen sus
+        /// propios nombres, así que hay que ir a buscarlas una a una.
+        /// </remarks>
+        /// <summary>Lo ancha que es una barra de desplazamiento.</summary>
+        private const int ScrollThickness = 8;
+
+        public static void StyleScroll(ScrollView scroll)
+        {
+            scroll.verticalScrollerVisibility = ScrollerVisibility.Auto;
+
+            // Estas listas son de arriba abajo y de nada más. Sin esto aparecía una
+            // barra horizontal cruzando el pie del panel por unos píxeles de sobra que
+            // nadie va a querer ver nunca.
+            scroll.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+            Dress(scroll.verticalScroller);
+
+            static void Dress(Scroller scroller)
+            {
+                if (scroller == null) return;
+
+                // Las flechas de los extremos sobran: nadie desplaza una lista de dos
+                // en dos píxeles, y ocupan más que la barra entera.
+                scroller.lowButton.style.display = DisplayStyle.None;
+                scroller.highButton.style.display = DisplayStyle.None;
+
+                var slider = scroller.slider;
+                if (slider == null) return;
+
+                slider.style.marginLeft = slider.style.marginRight = 2;
+                slider.style.width = ScrollThickness;
+
+                var tracker = slider.Q("unity-tracker");
+                if (tracker != null)
+                {
+                    tracker.style.backgroundColor = CreamDeep;
+                    tracker.style.borderTopWidth = tracker.style.borderBottomWidth =
+                        tracker.style.borderLeftWidth = tracker.style.borderRightWidth = 0;
+
+                    // Radio a la mitad del ancho y no el de cápsula: 999 sobre algo de
+                    // diez de ancho y setecientos de alto no da una barra redondeada,
+                    // da un huso que cruza el panel de arriba abajo.
+                    SetRadius(tracker, ScrollThickness * 0.5f);
+                }
+
+                var dragger = slider.Q("unity-dragger");
+                if (dragger != null)
+                {
+                    dragger.style.backgroundColor = InkFaint;
+                    dragger.style.borderTopWidth = dragger.style.borderBottomWidth =
+                        dragger.style.borderLeftWidth = dragger.style.borderRightWidth = 0;
+                    dragger.style.width = ScrollThickness;
+                    SetRadius(dragger, ScrollThickness * 0.5f);
+                    Animate(dragger, 120);
+                    Hoverable(dragger, InkFaint, InkSoft);
+                }
+            }
+        }
+
+        /// <summary>Texto de apoyo pequeño: la tecla de un atajo, una aclaración.</summary>
+        public static Label Caption(string text)
+        {
+            var label = new Label(text);
+            label.style.color = InkFaint;
+            label.style.fontSize = 12;
+            label.style.whiteSpace = WhiteSpace.Normal;
+            return label;
+        }
+
+        /// <summary>
+        /// La ventana del menú: crema, muy redonda y con lo que se salga recortado.
+        /// </summary>
+        public static VisualElement Window(string name = null)
+        {
+            var window = new VisualElement { name = name };
+            var s = window.style;
+            s.backgroundColor = Cream;
+            s.flexDirection = FlexDirection.Row;
+            s.overflow = Overflow.Hidden;
+            SetRadius(window, RadiusPanel);
+            return window;
+        }
+
+        /// <summary>
+        /// Una pestaña de la columna del menú: su punto de color y su nombre.
+        /// </summary>
+        /// <remarks>
+        /// No es un <c>Button</c> porque un botón de UI Toolkit dibuja su propio texto y
+        /// aquí hacen falta dos cosas dentro —el punto y el nombre—, así que se monta a
+        /// mano sobre un elemento normal que escucha el clic.
+        /// </remarks>
+        public static VisualElement RailTab(string label, Color tone, System.Action onClick,
+                                            out Label caption)
+        {
+            var tab = new VisualElement { name = $"pestana-{label}" };
+            var s = tab.style;
+            s.flexDirection = FlexDirection.Row;
+            s.alignItems = Align.Center;
+            s.paddingLeft = s.paddingRight = SpaceM;
+            s.paddingTop = s.paddingBottom = 10;
+            s.marginBottom = SpaceXS;
+            s.backgroundColor = Color.clear;
+            SetRadius(tab, Radius);
+            Animate(tab, 120);
+            Pressable(tab, 0.98f);
+
+            // El ratón encima solo aclara las que no están elegidas: la elegida ya está
+            // en crema y aclararla más la haría parpadear al pasar por encima.
+            tab.userData = false;
+            tab.RegisterCallback<MouseEnterEvent>(_ =>
+            {
+                if (!(bool)tab.userData) tab.style.backgroundColor = CreamPress;
+            });
+            tab.RegisterCallback<MouseLeaveEvent>(_ =>
+            {
+                if (!(bool)tab.userData) tab.style.backgroundColor = Color.clear;
+            });
+
+            tab.Add(Dot(tone));
+
+            caption = new Label(label);
+            caption.style.color = InkSoft;
+            caption.style.fontSize = 15;
+            caption.style.unityFontStyleAndWeight = FontStyle.Bold;
+            caption.style.marginLeft = 10;
+            tab.Add(caption);
+
+            tab.RegisterCallback<ClickEvent>(_ => onClick());
+            return tab;
+        }
+
+        /// <summary>Pinta una pestaña como elegida o como una más de la lista.</summary>
+        public static void SetTabSelected(VisualElement tab, Label caption, bool selected)
+        {
+            tab.userData = selected;
+            tab.style.backgroundColor = selected ? Cream : Color.clear;
+            caption.style.color = selected ? Ink : InkSoft;
+
+            // La elegida se queda cuadrada por la derecha para pegarse al panel y
+            // parecer la misma superficie. Es lo que dice, sin escribirlo, que lo que
+            // hay al lado es justo lo que has pulsado.
+            var s = tab.style;
+            s.borderTopRightRadius = s.borderBottomRightRadius = selected ? 0 : Radius;
         }
 
         // ═══════════════════════════════════════════════════════════════════

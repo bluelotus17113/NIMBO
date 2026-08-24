@@ -35,22 +35,22 @@ namespace Nimbo.UI
         private Decor.DecorPanel _decor;
         private Achievements.AchievementsPanel _achievements;
         private Achievements.AchievementToast _toast;
-        private Chronicle.ChroniclePanel _chronicle;
-        private Requests.RequestBoardPanel _board;
-        private Minigames.MinigamePanel _minigame;
-        private Player.SkillsPanel _skills;
-        private Village.EventsPanel _events;
         private Player.HotbarView _hotbar;
         private Player.BagPanel _bag;
         private Player.CraftPanel _craft;
         private Player.ShippingPanel _shipping;
+        private Chronicle.ChroniclePanel _chronicle;
+        private Requests.RequestBoardPanel _board;
+        private Village.EventsPanel _events;
+        private Player.SkillsPanel _skills;
+        private Minigames.MinigamePanel _minigame;
         private Player.MapPanel _map;
         private Player.BuildPanel _build;
         private Player.FurnishPanel _furnish;
         private Player.DoorFade _fade;
         private CreatorPanel _creator;
+        private Hub.MenuHub _hub;
         private VisualElement _islanderStrip;
-        private VisualElement _actions;
 
         private GameClock _clock;
         private float _sinceRefresh;
@@ -68,11 +68,14 @@ namespace Nimbo.UI
             EventBus.Unsubscribe<StationUsed>(OnStationUsed);
             EventBus.Unsubscribe<RequestBoardRead>(OnRequestBoardRead);
             EventBus.Unsubscribe<MinigameRequested>(OnMinigameRequested);
+            EventBus.Unsubscribe<TreeSpoke>(OnTreeSpoke);
             EventBus.Unsubscribe<BuildModeChanged>(OnBuildModeChanged);
             EventBus.Unsubscribe<FurnishModeChanged>(OnFurnishModeChanged);
+            EventBus.Unsubscribe<DecorModeChanged>(OnDecorModeChanged);
             EventBus.Unsubscribe<InteriorEntered>(OnInteriorEntered);
             EventBus.Unsubscribe<InteriorExited>(OnInteriorExited);
-            EventBus.Unsubscribe<TreeSpoke>(OnTreeSpoke);
+            EventBus.Unsubscribe<MenuOpened>(OnMenuOpened);
+            EventBus.Unsubscribe<GamePaused>(OnGamePaused);
             _toast?.Unsubscribe();
             _furnish?.Unsubscribe();
             _hotbar?.Unsubscribe();
@@ -103,17 +106,24 @@ namespace Nimbo.UI
             root.style.flexDirection = FlexDirection.Column;
             root.style.flexGrow = 1;
 
-            _hud = new HudView(_clock);
+            _hub = new Hub.MenuHub();
+
+            _hud = new HudView(_clock, () => _hub.Toggle());
             root.Add(_hud.Root);
 
+            // El cuerpo ya solo lleva lo que aparece por sí solo: la tienda al entrar
+            // en una, el cajón al usarlo, el menú del modo en el que estés. Todo lo que
+            // antes se abría con un botón de la fila vive ahora dentro del menú.
             var body = new VisualElement();
             body.style.flexDirection = FlexDirection.Row;
             body.style.flexGrow = 1;
-            body.style.marginLeft = body.style.marginRight = UiTheme.Gap;
-            body.style.marginTop = UiTheme.Gap;
+            body.style.marginLeft = body.style.marginRight = UiTheme.SpaceL;
+            body.style.marginTop = UiTheme.SpaceL;
 
-            _panel = new IslanderPanel();
-            body.Add(_panel.Root);
+            // Cada panel con su alto y no estirado hasta abajo: por omisión flexbox los
+            // estira al alto de la fila, y el de decorar —que es de tamaño fijo por
+            // dentro— quedaba con medio metro de crema vacía debajo del contenido.
+            body.style.alignItems = Align.FlexStart;
 
             _creator = new CreatorPanel();
             _creator.OnFinished += OnIslanderCreated;
@@ -128,42 +138,27 @@ namespace Nimbo.UI
             _shop = new ShopPanel();
             body.Add(_shop.Root);
 
+            // Decorar va aquí y no dentro del menú: es un modo, como construir y como
+            // amueblar. Se entra desde el pie de la columna y ocupa la pantalla él solo.
             _decor = new Decor.DecorPanel();
             body.Add(_decor.Root);
 
-            _achievements = new Achievements.AchievementsPanel();
-            body.Add(_achievements.Root);
-
-            _chronicle = new Chronicle.ChroniclePanel();
-            body.Add(_chronicle.Root);
-
-            _board = new Requests.RequestBoardPanel();
-            body.Add(_board.Root);
-
-            _minigame = new Minigames.MinigamePanel();
-            body.Add(_minigame.Root);
-
-            _skills = new Player.SkillsPanel();
-            body.Add(_skills.Root);
-
-            _events = new Village.EventsPanel();
-            body.Add(_events.Root);
-
-            _bag = new Player.BagPanel();
-            body.Add(_bag.Root);
-
-            _craft = new Player.CraftPanel();
-            // Las recetas de cocina no se hacen de un clic: se juegan. El menú avisa y
-            // aquí se abre el minijuego, porque el menú no sabe de otras ventanas.
-            _craft.OnCook = recipe => EventBus.Publish(new MinigameRequested(
-                MinigameKind.Cooking, DifficultyOf(recipe), recipe.RecipeId));
-            body.Add(_craft.Root);
+            // Su cruz tiene que salir del modo, no solo esconder la tarjeta: escondiendo
+            // solo el panel, el reloj y la barra se quedan apagados y el jugador se
+            // queda mirando la isla sin nada con lo que jugar y sin saber por qué.
+            var closeDecor = _decor.Root.Q<Button>("cerrar");
+            if (closeDecor != null)
+                closeDecor.clickable =
+                    new Clickable(() => EventBus.Publish(new DecorModeChanged(false)));
 
             _shipping = new Player.ShippingPanel();
             body.Add(_shipping.Root);
 
-            _map = new Player.MapPanel();
-            body.Add(_map.Root);
+            // El minijuego va en el cuerpo y no en el menú a propósito: no se elige
+            // desde una pestaña, lo abre el mundo —una receta que se cocina, un
+            // concierto— y mientras dura no hay menú que valga.
+            _minigame = new Minigames.MinigamePanel();
+            body.Add(_minigame.Root);
 
             _build = new Player.BuildPanel();
             body.Add(_build.Root);
@@ -173,17 +168,52 @@ namespace Nimbo.UI
             body.Add(_furnish.Root);
 
             root.Add(body);
-            root.Add(BuildActionBar());
 
-            _islanderStrip = new VisualElement();
-            var strip = _islanderStrip.style;
-            strip.flexDirection = FlexDirection.Row;
-            strip.marginLeft = strip.marginRight = strip.marginBottom = UiTheme.Gap;
-            strip.paddingTop = strip.paddingBottom = 8;
-            strip.paddingLeft = strip.paddingRight = 10;
-            strip.backgroundColor = UiTheme.Panel;
-            UiTheme.SetRadius(_islanderStrip, UiTheme.Radius);
-            root.Add(_islanderStrip);
+            // --- lo que vive dentro del menú ---
+            _panel = new IslanderPanel();
+            _bag = new Player.BagPanel();
+            _craft = new Player.CraftPanel();
+            // Las recetas de cocina no se hacen de un clic: se juegan. El menú avisa y
+            // aquí se abre el minijuego, porque el menú no sabe de otras ventanas.
+            _craft.OnCook = recipe => EventBus.Publish(new MinigameRequested(
+                MinigameKind.Cooking, DifficultyOf(recipe), recipe.RecipeId));
+            _map = new Player.MapPanel();
+            _achievements = new Achievements.AchievementsPanel();
+
+            _hub.Add("Mochila", UiTheme.Peach, _bag.Root, _bag.Show, _bag.Hide);
+            _hub.Add("Hacer", UiTheme.Butter, _craft.Root, _craft.Show, _craft.Hide);
+            _hub.Add("Vecinos", UiTheme.Mint, BuildNeighbours(), RebuildStrip, HideNeighbour);
+            _hub.Add("Mapa", UiTheme.Sky, _map.Root, _map.Show, _map.Hide);
+            _hub.Add("Logros", UiTheme.Rose, _achievements.Root,
+                     _achievements.Show, _achievements.Hide);
+
+            // **Estas cuatro no las quitó el rediseño: no las conocía.** La rama se
+            // bifurcó antes de que existieran —en el UiRoot de la base no hay ni una
+            // referencia a ellas— y la noche entera las fue añadiendo a la fila de
+            // botones que este menú sustituye. Sin volver a colgarlas aquí, mezclar el
+            // rediseño habría dejado sin puerta a la Crónica, al tablón de encargos, a
+            // las fiestas y a las vías: cuatro sistemas enteros, cada uno con sus
+            // pruebas en verde, invisibles para el jugador. Es la enfermedad de §18
+            // provocada por una mezcla, que es la forma más tonta de cometerla.
+            _chronicle = new Chronicle.ChroniclePanel();
+            _hub.Add("Crónica", UiTheme.Lavender, _chronicle.Root,
+                     _chronicle.Show, _chronicle.Hide);
+
+            _board = new Requests.RequestBoardPanel();
+            _hub.Add("Encargos", UiTheme.Sage, _board.Root, _board.Show, _board.Hide);
+
+            _events = new Village.EventsPanel();
+            _hub.Add("Fiestas", UiTheme.Butter, _events.Root, _events.Show, _events.Hide);
+
+            _skills = new Player.SkillsPanel();
+            _hub.Add("Vías", UiTheme.SkySoft, _skills.Root, _skills.Show, _skills.Hide);
+
+            SetIndoors(false);
+
+            // La pausa y los ajustes viven en la capa de encima y hasta ahora solo se
+            // llegaba a ellos con Escape. Desde aquí también.
+            _hub.SetSystemButton("Pausa y ajustes",
+                                 () => EventBus.Publish(new GamePaused(true)));
 
             // El cartel de logro va suelto sobre todo lo demás, así que se cuelga de
             // la raíz y no del cuerpo: dentro del cuerpo lo colocaría el flexbox y
@@ -199,6 +229,14 @@ namespace Nimbo.UI
             _hotbar.Rebuild();
             root.Add(_hotbar.Root);
 
+            // El menú va por encima del reloj y de la barra —los tapa con su velo— pero
+            // por debajo del cartel de logro y del fundido de las puertas.
+            root.Add(_hub.Root);
+            UiTheme.Animate(_hud.Root, 160);
+            UiTheme.Animate(_hotbar.Root, 160);
+            EventBus.Subscribe<MenuOpened>(OnMenuOpened);
+            EventBus.Subscribe<GamePaused>(OnGamePaused);
+
             // El fundido va el último de todos: tiene que taparlo todo, incluido el
             // cartel de logro y la barra.
             _fade = new Player.DoorFade();
@@ -210,156 +248,91 @@ namespace Nimbo.UI
             EventBus.Subscribe<StationUsed>(OnStationUsed);
             EventBus.Subscribe<RequestBoardRead>(OnRequestBoardRead);
             EventBus.Subscribe<MinigameRequested>(OnMinigameRequested);
+            EventBus.Subscribe<TreeSpoke>(OnTreeSpoke);
             EventBus.Subscribe<BuildModeChanged>(OnBuildModeChanged);
             EventBus.Subscribe<FurnishModeChanged>(OnFurnishModeChanged);
+            EventBus.Subscribe<DecorModeChanged>(OnDecorModeChanged);
             EventBus.Subscribe<InteriorEntered>(OnInteriorEntered);
             EventBus.Subscribe<InteriorExited>(OnInteriorExited);
-            EventBus.Subscribe<TreeSpoke>(OnTreeSpoke);
 
             RebuildStrip();
             _mounted = true;
 
             // Escape lo lee MainMenuView, que es la capa de arriba; aquí solo se ofrece
-            // «cierra lo que tengas abierto». Así hay un único dueño de la tecla.
+            // «cierra lo que tengas abierto». De ahí que haya un único dueño de la tecla.
             ServiceRegistry.Register<Menu.IEscapeCloser>(this);
         }
 
         /// <summary>
-        /// La fila de acciones: las tres pantallas que no cuelgan de un habitante.
+        /// La sección de vecinos del menú: quién vive aquí, la ficha del que mires y
+        /// la puerta para traer a alguien nuevo.
         /// </summary>
-        private VisualElement BuildActionBar()
+        /// <remarks>
+        /// La lista estaba antes en una fila pegada al borde de abajo, encendida todo
+        /// el rato. Leer quién se ha hecho amigo de quién es algo que uno hace al abrir
+        /// el menú, no mientras riega el huerto, así que su sitio es este.
+        /// </remarks>
+        private VisualElement BuildNeighbours()
         {
-            _actions = new VisualElement();
-            var s = _actions.style;
-            s.flexDirection = FlexDirection.Row;
-            s.marginLeft = s.marginRight = UiTheme.Gap;
-            s.marginTop = UiTheme.Gap;
-            s.paddingTop = s.paddingBottom = 8;
-            s.paddingLeft = s.paddingRight = 10;
-            s.backgroundColor = UiTheme.Panel;
-            UiTheme.SetRadius(_actions, UiTheme.RadiusCard);
+            var section = new VisualElement { name = "vecinos" };
+            section.Add(UiTheme.Header("Vecinos", null));
 
-            Add("Comida", () => Toggle(() => _shop.Show("tienda_comida"), _shop.IsShowing));
-            Add("Muebles", () => Toggle(() => _shop.Show("tienda_muebles"), _shop.IsShowing));
-            Add("Ropa", () => Toggle(() => _shop.Show("tienda_ropa"), _shop.IsShowing));
-            Add("Decorar", () =>
-            {
-                if (_decor.IsShowing) _decor.Hide(); else _decor.Show();
-            });
-            _buildButton = Add("Construir", () => EventBus.Publish(new BuildModeChanged(!_buildMode)));
+            _islanderStrip = new VisualElement();
+            _islanderStrip.style.flexDirection = FlexDirection.Row;
+            _islanderStrip.style.flexWrap = Wrap.Wrap;
+            _islanderStrip.style.marginBottom = UiTheme.SpaceM;
+            section.Add(_islanderStrip);
 
-            // Dentro de casa se amuebla; fuera se construye. Es el mismo sitio de la
-            // fila porque es el mismo gesto, y así no hay nunca dos botones de colocar
-            // cosas encendidos a la vez diciendo cada uno una cosa distinta.
-            _furnishButton = Add("Amueblar", () => EventBus.Publish(new FurnishModeChanged(!_furnishMode)));
-            _furnishButton.style.display = DisplayStyle.None;
+            section.Add(_panel.Root);
 
-            // Ampliar tu cabaña, y solo estando dentro de ella. En el mismo sitio que
-            // amueblar porque es el mismo gesto de ocuparse de tu casa, y así no hace
-            // falta un botón más en la fila para algo que se usa dos veces por partida.
-            _expandButton = Add("Ampliar la casa", ExpandHome);
-            _expandButton.style.display = DisplayStyle.None;
+            var invite = UiTheme.Secondary("Que venga alguien nuevo", () =>
+            {
+                _hub.Close();
+                _creator.Show();
+            });
+            invite.style.alignSelf = Align.FlexStart;
+            invite.style.marginTop = UiTheme.SpaceM;
+            section.Add(invite);
 
-            Add("Mapa", () =>
-            {
-                if (_map.IsShowing) _map.Hide(); else _map.Show();
-            });
-            Add("Mochila", () =>
-            {
-                if (_bag.IsShowing) _bag.Hide(); else _bag.Show();
-            });
-            Add("Hacer", () =>
-            {
-                if (_craft.IsShowing) _craft.Hide(); else _craft.Show();
-            });
-            // Organizar va junto a los encargos y la crónica: las tres son cosas de
-            // llevar la aldea, y las tres se abren desde el menú y no desde el mundo.
-            Add("Fiestas", () =>
-            {
-                if (_events.IsShowing) _events.Hide(); else _events.Show();
-            });
-            // Las cinco vías, junto a la mochila y el crafteo: es información del
-            // protagonista, no de la aldea, y va con lo suyo.
-            Add("Vías", () =>
-            {
-                if (_skills.IsShowing) _skills.Hide(); else _skills.Show();
-            });
-            // Los encargos tienen botón **además** del tablón de la plaza, igual que
-            // «Hacer» convive con la mesa de trabajo. El tablón es donde uno mira al
-            // pasar y dice de lejos cuántas cosas hay; el botón es para no cruzar el
-            // puente solo para comprobar que no hay ninguna.
-            Add("Encargos", () =>
-            {
-                if (_board.IsShowing) _board.Hide(); else _board.Show();
-            });
-            // La crónica va justo antes de los logros y no al final de la fila: es lo
-            // que se abre al entrar para ver qué pasó anoche, y lo que se abre primero
-            // no puede estar en el último sitio donde se busca.
-            Add("Crónica", () =>
-            {
-                if (_chronicle.IsShowing) _chronicle.Hide(); else _chronicle.Show();
-            });
-            Add("Logros", () =>
-            {
-                if (_achievements.IsShowing) _achievements.Hide(); else _achievements.Show();
-            });
-            Add("Nuevo habitante", () => _creator.Show());
-            return _actions;
+            return section;
+        }
 
-            Button Add(string text, System.Action onClick)
-            {
-                var button = UiTheme.Action(text, onClick);
-                button.style.marginRight = 8;
-                _actions.Add(button);
-                return button;
-            }
+        /// <summary>Al salir de la sección se cierra la ficha, no la isla entera.</summary>
+        private void HideNeighbour()
+        {
+            _panel.Hide();
+            EventBus.Publish(new IslanderFocused(""));
         }
 
         /// <summary>
-        /// Lo difícil que es cocinar una receta: cuántas cosas lleva.
+        /// El reloj y la barra se apartan mientras el menú está abierto. Dejarlos
+        /// debajo del velo los deja legibles a medias, que es peor que no verlos.
         /// </summary>
-        /// <remarks>
-        /// Una sopa de dos ingredientes son tres pasos y unas croquetas de cinco son
-        /// seis. Sale gratis del dato que ya está en la receta y ordena la cocina sola:
-        /// lo que cuesta reunir cuesta también hacerlo.
-        /// </remarks>
         /// <summary>
-        /// Amplía tu cabaña, y si no se puede dice por qué.
+        /// Con la partida en pausa, esta capa se calla: la pantalla es de la de
+        /// arriba y el reloj está parado.
         /// </summary>
-        /// <remarks>
-        /// El aviso va al cartel de logros porque no hay otro sitio donde quepa un
-        /// «te faltan 20 de piedra» sin abrir una pantalla, y abrir una pantalla para
-        /// leer un motivo es justo lo que hace que nadie lo lea.
-        /// </remarks>
-        private void ExpandHome()
+        private bool _paused;
+
+        private void OnGamePaused(GamePaused evt)
         {
-            if (!ServiceRegistry.TryGet<IHomeUpgradeService>(out var homes)) return;
+            _paused = evt.Paused;
 
-            var verdict = homes.CanUpgradePlayerHome();
-            if (verdict == UpgradeRejection.Ok && homes.UpgradePlayerHome())
-            {
-                int size = homes.SizeOfLevel(homes.PlayerLevel);
-                _toast?.Push("Casa ampliada", $"Tu cabaña es ahora de {size}×{size}.");
-                return;
-            }
-
-            _toast?.Push("Todavía no", verdict switch
-            {
-                UpgradeRejection.MaxedOut => "No se puede ampliar más.",
-                UpgradeRejection.NotEnoughCoins => "No te llegan los nimbos.",
-                UpgradeRejection.NotEnoughMaterials => "Falta obra. Hay que traer material.",
-                _ => "Ahora mismo no se puede.",
-            });
+            // El reloj y la barra se apartan también con la pausa, no solo con el menú.
+            // El velo del cartel es azul y translúcido, así que sin esto se quedaban
+            // detrás medio legibles: ni se leen ni dejan de verse.
+            SetPlayChrome(!evt.Paused);
         }
 
-        private static int DifficultyOf(Recipe recipe) =>
-            Mathf.Clamp(recipe.Ingredients?.Count ?? 1, 1, 5);
-
-        /// <summary>Abre lo pedido, o lo cierra si ya estaba abierto.</summary>
-        private void Toggle(System.Action open, bool alreadyOpen)
+        /// <summary>Enciende o apaga lo que solo sirve jugando: el reloj y la barra.</summary>
+        private void SetPlayChrome(bool visible)
         {
-            if (alreadyOpen) _shop.Hide(); else open();
+            float opacity = visible ? 1f : 0f;
+            _hud.Root.style.opacity = opacity;
+            _hotbar.Root.style.opacity = opacity;
         }
+
+        private void OnMenuOpened(MenuOpened evt) => SetPlayChrome(!evt.Open);
 
         /// <summary>
         /// El creador terminó. Aquí es donde el habitante entra de verdad en la isla:
@@ -379,43 +352,30 @@ namespace Nimbo.UI
         /// toque. Es lo que hace que la mesa de trabajo sea un sitio al que ir y no
         /// otro botón en la fila de arriba.
         /// </summary>
-        private void OnStationUsed(StationUsed evt)
-        {
-            switch (evt.Station)
-            {
-                case CraftStationKind.Shipping:
-                    if (_shipping.IsShowing) _shipping.Hide(); else _shipping.Show();
-                    break;
-
-                // El fogón abre el mismo menú pero ya en su pestaña. Llegar a la cocina
-                // y tener que buscar la cocina en una fila de tres botones es de las
-                // cosas que hacen dudar de si has pulsado lo que querías.
-                case CraftStationKind.Kitchen:
-                    if (_craft.IsShowing) _craft.Hide(); else _craft.Show(CraftStation.Kitchen);
-                    break;
-
-                default:
-                    if (_craft.IsShowing) _craft.Hide(); else _craft.Show();
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Se abre el minijuego que han pedido, y lo que estuviera abierto se cierra.
-        /// </summary>
+        /// <summary>Cocinar, tocar o pescar: se abre el minijuego que toque.</summary>
         /// <remarks>
         /// Si no se puede arrancar —no hay servicio, o ya hay otro a medias— no se abre
         /// nada. Una ventana vacía es peor que ninguna: parece que el juego se ha roto.
         /// </remarks>
+        /// <summary>
+        /// Lo difícil que es cocinar una receta: cuántas cosas lleva.
+        /// </summary>
+        /// <remarks>
+        /// Una sopa de dos ingredientes son tres pasos y unas croquetas de cinco son
+        /// seis. Sale gratis del dato que ya está en la receta y ordena la cocina sola:
+        /// lo que cuesta reunir cuesta también hacerlo.
+        /// </remarks>
+        private static int DifficultyOf(Recipe recipe) =>
+            Mathf.Clamp(recipe.Ingredients?.Count ?? 1, 1, 5);
+
         private void OnMinigameRequested(MinigameRequested evt)
         {
             if (_minigame == null) return;
 
-            _craft.Hide();
+            _hub.Close();
             _minigame.Show(evt.Kind, evt.Difficulty, evt.Context);
         }
 
-        /// <summary>Ha leído el tablón de la plaza: se abre la misma pantalla que el botón.</summary>
         /// <summary>
         /// El Árbol Nimbo ha hablado: el mismo cartelito que los logros.
         /// </summary>
@@ -426,39 +386,142 @@ namespace Nimbo.UI
         /// </remarks>
         private void OnTreeSpoke(TreeSpoke evt) => _toast.Push("El Árbol Nimbo", evt.Text);
 
-        private void OnRequestBoardRead(RequestBoardRead _)
+        /// <summary>Ha leído el tablón de la plaza: se abre su pestaña del menú.</summary>
+        private void OnRequestBoardRead(RequestBoardRead _) => _hub.Toggle("Encargos");
+
+        /// <summary>
+        /// Cierra una cosa de las que estén abiertas. False si no había nada.
+        /// </summary>
+        /// <remarks>
+        /// **Aquí se resolvió el choque de los dos diseños de Escape, y conviene que
+        /// quede escrito.** La rama del rediseño repartía la tecla entre dos lectores
+        /// —`UiRoot` y `MainMenuView`— con un `EscapeGuard` que daba el turno al primero
+        /// que preguntara, porque Unity no promete en qué orden corren dos `Update` y sin
+        /// el árbitro la pausa se abría y se cerraba en el mismo fotograma. La rama de la
+        /// noche hizo lo otro: **un solo lector**, que pregunta aquí antes de pausar.
+        ///
+        /// Se queda el segundo, y no por gusto: con un único lector el problema que el
+        /// árbitro resolvía **no puede ocurrir**, así que `EscapeGuard` deja de tener
+        /// motivo. Un mecanismo que existe para arbitrar entre dos deja de hacer falta
+        /// cuando hay uno. Lo que sí se conserva entero es lo que hacían sus dos lecturas:
+        /// salir del modo activo y cerrar el menú, y está aquí abajo.
+        ///
+        /// Una pulsación, un cierre: Escape no es «limpiar la pantalla», es «sácame de
+        /// donde estoy».
+        /// </remarks>
+        public bool CloseTopPanel()
         {
-            if (_board == null) return;
-            if (_board.IsShowing) _board.Hide(); else _board.Show();
+            if (_furnishMode) { EventBus.Publish(new FurnishModeChanged(false)); return true; }
+            if (_buildMode) { EventBus.Publish(new BuildModeChanged(false)); return true; }
+            if (_decorMode) { EventBus.Publish(new DecorModeChanged(false)); return true; }
+
+            if (_minigame.IsShowing) { _minigame.Hide(); return true; }
+            if (_shipping.IsShowing) { _shipping.Hide(); return true; }
+            if (_shop.IsShowing) { _shop.Hide(); return true; }
+            if (_creator.IsShowing) { _creator.Hide(); return true; }
+
+            if (_hub.IsOpen) { _hub.Close(); return true; }
+
+            return false;
+        }
+
+        private void OnStationUsed(StationUsed evt)
+        {
+            switch (evt.Station)
+            {
+                case CraftStationKind.Shipping:
+                    if (_shipping.IsShowing) _shipping.Hide(); else _shipping.Show();
+                    break;
+
+                default:
+                    // La mesa de trabajo abre el menú por «Hacer». Es la misma pantalla
+                    // que la del menú, así que enseñar una copia suelta encima sería
+                    // tener dos sitios distintos para lo mismo.
+                    _hub.Toggle("Hacer");
+                    break;
+            }
         }
 
         private bool _buildMode;
         private bool _furnishMode;
+        private bool _decorMode;
         private bool _indoors;
-        private Button _buildButton;
-        private Button _furnishButton;
-        private Button _expandButton;
 
         /// <summary>
-        /// Ha entrado en una casa: la fila de acciones cambia de oficio.
+        /// Ha entrado en un sitio con techo: cambia el modo que ofrece el menú y, si es
+        /// una tienda, se pone el mostrador delante sin que haya que pedirlo.
         /// </summary>
         /// <remarks>
-        /// Construir de puertas adentro movía la cámara a la aldea con el jugador
-        /// medio kilómetro por debajo, así que ese botón se va mientras estás dentro.
+        /// Construir de puertas adentro movía la cámara a la aldea con el jugador medio
+        /// kilómetro por debajo, así que ese modo se va mientras estás dentro.
+        ///
+        /// Las tiendas tenían tres botones encendidos en la esquina —comida, muebles y
+        /// ropa— que se podían pulsar desde el otro extremo de la isla. Comprar es ir a
+        /// la tienda: ahora se abre al entrar por la puerta y se cierra al salir.
         /// </remarks>
-        private void OnInteriorEntered(InteriorEntered _) => SetIndoors(true);
+        private void OnInteriorEntered(InteriorEntered evt)
+        {
+            SetIndoors(true);
 
-        private void OnInteriorExited(InteriorExited _) => SetIndoors(false);
+            string shopId = ShopIdOf(evt.HomeKey);
+            if (shopId != null)
+            {
+                _hub.Close();
+                _shop.Show(shopId);
+            }
+        }
 
+        private void OnInteriorExited(InteriorExited _)
+        {
+            SetIndoors(false);
+            _shop.Hide();
+        }
+
+        /// <summary>
+        /// La tienda de una zona, o <c>null</c> si esa zona no vende nada.
+        /// </summary>
+        /// <remarks>
+        /// Se hace con el nombre y no preguntándole a la isla porque el identificador de
+        /// zona es el de la tienda con «zona_» delante —<c>zona_tienda_comida</c> contra
+        /// <c>tienda_comida</c>— y esta capa no ve el catálogo de tiendas: la interfaz
+        /// está por debajo de economía en el grafo de ensamblados. Si un día dejan de
+        /// llamarse igual, la tienda no abre y no se rompe nada.
+        /// </remarks>
+        private static string ShopIdOf(string zoneId)
+        {
+            const string prefix = "zona_";
+            if (string.IsNullOrEmpty(zoneId) || !zoneId.StartsWith(prefix)) return null;
+
+            string rest = zoneId[prefix.Length..];
+            return rest.StartsWith("tienda_") ? rest : null;
+        }
+
+        /// <summary>
+        /// Los modos que se pueden usar donde estás, y solo esos.
+        /// </summary>
+        /// <remarks>
+        /// De puertas adentro se amuebla la habitación; en la calle se construye y se
+        /// decora. Ofrecer los tres siempre sería enseñar dos botones que van a
+        /// rechazar la pulsación sin decir por qué.
+        /// </remarks>
         private void SetIndoors(bool indoors)
         {
             _indoors = indoors;
-            if (_buildButton == null || _furnishButton == null) return;
+            if (_hub == null) return;
 
-            _buildButton.style.display = indoors ? DisplayStyle.None : DisplayStyle.Flex;
-            _furnishButton.style.display = indoors ? DisplayStyle.Flex : DisplayStyle.None;
-            if (_expandButton != null)
-                _expandButton.style.display = indoors ? DisplayStyle.Flex : DisplayStyle.None;
+            _hub.ClearModes();
+
+            if (indoors)
+            {
+                _hub.AddMode("Amueblar",
+                             () => EventBus.Publish(new FurnishModeChanged(!_furnishMode)));
+                return;
+            }
+
+            _hub.AddMode("Construir",
+                         () => EventBus.Publish(new BuildModeChanged(!_buildMode)));
+            _hub.AddMode("Decorar",
+                         () => EventBus.Publish(new DecorModeChanged(!_decorMode)));
         }
 
         /// <summary>Amueblando, como construyendo: fuera todo lo de andar por la isla.</summary>
@@ -473,16 +536,12 @@ namespace Nimbo.UI
 
             var play = evt.Furnishing ? DisplayStyle.None : DisplayStyle.Flex;
             _hotbar.Root.style.display = play;
-            _islanderStrip.style.display = play;
-            _actions.style.display = play;
+            _hud.Root.style.display = play;
 
             if (evt.Furnishing)
             {
-                _bag.Hide();
-                _craft.Hide();
+                _hub.Close();
                 _shipping.Hide();
-                _map.Hide();
-                _panel.Hide();
                 _furnish.Show();
             }
             else _furnish.Hide();
@@ -502,23 +561,52 @@ namespace Nimbo.UI
 
             var play = evt.Building ? DisplayStyle.None : DisplayStyle.Flex;
             _hotbar.Root.style.display = play;
-            _islanderStrip.style.display = play;
-            _actions.style.display = play;
+            _hud.Root.style.display = play;
 
             if (evt.Building)
             {
-                _bag.Hide();
-                _craft.Hide();
+                _hub.Close();
+                _shop.Hide();
                 _shipping.Hide();
-                _map.Hide();
                 _build.Show();
             }
             else _build.Hide();
         }
 
+        /// <summary>
+        /// Decorando: fuera el reloj y la barra, y el plano de la zona en medio.
+        /// </summary>
+        /// <remarks>
+        /// Este no mueve la cámara —se decora sobre un plano cenital dibujado en la
+        /// interfaz, no pinchando en el mundo—, así que la isla se queda como estaba
+        /// detrás. Lo que sí hace, como los otros dos modos, es apagar todo lo demás:
+        /// mientras colocas bancos no hay nada que hacer con la mochila.
+        /// </remarks>
+        private void OnDecorModeChanged(DecorModeChanged evt)
+        {
+            // Decorar es de la calle. El aviso puede llegar con el jugador ya dentro
+            // de una casa, y allí el plano no vale para nada.
+            if (evt.Decorating && _indoors) return;
+
+            _decorMode = evt.Decorating;
+
+            var play = evt.Decorating ? DisplayStyle.None : DisplayStyle.Flex;
+            _hotbar.Root.style.display = play;
+            _hud.Root.style.display = play;
+
+            if (evt.Decorating)
+            {
+                _hub.Close();
+                _shop.Hide();
+                _shipping.Hide();
+                _decor.Show();
+            }
+            else _decor.Hide();
+        }
+
         private void OnRosterChanged<T>(T _) => RebuildStrip();
 
-        /// <summary>La fila de abajo: un botón por habitante para abrir su ficha.</summary>
+        /// <summary>Un botón por habitante para abrir su ficha, dentro del menú.</summary>
         private void RebuildStrip()
         {
             if (_islanderStrip == null) return;
@@ -532,9 +620,15 @@ namespace Nimbo.UI
                 var islander = all[i];
                 string id = islander.Id;
 
-                var button = UiTheme.Action(islander.Identity.ShortName, () => Toggle(id));
-                button.style.marginRight = 8;
-                button.style.backgroundColor = UiTheme.PanelDark;
+                // El que estés mirando va en melocotón y el resto en crema: la lista
+                // dice dónde estás sin necesitar una línea que lo explique.
+                bool open = _panel.IsShowing && _panel.Root.name == id;
+                var button = open
+                    ? UiTheme.Action(islander.Identity.ShortName, () => Toggle(id))
+                    : UiTheme.Secondary(islander.Identity.ShortName, () => Toggle(id));
+
+                button.style.marginRight = UiTheme.SpaceS;
+                button.style.marginBottom = UiTheme.SpaceS;
                 _islanderStrip.Add(button);
             }
 
@@ -611,106 +705,78 @@ namespace Nimbo.UI
             {
                 _panel.Hide();
                 EventBus.Publish(new IslanderFocused(""));
+                RebuildStrip();
                 return;
             }
 
             _panel.Root.name = islanderId;
             _panel.Show(islanderId);
             EventBus.Publish(new IslanderFocused(islanderId));
+            RebuildStrip();
         }
 
-        /// <summary>¿Hay algo abierto que se maneje con el ratón?</summary>
-        private bool AnyPanelOpen =>
-            _panel.IsShowing || _shop.IsShowing || _decor.IsShowing ||
-            _achievements.IsShowing || _bag.IsShowing || _craft.IsShowing || _board.IsShowing ||
-            _minigame.IsShowing || _skills.IsShowing || _events.IsShowing ||
-            _shipping.IsShowing || _map.IsShowing || _build.IsShowing ||
-            _furnish.IsShowing || _creator.IsShowing || _chronicle.IsShowing;
-
         /// <summary>
-        /// Cierra una cosa de las que estén abiertas: primero el modo activo, que ha
-        /// apagado toda la demás interfaz; después el panel pintado más arriba, que es
-        /// el último que se montó en <see cref="Mount"/>. False si no había nada.
+        /// Las teclas del menú. Tab lo abre por la mochila, M por el mapa, Esc cierra
+        /// lo que haya —y si no hay nada, pausa— y las flechas pasan de una sección a
+        /// otra sin soltar el teclado.
         /// </summary>
         /// <remarks>
-        /// **Una pulsación, un cierre.** La mochila y el mapa pueden estar abiertos a la
-        /// vez porque son ventanas independientes, y Escape no es «limpiar la pantalla»
-        /// sino «sácame de donde estoy». Cerrarlo todo de golpe deja al jugador sin saber
-        /// qué acaba de pasar.
+        /// Construyendo o amueblando no se atiende ninguna salvo la de salir: ahí la
+        /// pantalla es del modo entero y abrir el menú encima dejaría dos cosas
+        /// mandando sobre la misma cámara.
         ///
-        /// Nunca lee la tecla él mismo: la lee `MainMenuView`, y si aquí no queda nada
-        /// que cerrar es ella quien abre la pausa. De ahí sale la regla que evita el
-        /// choque clásico —Escape cerrando un panel *y* pausando a la vez—: hay un solo
-        /// dueño de la tecla y esto es solo lo que le ofrece la capa de juego.
-        ///
-        /// El orden es el inverso al del montaje, porque en UI Toolkit el último hermano
-        /// pinta encima: el último de esta lista que esté abierto es el que el jugador
-        /// tiene delante.
+        /// Escape se va cerrando capas de fuera adentro: primero el modo, luego el
+        /// menú, y solo cuando no queda nada abierto pausa la partida. Esa última es
+        /// la puerta a la pausa y a los ajustes, que viven en la capa de encima.
         /// </remarks>
-        public bool CloseTopPanel()
+        private void ReadMenuKeys()
         {
-            if (_furnishMode)
+            // En pausa manda la capa de arriba: ni Tab abre el menú por detrás del
+            // cartel, ni Escape hace nada aquí.
+            if (_paused) return;
+
+            if (_buildMode || _furnishMode || _decorMode)
             {
-                EventBus.Publish(new FurnishModeChanged(false));
-                return true;
+                // La B entra y sale de construir y de amueblar, pero no de decorar:
+                // ese modo se abre desde el menú y se sale con Esc, como cualquier
+                // pantalla. Darle una tecla propia sin que nadie la pida sería
+                // inventarse un atajo que no está escrito en ningún sitio.
+                // Escape ya no se lee aquí: lo lee MainMenuView y baja hasta
+                // CloseTopPanel, que sale del modo igual que hacía esta rama. Queda la B,
+                // que es un atajo propio de construir y amueblar y no toca a nadie.
+                bool salir = Input.GetKeyDown(Menu.GameKeys.Furnish) && !_decorMode;
+                if (!salir) return;
+
+                // Cada aviso por su lado y no con un operador entre medias: el bus
+                // reparte por el tipo de lo que le des, y una expresión que devuelva lo
+                // uno o lo otro lo convierte en <c>object</c> y no lo recibe nadie.
+                if (_furnishMode) EventBus.Publish(new FurnishModeChanged(false));
+                else if (_buildMode) EventBus.Publish(new BuildModeChanged(false));
+                else EventBus.Publish(new DecorModeChanged(false));
+                return;
             }
 
-            if (_buildMode)
+            // Tab es la tecla que todo el mundo prueba primero en un juego con
+            // inventario, así que abre el menú por donde está la mochila.
+            if (Input.GetKeyDown(Menu.GameKeys.Bag)) _hub.Toggle("Mochila");
+
+            // M de mapa. Con dos islas y un puente, saber de qué lado estás pasa a ser
+            // una pregunta de verdad y merece su tecla.
+            if (Input.GetKeyDown(Menu.GameKeys.Map)) _hub.Toggle("Mapa");
+
+            if (_hub.IsOpen)
             {
-                EventBus.Publish(new BuildModeChanged(false));
-                return true;
+                if (Input.GetKeyDown(KeyCode.RightArrow)) _hub.Step(1);
+                if (Input.GetKeyDown(KeyCode.LeftArrow)) _hub.Step(-1);
+                return;
             }
 
-            if (_furnish.IsShowing) { _furnish.Hide(); return true; }
-            if (_build.IsShowing) { _build.Hide(); return true; }
-            if (_map.IsShowing) { _map.Hide(); return true; }
-            if (_shipping.IsShowing) { _shipping.Hide(); return true; }
-            if (_craft.IsShowing) { _craft.Hide(); return true; }
-            if (_bag.IsShowing) { _bag.Hide(); return true; }
-            if (_events.IsShowing) { _events.Hide(); return true; }
-            if (_skills.IsShowing) { _skills.Hide(); return true; }
-            if (_minigame.IsShowing) { _minigame.Hide(); return true; }
-            if (_board.IsShowing) { _board.Hide(); return true; }
-            if (_chronicle.IsShowing) { _chronicle.Hide(); return true; }
-            if (_achievements.IsShowing) { _achievements.Hide(); return true; }
-            if (_decor.IsShowing) { _decor.Hide(); return true; }
-            if (_shop.IsShowing) { _shop.Hide(); return true; }
-            if (_creator.IsShowing) { _creator.Hide(); return true; }
+            // B entra en el modo que toque aquí: construir en la calle, amueblar dentro
+            // de casa. Antes solo servía de puertas adentro y en la calle no hacía nada.
+            if (!Input.GetKeyDown(Menu.GameKeys.Furnish)) return;
 
-            // La ficha va la última porque se montó la primera, y su cierre avisa a la
-            // cámara igual que hace Toggle: sin eso Escape la cierra y la cámara se queda
-            // mirando a nadie.
-            if (_panel.IsShowing)
-            {
-                _panel.Hide();
-                EventBus.Publish(new IslanderFocused(""));
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool _pointerWasNeeded;
-
-        /// <summary>
-        /// Avisa cuando se abre o se cierra algo, para que la cámara suelte el ratón.
-        /// </summary>
-        /// <remarks>
-        /// Se mira cada fotograma en vez de avisar desde cada <c>Show</c> y cada
-        /// <c>Hide</c>. Son once paneles y varios se cierran solos —el creador al
-        /// terminar, la ficha cuando el vecino se va de la isla—: enganchando el aviso
-        /// a mano en cada sitio, el día que alguien añada un panel o un camino de
-        /// cierre nuevo, el ratón se queda capturado con un panel abierto delante y no
-        /// hay forma de cerrarlo. Comparar un booleano sesenta veces por segundo no le
-        /// cuesta nada a nadie.
-        /// </remarks>
-        private void RefreshPointer()
-        {
-            bool needed = AnyPanelOpen;
-            if (needed == _pointerWasNeeded) return;
-
-            _pointerWasNeeded = needed;
-            EventBus.Publish(new PointerNeeded(needed));
+            if (_indoors) EventBus.Publish(new FurnishModeChanged(true));
+            else EventBus.Publish(new BuildModeChanged(true));
         }
 
         private void Update()
@@ -723,33 +789,13 @@ namespace Nimbo.UI
             // juego esté en pausa, en vez de quedarse clavado en pantalla.
             _toast.Tick(Time.unscaledDeltaTime);
             _fade.Tick(Time.unscaledDeltaTime);
-
-            // El minijuego de ritmo va con reloj propio, así que necesita el fotograma
-            // entero y no el refresco lento de las listas: a dos veces por segundo no
-            // hay ritmo que valga. Los otros dos lo ignoran.
-            _minigame.Tick(Time.unscaledDeltaTime);
-            _hotbar.Tick();
             RefreshPrompt();
-            RefreshPointer();
 
-            // Tab abre y cierra la mochila. Es la tecla que todo el mundo prueba
-            // primero en un juego con inventario.
-            if (Input.GetKeyDown(Menu.GameKeys.Bag))
-            {
-                if (_bag.IsShowing) _bag.Hide(); else _bag.Show();
-            }
+            // Los huecos de la barra solo se cambian jugando: con el menú abierto la
+            // barra ni se ve, y cambiar de herramienta a ciegas no lo quiere nadie.
+            if (!_hub.IsOpen) _hotbar.Tick();
 
-            // M de mapa. Con dos islas y un puente, saber de qué lado estás pasa a ser
-            // una pregunta de verdad y merece su tecla.
-            if (Input.GetKeyDown(Menu.GameKeys.Map))
-            {
-                if (_map.IsShowing) _map.Hide(); else _map.Show();
-            }
-
-            // B de amueblar, y solo dentro de casa: fuera esa tecla no hace nada en vez
-            // de abrir un menú que no se puede usar.
-            if (Input.GetKeyDown(Menu.GameKeys.Furnish) && (_indoors || _furnishMode))
-                EventBus.Publish(new FurnishModeChanged(!_furnishMode));
+            ReadMenuKeys();
 
             // Las listas y las barras a ritmo lento: nadie nota que una barra de
             // hambre se mueva dos veces por segundo en vez de sesenta, y reconstruir
@@ -776,14 +822,12 @@ namespace Nimbo.UI
             // Los cinco paneles que se quedaban mintiendo mientras los mirabas: un
             // encargo que caduca, un logro que se desbloquea, una fiesta que empieza.
             // Cada uno firma lo que ha pintado y solo reconstruye si la firma cambió,
-            // así que esto no redibuja cinco listas cada 0,4 s — compara cinco cadenas.
+            // así que esto no redibuja cinco listas cada 0,4 s: compara cinco cadenas.
             //
-            // Existían los cinco `Refresh()` y **no los llamaba nadie**. El comentario de
-            // `RequestBoardPanel._signature` llegó a decir que «el ciclo lento de UiRoot
-            // llama a Refresh cada 0,4 s» cuando era falso: lo cazó el verificador de
-            // nimbo-copy leyendo un mecanismo que su autor daba por enchufado. Es la
-            // enfermedad de §18 en su forma más barata de cometer — el que escribe el
-            // panel no es el que escribe la llamada.
+            // Existían los cinco `Refresh()` y **no los llamaba nadie**. El comentario
+            // de `RequestBoardPanel._signature` llegó a decir que este ciclo los
+            // refrescaba, cuando era falso; lo cazó el verificador de nimbo-copy
+            // leyendo un mecanismo que su autor daba por enchufado.
             if (_board.IsShowing) _board.Refresh();
             if (_achievements.IsShowing) _achievements.Refresh();
             if (_chronicle.IsShowing) _chronicle.Refresh();

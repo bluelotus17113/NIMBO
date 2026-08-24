@@ -11,6 +11,7 @@ using Nimbo.Data.Save;
 using Nimbo.Economy;
 using Nimbo.Economy.Items;
 using Nimbo.Economy.Shops;
+using Nimbo.Items;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
@@ -461,6 +462,45 @@ namespace Nimbo.Tests
                 "el inventario no debió cambiar");
         }
 
+        /// <summary>
+        /// El regalo sale de la mochila del protagonista, que es de donde lo saca la
+        /// mano al pulsar la tecla de acción delante de un vecino.
+        /// </summary>
+        /// <remarks>
+        /// Hay dos inventarios —el de muebles y ropa, y la mochila de la aldea— y hasta
+        /// ahora regalar solo miraba el primero. Como en la mochila es donde acaban las
+        /// flores y los cultivos, dar lo que llevabas encima devolvía falso sin más.
+        /// </remarks>
+        [Test]
+        public void GiveTo_SacaElRegaloDeLaMochila_CuandoEsLoQueLleva()
+        {
+            var bag = new InventoryService(_save.Player, _service);
+            ServiceRegistry.Register<IInventoryService>(bag);
+            try
+            {
+                bag.TryStore("test_snack", 3, out _);
+                bag.Select(0);
+                Assert.AreEqual("test_snack", bag.InHand.CatalogId, "lo lleva en la mano");
+
+                _sim.Reset();
+                bool result = _service.GiveTo("test_islander", "test_snack");
+
+                Assert.IsTrue(result, "lo lleva encima: el regalo tiene que salir");
+                Assert.AreEqual(2, bag.CountOf("test_snack"), "sale del hueco que sostiene");
+                Assert.AreEqual(0, _save.Inventory.CountOf("test_snack"),
+                    "el inventario de muebles y ropa no se toca");
+
+                Assert.IsTrue(_giftFired);
+                Assert.AreEqual(1, _lastGift.Opinion, "le encanta el snack");
+                Assert.AreEqual("test_islander", _sim.LastEmotionIslanderId,
+                    "pone cara: sin eso el regalo no se ve por ningún lado");
+            }
+            finally
+            {
+                ServiceRegistry.Unregister<IInventoryService>();
+            }
+        }
+
         // ── 6. integridad del inventario ────────────────────────────────────────
 
         [Test]
@@ -501,14 +541,23 @@ namespace Nimbo.Tests
     {
         public string LastIslanderId;
         public float LastDelta;
-        public void Reset() { LastIslanderId = null; LastDelta = 0f; }
+        public string LastEmotionIslanderId;
+        public Emotion LastEmotion;
+        public void Reset()
+        {
+            LastIslanderId = null; LastDelta = 0f;
+            LastEmotionIslanderId = null; LastEmotion = default;
+        }
         public void ApplyHappiness(string islanderId, float delta)
         {
             LastIslanderId = islanderId; LastDelta = delta;
         }
         public void ApplyNeed(string islanderId, NeedKind need, float delta) { }
         public void SetNeed(string islanderId, NeedKind need, float value) { }
-        public void ShowEmotion(string islanderId, Emotion emotion, float seconds = 4f) { }
+        public void ShowEmotion(string islanderId, Emotion emotion, float seconds = 4f)
+        {
+            LastEmotionIslanderId = islanderId; LastEmotion = emotion;
+        }
         public void GrantExperience(string islanderId, float amount) { }
         public void SetSimulationPaused(bool paused) { }
     }

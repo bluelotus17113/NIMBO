@@ -69,6 +69,7 @@ namespace Nimbo.UI.Creator
             Root.style.display = DisplayStyle.None;
 
             var scroll = new ScrollView(ScrollViewMode.Vertical);
+            UiTheme.StyleScroll(scroll);
             scroll.style.flexGrow = 1;
 
             var header = UiTheme.Card();

@@ -34,13 +34,7 @@ namespace Nimbo.UI.Player
             Root.style.display = DisplayStyle.None;
             Root.style.width = 520;
 
-            var head = new VisualElement();
-            head.style.flexDirection = FlexDirection.Row;
-            head.style.justifyContent = Justify.SpaceBetween;
-            head.style.alignItems = Align.Center;
-            head.Add(UiTheme.Title("Lo que llevas"));
-            head.Add(UiTheme.Secondary("Cerrar", Hide));
-            Root.Add(head);
+            Root.Add(UiTheme.Header("Lo que llevas", Hide));
 
             _hint = UiTheme.Body("Los diez primeros huecos son los de la barra de abajo.",
                                  soft: true);
@@ -84,17 +78,26 @@ namespace Nimbo.UI.Player
             bool picked = index == _picked;
 
             var slot = new VisualElement();
-            slot.style.width = slot.style.height = 74;
+
+            // Diez píxeles más que antes. Con 74 y el nombre en tres líneas, «Semillas
+            // de nimbocereza» se comía la primera línea y el hueco decía «de
+            // nimbocereza», que no es nada.
+            slot.style.width = slot.style.height = 84;
             slot.style.marginRight = slot.style.marginBottom = 6;
             slot.style.alignItems = Align.Center;
             slot.style.justifyContent = Justify.Center;
             slot.style.paddingLeft = slot.style.paddingRight = 4;
 
-            // Los de la barra van en crema claro y el resto en el profundo: se ve de un
-            // vistazo qué tienes a mano y qué está guardado al fondo.
-            slot.style.backgroundColor = picked ? UiTheme.Peach
-                                       : inHotbar ? UiTheme.Cream : UiTheme.CreamDeep;
+            // Todos los huecos en crema profundo. Los de la barra iban en crema claro
+            // —el mismo color que el panel de detrás—, así que los diez primeros no se
+            // veían: quedaba el nombre del objeto flotando sobre la nada. Cuál está a
+            // mano lo dice su número, que va en melocotón en esos diez.
+            slot.style.backgroundColor = picked ? UiTheme.Peach : UiTheme.CreamDeep;
+            slot.style.overflow = Overflow.Hidden;
             UiTheme.SetRadius(slot, UiTheme.Radius);
+            UiTheme.Animate(slot, 120);
+            UiTheme.Hoverable(slot, picked ? UiTheme.Peach : UiTheme.CreamDeep,
+                              picked ? UiTheme.Peach : UiTheme.CreamPress);
 
             if (stack.Quantity > 0)
             {
@@ -113,6 +116,18 @@ namespace Nimbo.UI.Player
                     count.style.marginTop = 3;
                     slot.Add(count);
                 }
+            }
+
+            // La tecla con la que se saca, en los diez que están a mano. Es lo que
+            // distingue esa primera fila ahora que todos los huecos son del mismo color.
+            if (inHotbar)
+            {
+                var key = UiTheme.Body(((index + 1) % 10).ToString());
+                key.style.fontSize = 10;
+                key.style.unityFontStyleAndWeight = FontStyle.Bold;
+                key.style.color = UiTheme.PeachDeep;
+                key.style.marginTop = 2;
+                slot.Add(key);
             }
 
             int captured = index;
