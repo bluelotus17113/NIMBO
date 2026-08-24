@@ -138,8 +138,9 @@ namespace Nimbo.UI.Player
             if (stack.Quantity > 0)
             {
                 // Sin iconos: el nombre corto del objeto. Es feo comparado con un
-                // dibujo, pero un icono equivocado miente y un texto no.
-                var name = UiTheme.Body(ShortName(stack.CatalogId));
+                // dibujo, pero un icono equivocado miente y un texto no. Sale de
+                // ItemNames y no de recortar el id: la misma voz que la mochila.
+                var name = UiTheme.Body(ItemNames.Short(stack.CatalogId));
                 name.style.fontSize = 10;
                 name.style.unityTextAlign = TextAnchor.MiddleCenter;
                 name.style.whiteSpace = WhiteSpace.Normal;
@@ -161,16 +162,6 @@ namespace Nimbo.UI.Player
             int captured = index;
             slot.RegisterCallback<ClickEvent>(_ => _inventory.Select(captured));
             return slot;
-        }
-
-        /// <summary>«tool_regadera» no es un nombre. Esto lo deja en «regadera».</summary>
-        private static string ShortName(string catalogId)
-        {
-            if (string.IsNullOrEmpty(catalogId)) return "";
-
-            int underscore = catalogId.IndexOf('_');
-            string name = underscore >= 0 ? catalogId[(underscore + 1)..] : catalogId;
-            return name.Replace('_', ' ');
         }
 
         /// <summary>Las teclas 1-0 eligen hueco. Sistema de entrada antiguo.</summary>

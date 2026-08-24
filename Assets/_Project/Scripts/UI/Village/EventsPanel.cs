@@ -1,3 +1,4 @@
+using System.Text;
 using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
 using UnityEngine.UIElements;
@@ -24,6 +25,13 @@ namespace Nimbo.UI.Village
 
         private readonly ScrollView _list;
         private readonly Label _headline;
+
+        /// <summary>
+        /// Lo que mandó la última vez que se levantó la lista. El ciclo lento de
+        /// UiRoot llama a <see cref="Refresh"/> con el panel abierto; sin firma se
+        /// reconstruiría cada 0,4 s aunque ni el monedero ni el calendario se movieran.
+        /// </summary>
+        private string _signature;
 
         public EventsPanel()
         {
@@ -54,9 +62,52 @@ namespace Nimbo.UI.Village
         {
             Root.style.display = DisplayStyle.Flex;
             Rebuild();
+
+            // Lo pintado queda firmado: si nada cambia detrás, el primer Refresh no
+            // reconstruye por sorpresa lo que acaba de levantarse.
+            _signature = Firma();
         }
 
         public void Hide() => Root.style.display = DisplayStyle.None;
+
+        /// <summary>
+        /// Refresco barato: firma el veredicto de cada fiesta y solo reconstruye si
+        /// cambió.
+        /// </summary>
+        /// <remarks>
+        /// Lo que se pinta de cada fila es el veredicto de <c>CanHost</c> —botón o
+        /// chip con su excusa—, y ese veredicto envejece mientras se mira: cobrar un
+        /// sueldo te abre la fiesta que «no llegaba», y montarla cierra todas las
+        /// demás. El veredicto lo resume todo, así que la firma no necesita nada más.
+        /// </remarks>
+        public void Refresh()
+        {
+            if (!ServiceRegistry.TryGet<IVillageEvents>(out _))
+            {
+                _signature = null;
+                return;
+            }
+
+            string candidata = Firma();
+            if (candidata == _signature) return;
+            _signature = candidata;
+            Rebuild();
+        }
+
+        /// <summary>Lo que dicta el estado del servicio, en una cadena.</summary>
+        private string Firma()
+        {
+            if (!ServiceRegistry.TryGet<IVillageEvents>(out var events))
+                return "";
+
+            var hostable = events.Hostable;
+            var firma = new StringBuilder(events.ActiveEventId);
+            for (int i = 0; i < hostable.Count; i++)
+                firma.Append('|').Append(hostable[i].Id)
+                     .Append('|').Append((int)events.CanHost(hostable[i].Id));
+
+            return firma.ToString();
+        }
 
         public void Rebuild()
         {

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
+using System.Text;
 using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
 using Nimbo.Core.Time;
 using Nimbo.Data.Requests;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Nimbo.UI.Requests
@@ -34,6 +34,14 @@ namespace Nimbo.UI.Requests
         private readonly ScrollView _list;
         private readonly Label _headline;
 
+        /// <summary>
+        /// Lo que mandó la última vez que se levantó el tablón. El ciclo lento de
+        /// UiRoot llama a <see cref="Refresh"/> cada 0,4 s con el panel abierto, y
+        /// derribar los botones bajo el cursor se comía los clics en la ficha: solo
+        /// se reconstruye cuando la firma cambia.
+        /// </summary>
+        private string _signature;
+
         public RequestBoardPanel()
         {
             Root = UiTheme.Card("tablon-encargos");
@@ -62,9 +70,76 @@ namespace Nimbo.UI.Requests
         {
             Root.style.display = DisplayStyle.Flex;
             Rebuild();
+
+            // Lo pintado queda firmado: si nada cambia detrás, el primer Refresh no
+            // reconstruye por sorpresa lo que acaba de levantarse.
+            _signature = Firma();
         }
 
         public void Hide() => Root.style.display = DisplayStyle.None;
+
+        /// <summary>
+        /// Refresco barato: firma lo que se pinta y solo reconstruye si cambió.
+        /// </summary>
+        /// <remarks>
+        /// Un encargo caduca, se atiende o deja de ser pagable mientras el tablón
+        /// está delante —y vender de la mochila cambia los botones sin que el tablón
+        /// se entere por otro lado—. El plazo entra en la firma siendo **el texto
+        /// exacto que se pinta** (<see cref="UiTheme.Plazo"/>): si la firma usara un
+        /// cálculo paralelo, bastaría que alguien ajustara uno de los dos para que
+        /// el tablón enseñase una cuenta atrás vieja sin enterarse.
+        /// </remarks>
+        public void Refresh()
+        {
+            if (!ServiceRegistry.TryGet<IRequestService>(out _))
+            {
+                _signature = null;
+                return;
+            }
+
+            string candidata = Firma();
+            if (candidata == _signature) return;
+            _signature = candidata;
+            Rebuild();
+        }
+
+        /// <summary>Lo que dicta el estado del servicio, en una cadena.</summary>
+        private string Firma()
+        {
+            var firma = new StringBuilder();
+            if (!ServiceRegistry.TryGet<IRequestService>(out var service))
+                return firma.ToString();
+
+            ServiceRegistry.TryGet<GameClock>(out var clock);
+            ServiceRegistry.TryGet<IIslanderRegistry>(out var registry);
+
+            var open = service.Open;
+            for (int i = 0; i < open.Count; i++)
+            {
+                var request = open[i];
+                var demand = service.DemandOf(request.RequestId);
+
+                firma.Append(request.RequestId)
+                     .Append('|').Append((int)request.Priority)
+                     .Append('|').Append(request.CoinReward)
+                     .Append('|').Append(demand.CatalogId)
+                     .Append('|').Append(demand.Quantity)
+                     .Append('|').Append(demand.WantsAnItem ? 'p' : '-');
+
+                // Lo pagable ahora mismo: decide si la fila enseña botón o aviso.
+                var options = service.OptionsFor(request.RequestId);
+                for (int j = 0; j < options.Count; j++)
+                    firma.Append('|').Append(options[j]);
+
+                long left = request.ExpiresMinute - (clock?.ElapsedMinutes ?? 0);
+                firma.Append('|').Append(clock == null ? "-" : UiTheme.Plazo(left));
+
+                if (registry != null && registry.TryGet(request.IslanderId, out var islander))
+                    firma.Append('|').Append(islander.Identity.ShortName);
+            }
+
+            return firma.ToString();
+        }
 
         public void Rebuild()
         {
@@ -141,18 +216,15 @@ namespace Nimbo.UI.Requests
         /// <remarks>
         /// En horas y no en minutos porque el reloj de la isla corre rápido —un día son
         /// veinticuatro minutos de verdad— y ver los minutos bajar convierte un recado en
-        /// una cuenta atrás. Sin reloj registrado no se enseña nada: mejor callarse que
-        /// escribir un plazo inventado.
+        /// una cuenta atrás. Las palabras las pone <see cref="UiTheme.Plazo"/>, que
+        /// compara minutos antes de redondear: con 61-89 minutos decía «menos de una
+        /// hora» y quien se fiaba perdía el encargo. Sin reloj registrado no se enseña
+        /// nada: mejor callarse que escribir un plazo inventado.
         /// </remarks>
         private static string Deadline(in IslanderRequest request)
         {
             if (!ServiceRegistry.TryGet<GameClock>(out var clock)) return "";
-
-            long left = request.ExpiresMinute - clock.ElapsedMinutes;
-            if (left <= 0) return "Se le ha pasado el momento.";
-
-            int hours = Mathf.RoundToInt(left / 60f);
-            return hours <= 1 ? "Queda menos de una hora." : $"Quedan unas {hours} horas.";
+            return UiTheme.Plazo(request.ExpiresMinute - clock.ElapsedMinutes);
         }
 
         private static string NameOf(IIslanderRegistry registry, string islanderId)

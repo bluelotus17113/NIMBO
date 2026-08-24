@@ -26,7 +26,6 @@ namespace Nimbo.UI.Player
         private readonly Label _hint;
 
         private IInventoryService _inventory;
-        private IEconomyService _economy;
         private int _picked = -1;
 
         public BagPanel()
@@ -57,7 +56,6 @@ namespace Nimbo.UI.Player
         public void Show()
         {
             if (!ServiceRegistry.TryGet(out _inventory)) return;
-            ServiceRegistry.TryGet(out _economy);
 
             _picked = -1;
             Root.style.display = DisplayStyle.Flex;
@@ -100,7 +98,9 @@ namespace Nimbo.UI.Player
 
             if (stack.Quantity > 0)
             {
-                var name = UiTheme.Body(NameOf(stack.CatalogId));
+                // El nombre lo decide ItemNames, como el hotbar y el tablón: el mismo
+                // objeto no puede llamarse distinto según la pantalla que lo pinta.
+                var name = UiTheme.Body(ItemNames.Display(stack.CatalogId));
                 name.style.fontSize = 11;
                 name.style.unityTextAlign = TextAnchor.MiddleCenter;
                 name.style.whiteSpace = WhiteSpace.Normal;
@@ -139,16 +139,6 @@ namespace Nimbo.UI.Player
             _picked = -1;
             _hint.text = "Los diez primeros huecos son los de la barra de abajo.";
             Rebuild();
-        }
-
-        /// <summary>El nombre del catálogo, o el identificador aseado si no está.</summary>
-        private string NameOf(string catalogId)
-        {
-            var item = _economy?.GetItem(catalogId);
-            if (item != null) return item.DisplayName;
-
-            int underscore = catalogId.IndexOf('_');
-            return underscore >= 0 ? catalogId[(underscore + 1)..].Replace('_', ' ') : catalogId;
         }
     }
 }

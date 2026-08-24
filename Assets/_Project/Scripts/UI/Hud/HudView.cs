@@ -15,6 +15,11 @@ namespace Nimbo.UI.Hud
     /// El reloj se refresca por fotograma pero el resto solo cuando llega su aviso.
     /// Reconstruir la interfaz entera cada fotograma es la forma más rápida de que un
     /// juego tranquilo se coma una batería de portátil.
+    ///
+    /// Las tres esquinas derechas son atajos, no solo lectura: el badge abre el
+    /// tablón —por el mismo aviso que ya usa el tablón de la plaza— y los otros dos
+    /// avisan por callback porque el HUD no conoce paneles y no puede abrirlos él
+    /// solo. Quien los enchufa es UiRoot, que es quien tiene las ventanas.
     /// </remarks>
     public sealed class HudView : System.IDisposable
     {
@@ -27,6 +32,18 @@ namespace Nimbo.UI.Hud
         private readonly VisualElement _badgeHolder;
 
         public VisualElement Root { get; }
+
+        /// <summary>
+        /// Pulsar los nimbos quiere decir «quiero gastarlos». Lo abre UiRoot.
+        /// </summary>
+        /// <remarks>
+        /// Queda en nada hasta que UiRoot le ponga función: el HUD va antes en el
+        /// montaje que las tiendas, así que ni siquiera podría pedirle la referencia.
+        /// </remarks>
+        public System.Action OnCoinsClicked;
+
+        /// <summary>Pulsar el nivel de aldeano abre las cinco vías. Lo abre UiRoot.</summary>
+        public System.Action OnLevelClicked;
 
         public HudView(GameClock clock)
         {
@@ -60,12 +77,19 @@ namespace Nimbo.UI.Hud
             Root.Add(timeBlock);
 
             // --- monedas ---
+            //
+            // Clicable a propósito: el número que se está mirando es también el
+            // botón de «quiero gastarlos».
             _coinsLabel = new Label("0");
             _coinsLabel.style.fontSize = 18;
             _coinsLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             _coinsLabel.style.color = UiTheme.AccentDeep;
 
-            var coinBlock = new VisualElement();
+            var coinBlock = new VisualElement { name = "hud-nimbos" };
+            // Sin tooltip a propósito: la franja de avisos (GateNotice) recoge
+            // cualquier tooltip visible como explicación de bloqueo, y un texto
+            // informativo siempre visible le ganaría el pase a lo que sí está cerrado.
+            coinBlock.RegisterCallback<ClickEvent>(_ => OnCoinsClicked?.Invoke());
             coinBlock.style.flexDirection = FlexDirection.Row;
             coinBlock.style.alignItems = Align.Center;
             var coinName = UiTheme.Body("nimbos", soft: true);
@@ -80,7 +104,9 @@ namespace Nimbo.UI.Hud
             // desbloquea nada: está aquí porque hace falta un número que diga «voy por
             // aquí» sin abrir ninguna pantalla. Lo que abre cosas son las vías, y esas
             // se miran a propósito.
-            var levelBlock = new VisualElement();
+            var levelBlock = new VisualElement { name = "hud-aldeano" };
+            // Sin tooltip: mismo porqué que hud-nimbos.
+            levelBlock.RegisterCallback<ClickEvent>(_ => OnLevelClicked?.Invoke());
             levelBlock.style.flexDirection = FlexDirection.Row;
             levelBlock.style.alignItems = Align.Center;
             var levelName = UiTheme.Body("aldeano", soft: true);
@@ -92,7 +118,15 @@ namespace Nimbo.UI.Hud
             Root.Add(levelBlock);
 
             // --- peticiones ---
-            _badgeHolder = new VisualElement();
+            //
+            // El badge publica el mismo aviso que el tablón de la plaza
+            // (PlayerInteractor, TargetKind.Board): UiRoot ya lo escucha y lo convierte
+            // en abrir la pantalla. Un canal nuevo para el mismo gesto sería un segundo
+            // sitio que mantener sincronizado.
+            _badgeHolder = new VisualElement { name = "hud-peticiones" };
+            // Sin tooltip: mismo porqué que hud-nimbos.
+            _badgeHolder.RegisterCallback<ClickEvent>(_ =>
+                EventBus.Publish(new RequestBoardRead()));
             _badgeHolder.style.flexDirection = FlexDirection.Row;
             _badgeHolder.style.alignItems = Align.Center;
 

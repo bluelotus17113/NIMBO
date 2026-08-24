@@ -16,6 +16,11 @@ namespace Nimbo.UI.Player
     /// se puede deshacer, y este juego no hace eso; dejarlas fuera de la lista es más
     /// simple que un aviso de confirmación y no se puede fallar.
     ///
+    /// «Vender todo» es la excepción que sí pregunta: vacía de un golpe justo lo que
+    /// los encargos de material pagan por recibir, así que ahí el desastre cuesta un
+    /// clic. Se pregunta enseñando qué se va a perder —el patrón del título al
+    /// empezar de nuevo—, no con un «¿seguro?».
+    ///
     /// El precio es el del catálogo, sin regateo. Un margen distinto por objeto sería
     /// otra cosa que aprender, y aquí vender es el cierre del paseo, no un minijuego.
     /// </remarks>
@@ -27,6 +32,16 @@ namespace Nimbo.UI.Player
         private readonly ScrollView _list;
         private readonly Label _total;
         private readonly Label _hint;
+
+        /// <summary>El botón de vender todo, que se aparta mientras se confirma.</summary>
+        private Button _sellAll;
+
+        /// <summary>
+        /// El cartel de confirmación vive en su hueco propio entre la lista y el
+        /// botón: así no hay que saber en qué posición del panel cae para quitarlo.
+        /// </summary>
+        private readonly VisualElement _confirmSlot;
+        private VisualElement _confirmCard;
 
         private IInventoryService _inventory;
         private IEconomyService _economy;
@@ -54,9 +69,12 @@ namespace Nimbo.UI.Player
             _list.style.flexGrow = 1;
             Root.Add(_list);
 
-            var all = UiTheme.Action("Vender todo", SellEverything);
-            all.style.marginTop = 10;
-            Root.Add(all);
+            _confirmSlot = new VisualElement();
+            Root.Add(_confirmSlot);
+
+            _sellAll = UiTheme.Action("Vender todo", AskConfirm);
+            _sellAll.style.marginTop = 10;
+            Root.Add(_sellAll);
 
             _hint = UiTheme.Body("Las herramientas y las semillas no se venden aquí.", soft: true);
             _hint.style.marginTop = 8;
@@ -68,6 +86,10 @@ namespace Nimbo.UI.Player
         {
             if (!ServiceRegistry.TryGet(out _inventory)) return;
             if (!ServiceRegistry.TryGet(out _economy)) return;
+
+            // Reabrir empieza limpio: un cartel confirmado sobre una mochila que ya
+            // cambió mientras estaba cerrado prometería vender lo que ya no está.
+            CancelConfirm();
 
             Root.style.display = DisplayStyle.Flex;
             Rebuild();
@@ -145,6 +167,86 @@ namespace Nimbo.UI.Player
 
             _economy.AddCoins(quantity * price, $"vendido {catalogId}");
             Rebuild();
+        }
+
+        /// <summary>
+        /// «Vender todo» no vende: enseña qué se va a llevar y espera un segundo clic.
+        /// </summary>
+        /// <remarks>
+        /// Hay encargos de material que pagan por entregar exactamente lo que este
+        /// botón funde, y la venta no se puede deshacer. Con la mochila vacía no hay
+        /// nada que confirmar: se contesta en el aviso de siempre y punto.
+        /// </remarks>
+        private void AskConfirm()
+        {
+            var sellable = Sellable();
+            if (sellable.Count == 0)
+            {
+                _hint.text = "No traes nada que vender.";
+                return;
+            }
+
+            CancelConfirm();
+            _confirmCard = BuildConfirm(sellable);
+            _confirmSlot.Add(_confirmCard);
+
+            // Dos caminos vivos hacia la misma venta es uno de más.
+            _sellAll.style.display = DisplayStyle.None;
+        }
+
+        /// <summary>El cartel del título, traído aquí: se pregunta enseñando la pérdida.</summary>
+        private VisualElement BuildConfirm(List<(string id, int quantity, long price)> sellable)
+        {
+            var card = UiTheme.Card("confirmar-venta");
+            card.style.backgroundColor = UiTheme.Rose;
+
+            card.Add(UiTheme.Title("¿Venderlo todo?"));
+            card.Add(UiTheme.Body(
+                "Se va de la mochila y no vuelve. Mira el tablón antes: algún vecino " +
+                "puede estar esperando justo esto."));
+
+            long sum = 0;
+            for (int i = 0; i < sellable.Count; i++)
+            {
+                var entry = sellable[i];
+                sum += entry.quantity * entry.price;
+
+                var item = _economy.GetItem(entry.id);
+                card.Add(UiTheme.Body(
+                    $"{item?.DisplayName ?? entry.id} ×{entry.quantity} — " +
+                    $"{entry.quantity * entry.price} nimbos", soft: true));
+            }
+
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.marginTop = 14;
+
+            var cancel = UiTheme.Secondary("Mejor no", CancelConfirm);
+            cancel.style.flexGrow = 1;
+            cancel.style.marginRight = 8;
+            row.Add(cancel);
+
+            var go = UiTheme.Action($"Vender todo ({sum} nimbos)", ConfirmEverything);
+            go.style.flexGrow = 1;
+            row.Add(go);
+
+            card.Add(row);
+            return card;
+        }
+
+        private void CancelConfirm()
+        {
+            if (_confirmCard == null) return;
+
+            _confirmSlot.Remove(_confirmCard);
+            _confirmCard = null;
+            _sellAll.style.display = DisplayStyle.Flex;
+        }
+
+        private void ConfirmEverything()
+        {
+            CancelConfirm();
+            SellEverything();
         }
 
         private void SellEverything()

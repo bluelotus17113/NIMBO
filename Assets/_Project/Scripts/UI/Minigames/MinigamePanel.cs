@@ -56,7 +56,11 @@ namespace Nimbo.UI.Minigames
             head.Add(UiTheme.Secondary("Dejarlo", Leave));
             Root.Add(head);
 
-            _headline = UiTheme.Title("—");
+            // Estado del juego, no título: debajo de la cabecera ya hay un Title y dos
+            // seguidos (20 px negrita los dos) se leían como un fallo de maquetación.
+            // Negrita de cuerpo para que mande la jerarquía y no el grito.
+            _headline = UiTheme.Body("—");
+            _headline.style.unityFontStyleAndWeight = FontStyle.Bold;
             _headline.style.marginTop = 6;
             _headline.style.whiteSpace = WhiteSpace.Normal;
             Root.Add(_headline);

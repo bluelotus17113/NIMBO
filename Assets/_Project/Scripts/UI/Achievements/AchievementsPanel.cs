@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
 using UnityEngine;
@@ -23,9 +24,18 @@ namespace Nimbo.UI.Achievements
         public bool IsShowing => Root.style.display == DisplayStyle.Flex;
 
         private readonly ScrollView _list;
+        private readonly VisualElement _filterRow;
         private readonly Label _headline;
         private IAchievementService _service;
         private AchievementKind? _filter;
+
+        /// <summary>
+        /// Lo que mandó la última vez que se levantó la lista. El ciclo lento de
+        /// UiRoot llama a <see cref="Refresh"/> con el panel abierto; sin firma,
+        /// cuarenta y pico filas se reconstruirían cada 0,4 s aunque nadie consiguiera
+        /// nada — el derroche que hizo que la ficha se comiera sus propios mensajes.
+        /// </summary>
+        private string _signature;
 
         public AchievementsPanel()
         {
@@ -46,11 +56,31 @@ namespace Nimbo.UI.Achievements
             _headline.style.marginBottom = 10;
             Root.Add(_headline);
 
-            Root.Add(BuildFilters());
+            // La fila se reconstruye en cada cambio de filtro para que el chip activo
+            // quede pintado: un filtro sin estado visible obliga a pulsar para saber
+            // qué lista estás mirando.
+            _filterRow = new VisualElement { name = "filtros-logros" };
+            _filterRow.style.flexDirection = FlexDirection.Row;
+            _filterRow.style.flexWrap = Wrap.Wrap;
+            _filterRow.style.marginBottom = 8;
+            Root.Add(_filterRow);
+            BuildFilters();
 
             _list = new ScrollView();
             _list.style.flexGrow = 1;
             Root.Add(_list);
+        }
+
+        /// <summary>Cambia el filtro y repinta la fila para que se vea cuál está activo.</summary>
+        /// <remarks>
+        /// Público porque es el mismo gesto que el chip: lo usan los clics y cualquier
+        /// atajo futuro que quiera dejar la lista ya filtrada al abrirla.
+        /// </remarks>
+        public void SetFilter(AchievementKind? kind)
+        {
+            _filter = kind;
+            BuildFilters();
+            Rebuild();
         }
 
         public void Show()
@@ -59,32 +89,81 @@ namespace Nimbo.UI.Achievements
 
             Root.style.display = DisplayStyle.Flex;
             Rebuild();
+
+            // Lo pintado queda firmado: si nadie consigue nada, el primer Refresh no
+            // reconstruye por sorpresa lo que acaba de levantarse.
+            _signature = Firma();
         }
 
         public void Hide() => Root.style.display = DisplayStyle.None;
 
-        private VisualElement BuildFilters()
+        /// <summary>
+        /// Refresco barato: firma el progreso de todo el catálogo y solo reconstruye
+        /// si algo cambió de verdad.
+        /// </summary>
+        /// <remarks>
+        /// Un logro se consigue con la pantalla abierta más de lo que parece —el
+        /// propio juego sigue corriendo detrás— y la cabecera «N de M» se quedaba
+        /// vieja para siempre. El filtro entra en la firma porque cambia lo pintado,
+        /// aunque sus clics ya reconstruyan por su cuenta.
+        /// </remarks>
+        public void Refresh()
         {
-            var row = new VisualElement();
-            row.style.flexDirection = FlexDirection.Row;
-            row.style.flexWrap = Wrap.Wrap;
-            row.style.marginBottom = 8;
+            if (_service == null && !ServiceRegistry.TryGet(out _service))
+            {
+                _signature = null;
+                return;
+            }
 
+            string candidata = Firma();
+            if (candidata == _signature) return;
+            _signature = candidata;
+            Rebuild();
+        }
+
+        /// <summary>Lo que dicta el estado del servicio y del filtro, en una cadena.</summary>
+        private string Firma()
+        {
+            if (_service == null) return "";
+
+            var catalog = _service.Catalog;
+            var firma = new StringBuilder()
+                .Append(_filter).Append('|').Append(_service.UnlockedCount);
+
+            for (int i = 0; i < catalog.Count; i++)
+            {
+                var progress = _service.ProgressOf(catalog[i].AchievementId);
+                firma.Append('|').Append(progress.Current)
+                     .Append('/').Append(progress.Goal)
+                     .Append(progress.Unlocked ? '+' : '.');
+            }
+
+            return firma.ToString();
+        }
+
+        /// <remarks>
+        /// Mismo patrón que las pestañas del crafteo (CraftPanel.BuildStations): la fila
+        /// entera se vuelve a construir y el activo lleva fondo melocotón. El inline
+        /// pisa el <c>:hover</c> del chip activo a sabiendas —ya está marcado, no hace
+        /// falta que la hoja lo vuelva a decir—; los inactivos conservan los suyos.
+        /// </remarks>
+        private void BuildFilters()
+        {
+            _filterRow.Clear();
             Add("Todo", null);
             foreach (AchievementKind kind in System.Enum.GetValues(typeof(AchievementKind)))
                 Add(KindName(kind), kind);
 
-            return row;
-
             void Add(string text, AchievementKind? kind)
             {
-                var chip = UiTheme.Secondary(text, () => { _filter = kind; Rebuild(); });
+                var chip = UiTheme.Secondary(text, () => SetFilter(kind));
                 chip.style.fontSize = 12;
                 chip.style.paddingTop = chip.style.paddingBottom = 3;
                 chip.style.paddingLeft = chip.style.paddingRight = 10;
                 chip.style.marginRight = 4;
                 chip.style.marginBottom = 4;
-                row.Add(chip);
+                if (kind == _filter) chip.style.backgroundColor = UiTheme.Peach;
+                _filterRow.Add(chip);
             }
         }
 

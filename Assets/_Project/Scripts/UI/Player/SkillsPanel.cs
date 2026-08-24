@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
 using Nimbo.Data.Player;
@@ -27,6 +28,13 @@ namespace Nimbo.UI.Player
         private readonly Label _headline;
         private readonly VisualElement _lines;
         private readonly VisualElement _conduct;
+
+        /// <summary>
+        /// Lo que mandó la última vez que se levantó la pantalla. El ciclo lento de
+        /// UiRoot llama a <see cref="Refresh"/> con el panel abierto; sin firma se
+        /// reconstruiría cada 0,4 s aunque no se subiera ni un punto de experiencia.
+        /// </summary>
+        private string _signature;
 
         /// <summary>Lo que abre cada vía, en orden. Para poder decir qué viene después.</summary>
         private static readonly Dictionary<SkillKind, Unlock[]> Ladder = new()
@@ -80,9 +88,67 @@ namespace Nimbo.UI.Player
         {
             Root.style.display = DisplayStyle.Flex;
             Rebuild();
+
+            // Lo pintado queda firmado: si no se sube nada, el primer Refresh no
+            // reconstruye por sorpresa lo que acaba de levantarse.
+            _signature = Firma();
         }
 
         public void Hide() => Root.style.display = DisplayStyle.None;
+
+        /// <summary>
+        /// Refresco barato: firma niveles, experiencia, candados y conducta, y solo
+        /// reconstruye si cambió algo.
+        /// </summary>
+        /// <remarks>
+        /// La experiencia entra redondeada a décimas porque es lo que mueve la barra:
+        /// con el valor crudo, un <c>float</c> que gotee por debajo del punto
+        /// redibujaría la pantalla entera sin mover ni un píxel. Los candados van
+        /// porque el texto de «lo próximo que abre» depende de ellos, no del nivel.
+        /// </remarks>
+        public void Refresh()
+        {
+            if (!ServiceRegistry.TryGet<IPlayerProgression>(out _))
+            {
+                _signature = null;
+                return;
+            }
+
+            string candidata = Firma();
+            if (candidata == _signature) return;
+            _signature = candidata;
+            Rebuild();
+        }
+
+        /// <summary>Lo que dicta el estado de la progresión y la conducta, en una cadena.</summary>
+        private string Firma()
+        {
+            if (!ServiceRegistry.TryGet<IPlayerProgression>(out var progression))
+                return "";
+
+            var firma = new StringBuilder().Append(progression.VillagerLevel);
+
+            foreach (SkillKind skill in System.Enum.GetValues(typeof(SkillKind)))
+                firma.Append('|').Append(progression.LevelOf(skill))
+                     .Append('|').Append(Mathf.RoundToInt(progression.XpOf(skill) * 10f))
+                     .Append('/').Append(Mathf.RoundToInt(progression.XpNeededFor(skill) * 10f));
+
+            foreach (Unlock[] escalones in Ladder.Values)
+                for (int i = 0; i < escalones.Length; i++)
+                    firma.Append('|').Append(progression.IsUnlocked(escalones[i]) ? '1' : '0');
+
+            if (ServiceRegistry.TryGet<IConductService>(out var conduct))
+            {
+                var profile = conduct.Profile;
+                foreach (Data.Islanders.PersonalityAxis axis in
+                         System.Enum.GetValues(typeof(Data.Islanders.PersonalityAxis)))
+                    firma.Append('|').Append(Mathf.RoundToInt(profile[axis] * 100f))
+                         .Append('/')
+                         .Append(Mathf.RoundToInt(conduct.ConfidenceOf(axis) * 100f));
+            }
+
+            return firma.ToString();
+        }
 
         public void Rebuild()
         {

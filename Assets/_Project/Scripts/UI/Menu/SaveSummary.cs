@@ -55,7 +55,12 @@ namespace Nimbo.UI.Menu
         }
 
         /// <summary>Una línea que da la sensación de tiempo, no la fecha exacta.</summary>
-        private static string Ago(string savedUtc)
+        /// <remarks>
+        /// Pública y pura a propósito: solo mira la fecha que le llega, así que las
+        /// pruebas pueden clavar cada tramo sin partida ni guardado — aquí vivió
+        /// «hace 1 minutos» y solo una prueba que mire el texto lo mantiene muerto.
+        /// </remarks>
+        public static string Ago(string savedUtc)
         {
             if (string.IsNullOrEmpty(savedUtc)) return "";
             if (!DateTime.TryParse(savedUtc, null,
@@ -63,11 +68,20 @@ namespace Nimbo.UI.Menu
 
             var away = DateTime.UtcNow - saved;
             if (away.TotalMinutes < 2) return "hace un momento";
-            if (away.TotalMinutes < 60) return $"hace {(int)away.TotalMinutes} minutos";
+
+            int minutos = (int)away.TotalMinutes;
+            if (minutos < 60) return $"hace {minutos} {UiTheme.Plural(minutos, "minuto")}";
+
             if (away.TotalHours < 2) return "hace una hora";
-            if (away.TotalHours < 24) return $"hace {(int)away.TotalHours} horas";
+
+            int horas = (int)away.TotalHours;
+            if (horas < 24) return $"hace {horas} {UiTheme.Plural(horas, "hora")}";
+
             if (away.TotalDays < 2) return "ayer";
-            if (away.TotalDays < 30) return $"hace {(int)away.TotalDays} días";
+
+            int dias = (int)away.TotalDays;
+            if (dias < 30) return $"hace {dias} {UiTheme.Plural(dias, "día", "días")}";
+
             return "hace bastante";
         }
 

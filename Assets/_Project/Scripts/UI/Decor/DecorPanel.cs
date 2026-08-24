@@ -33,6 +33,7 @@ namespace Nimbo.UI.Decor
 
         private readonly VisualElement _catalogList;
         private readonly VisualElement _zoneRow;
+        private readonly VisualElement _filterRow;
         private readonly VisualElement _map;
         private readonly Label _hint;
         private readonly Label _charm;
@@ -76,7 +77,15 @@ namespace Nimbo.UI.Decor
             left.style.width = 360;
             left.style.marginRight = UiTheme.Gap;
 
-            left.Add(BuildFilters());
+            // La fila se reconstruye en cada cambio de filtro para que el chip activo
+            // quede pintado, igual que las zonas de arriba: dos filas del mismo panel
+            // no pueden contar el estado de dos maneras distintas.
+            _filterRow = new VisualElement { name = "filtros-adornos" };
+            _filterRow.style.flexDirection = FlexDirection.Row;
+            _filterRow.style.flexWrap = Wrap.Wrap;
+            _filterRow.style.marginBottom = 8;
+            left.Add(_filterRow);
+            BuildFilters();
 
             _catalogList = new ScrollView { style = { height = MapSize } };
             left.Add(_catalogList);
@@ -190,28 +199,41 @@ namespace Nimbo.UI.Decor
 
         // ── Catálogo ─────────────────────────────────────────────────────────
 
-        private VisualElement BuildFilters()
+        /// <summary>Cambia el filtro y repinta la fila para que se vea cuál está activo.</summary>
+        /// <remarks>
+        /// Público porque es el mismo gesto que el chip: lo usan los clics y cualquier
+        /// atajo futuro que quiera abrir el catálogo ya filtrado.
+        /// </remarks>
+        public void SetFilter(DecorKind? kind)
         {
-            var row = new VisualElement();
-            row.style.flexDirection = FlexDirection.Row;
-            row.style.flexWrap = Wrap.Wrap;
-            row.style.marginBottom = 8;
+            _filter = kind;
+            BuildFilters();
+            RebuildCatalog();
+        }
 
+        /// <remarks>
+        /// Mismo patrón que la fila de zonas (RebuildZones) y que las pestañas del
+        /// crafteo: se reconstruye entera y el activo lleva fondo melocotón. El inline
+        /// pisa el <c>:hover</c> del activo a sabiendas —ya está marcado—; los
+        /// inactivos conservan los suyos.
+        /// </remarks>
+        private void BuildFilters()
+        {
+            _filterRow.Clear();
             Add("Todo", null);
             foreach (DecorKind kind in System.Enum.GetValues(typeof(DecorKind)))
                 Add(KindName(kind), kind);
 
-            return row;
-
             void Add(string text, DecorKind? kind)
             {
-                var chip = UiTheme.Secondary(text, () => { _filter = kind; RebuildCatalog(); });
+                var chip = UiTheme.Secondary(text, () => SetFilter(kind));
                 chip.style.fontSize = 12;
                 chip.style.paddingTop = chip.style.paddingBottom = 3;
                 chip.style.paddingLeft = chip.style.paddingRight = 10;
                 chip.style.marginRight = 4;
                 chip.style.marginBottom = 4;
-                row.Add(chip);
+                if (kind == _filter) chip.style.backgroundColor = UiTheme.Peach;
+                _filterRow.Add(chip);
             }
         }
 

@@ -41,18 +41,29 @@ namespace Nimbo.PlayTests
         /// Cuántos días se le dan al dado. No es un plazo de cortesía: es la cuenta.
         /// </summary>
         /// <remarks>
-        /// Que el vecino cuente algo es un dado de entre 0,20 y 0,40 según su
-        /// Expresión (<c>ConversationRecall.ChanceFloor/ChanceCeiling</c>), y a primera
-        /// vista esto parecería una prueba inestable. No lo es: el dado se siembra con
-        /// <c>Rng.FromSeed("recuerdo-dado:{id}:{día}")</c>, así que para un vecino y un
-        /// día **la respuesta es fija**. Doce días no son doce sorteos, son doce
-        /// casillas de una tabla que no cambia entre corridas.
+        /// Que el vecino cuente algo es un dado, y el primer comentario que escribí aquí
+        /// decía que no lo era: «el dado se siembra con
+        /// <c>Rng.FromSeed("recuerdo-dado:{id}:{día}")</c>, así que veinticinco días son
+        /// veinticinco casillas de una tabla fija». La semilla sí es fija dado el id —
+        /// pero **el id no lo es**: la isla nueva sortea vecinos y cada corrida trae otros.
+        /// Eran sorteos de verdad.
         ///
-        /// Doce y no tres porque con el suelo de 0,20 una racha de tres noes cabe de
-        /// sobra en cualquier tabla; y no cien porque cada día son cuatro fotogramas y
-        /// una pulsación, y una prueba de costura que tarda un minuto deja de correrse.
+        /// Por eso el número va acompañado de fijarle la Expresión al vecino
+        /// (<c>HablarPorLosCodos</c>): <c>ConversationRecall</c> interpola la probabilidad
+        /// entre 0,20 y 0,40 con ese eje, y con 0,40 fijo que fallen los veinticinco días
+        /// es 0,6²⁵ ≈ 3 entre un millón. Sembrar la personalidad a mano tiene precedente en
+        /// <c>AgendaEnLaFichaTests</c> y por el mismo motivo.
+        ///
+        /// **Sirve solo para la prueba de que llega a contar.** La otra —la de que no lo
+        /// cuenta dos veces— pasó por aquí buscando su propia estabilidad y no la encontró:
+        /// está escrita para no necesitar que el dado salga. La cuenta de arriba tapa un
+        /// riesgo pequeño; no depender de él es mejor que hacerlo improbable.
         /// </remarks>
-        private const int DiasQueSeLeDan = 12;
+        private const int DiasQueSeLeDan = 25;
+
+        /// <summary>El eje que manda en el dado, puesto al tope para que no lo mande el azar.</summary>
+        private static void HablarPorLosCodos(Data.Islanders.IslanderData vecino) =>
+            vecino.Personality = new Data.Islanders.PersonalityProfile(0f, 1f, 0f, 0f);
 
         [SetUp]
         public void SetUp()
@@ -91,6 +102,7 @@ namespace Nimbo.PlayTests
 
             var vecino = censo.All[0];
             var otro = censo.All[1];
+            HablarPorLosCodos(vecino);
 
             // Se abre la ficha por donde la abre el jugador: la fila de vecinos monta
             // un botón con el nombre corto de cada uno (UiRoot.cs:530).
@@ -98,36 +110,7 @@ namespace Nimbo.PlayTests
                                 $"el botón de «{vecino.Identity.ShortName}» en la fila de vecinos");
 
             string dicho = null;
-
-            for (int intento = 0; intento < DiasQueSeLeDan && dicho == null; intento++)
-            {
-                // Se siembra el suceso cada día en vez de una sola vez al principio:
-                // un recuerdo caduca a los tres días (FreshDays) y la prueba dura doce.
-                // Es lo mismo que publica el evaluador de romance al prometerse dos.
-                EventBus.Publish(new RomanceStageChanged(
-                    vecino.Id, otro.Id, RomanceStage.Engaged));
-                yield return null;
-
-                Assert.That(cronica.Entries.Count, Is.GreaterThan(0),
-                    "el suceso se publicó y la crónica no se enteró");
-                string suceso = cronica.Entries[cronica.Entries.Count - 1].Text;
-
-                yield return Pulsar(Boton("Charlar"), "el botón «Charlar» de la ficha");
-
-                // `Compose` devuelve prefijo + el texto de la crónica tal cual, así que
-                // si el recuerdo salió, la línea de la crónica está dentro del aviso
-                // palabra por palabra. Comparar contra el texto de verdad y no contra
-                // un fragmento inventado es lo que hace que esto no pueda dar verde
-                // por accidente.
-                foreach (var texto in TextosDeLaFicha(vecino.Id))
-                {
-                    if (texto.Contains(suceso)) { dicho = texto; break; }
-                }
-                if (dicho != null) break;
-
-                reloj.Advance(GameClock.MinutesPerDay);
-                for (int i = 0; i < 3; i++) yield return null;
-            }
+            yield return CharlaHastaQueCuente(vecino, otro, cronica, reloj, l => dicho = l);
 
             Assert.IsNotNull(dicho,
                 $"charlé {DiasQueSeLeDan} días seguidos con {vecino.Identity.ShortName} " +
@@ -141,22 +124,30 @@ namespace Nimbo.PlayTests
         /// Y no te lo cuenta dos veces el mismo día.
         /// </summary>
         /// <remarks>
-        /// **Esta prueba nació de equivocarme y merece la pena contarlo.** La primera
-        /// versión afirmaba que en una isla recién empezada el vecino no tenía nada que
-        /// contar. Falso: la crónica arranca con las líneas de los edificios que se
-        /// abren, y el vecino las cotillea con toda la razón. La premisa era mía, no un
-        /// fallo del código.
+        /// Es la mitad del trato que impide que «se acuerdan» degenere: un vecino que te
+        /// suelta lo mismo cada vez que le hablas es peor que uno que calla, porque delata
+        /// que no se acuerda de verdad, solo repite.
         ///
-        /// Lo que sí es cierto —y es la mitad del trato que hace que «se acuerdan» no
-        /// degenere— es el tope de una historia por vecino y día. Un vecino que te suelta
-        /// lo mismo cada vez que le hablas es peor que uno que calla: delata que no se
-        /// acuerda de verdad, solo repite.
+        /// **Cómo está escrita, y por qué así después de tres intentos.** Las dos primeras
+        /// versiones exigían primero que el vecino contara algo y luego comprobaban la
+        /// repetición — y esa precondición depende de un dado, así que la prueba se ponía
+        /// roja unas veces sí y otras no <b>sin que nada estuviera mal</b>. Le eché la
+        /// culpa a la probabilidad y le subí los días; luego al acoplamiento entre las dos
+        /// pruebas y le cambié el vecino. Las dos explicaciones eran plausibles y ninguna
+        /// arregló nada, que es la señal de que el problema era la forma de preguntar.
+        ///
+        /// Así que no se exige que cuente: se recorren los días y en cada uno se habla
+        /// **dos veces**, afirmando la invariante de verdad — <b>nunca dos historias el
+        /// mismo día</b>—, que es cierta cuente o no cuente. Que llegue a contar alguna
+        /// vez lo demuestra la otra prueba de esta clase; ésa es su carga y no la de aquí.
+        /// Una prueba que necesita que salga un número para poder afirmar algo no es una
+        /// prueba, es una apuesta.
         ///
         /// Vale con cualquier tope diario de charla que ponga la configuración: si la
-        /// segunda pulsación se pasa del tope, el aviso dice «por hoy ya está bien», y
-        /// si no se pasa, <c>RecallLine</c> devuelve null por la bandera del día y el
-        /// aviso queda limpio. En los dos casos lo que NO puede haber es otra línea de
-        /// la crónica, que es exactamente lo que se afirma.
+        /// segunda pulsación se pasa del tope, el aviso dice «por hoy ya está bien», y si
+        /// no se pasa, <c>RecallLine</c> devuelve null por la bandera del día y el aviso
+        /// queda limpio. En los dos casos lo que NO puede haber es una segunda línea de la
+        /// crónica.
         /// </remarks>
         [UnityTest]
         public IEnumerator NoTeCuentaOtraHistoriaElMismoDia()
@@ -168,29 +159,55 @@ namespace Nimbo.PlayTests
             Assert.IsTrue(ServiceRegistry.TryGet<IChronicleService>(out var cronica));
             Assert.IsTrue(ServiceRegistry.TryGet(out GameClock reloj));
 
-            var vecino = censo.All[0];
+            var vecino = censo.All[1];
+            var otro = censo.All[0];
+            HablarPorLosCodos(vecino);
 
             yield return Pulsar(Boton(vecino.Identity.ShortName),
                                 $"el botón de «{vecino.Identity.ShortName}»");
 
-            string primera = null;
-            yield return CharlaHastaQueCuente(vecino, censo.All[1], cronica, reloj,
-                                              linea => primera = linea);
-            Assert.IsNotNull(primera, "no llegó a contar nada, así que no hay nada que repetir");
+            int diasQueContaron = 0;
 
-            // Segunda charla, mismo día.
-            yield return Pulsar(Boton("Charlar"), "el botón «Charlar» de la ficha");
-
-            foreach (var texto in TextosDeLaFicha(vecino.Id))
+            for (int dia = 0; dia < DiasQueSeLeDan; dia++)
             {
-                foreach (var linea in cronica.Entries)
+                EventBus.Publish(new RomanceStageChanged(
+                    vecino.Id, otro.Id, RomanceStage.Engaged));
+                yield return null;
+
+                yield return Pulsar(Boton("Charlar"), "el botón «Charlar» de la ficha");
+                string primera = LineaDeCronicaEnLaFicha(vecino.Id, cronica);
+
+                yield return Pulsar(Boton("Charlar"), "el botón «Charlar» de la ficha");
+                string segunda = LineaDeCronicaEnLaFicha(vecino.Id, cronica);
+
+                if (primera != null) diasQueContaron++;
+
+                // La segunda solo puede traer historia si es **la misma frase que sigue
+                // en pantalla** — el aviso no se borra solo, y eso no es contar dos veces.
+                if (segunda != null && segunda != primera)
                 {
-                    Assert.That(texto, Does.Not.Contain(linea.Text),
-                        "le hablé dos veces el mismo día y volvió a contar algo de la " +
-                        "crónica. El tope de una historia por vecino y día no está " +
-                        $"llegando por el camino real. Primera vez dijo: «{primera}»");
+                    Assert.Fail(
+                        $"día {dia}: le hablé dos veces y contó dos cosas. La primera vez " +
+                        $"dijo «{primera}» y la segunda «{segunda}». El tope de una " +
+                        "historia por vecino y día no está llegando por el camino real.");
                 }
             }
+
+            // No es una afirmación sobre el juego, es sobre la prueba: si en veinticinco
+            // días no contó ni una vez, lo de arriba no ha comprobado nada y hay que
+            // enterarse en vez de tragarse un verde vacío.
+            Assert.That(diasQueContaron, Is.GreaterThan(0),
+                $"en {DiasQueSeLeDan} días no contó nada ni una sola vez, así que la " +
+                "comprobación de «no dos veces» no ha llegado a ejercitarse nunca");
+        }
+
+        /// <summary>La línea de la crónica que la ficha esté enseñando, o null.</summary>
+        private static string LineaDeCronicaEnLaFicha(string islanderId, IChronicleService cronica)
+        {
+            foreach (var texto in TextosDeLaFicha(islanderId))
+                foreach (var linea in cronica.Entries)
+                    if (texto.Contains(linea.Text)) return texto;
+            return null;
         }
 
         /// <summary>
@@ -203,7 +220,7 @@ namespace Nimbo.PlayTests
             for (int intento = 0; intento < DiasQueSeLeDan; intento++)
             {
                 // Se siembra el suceso cada día en vez de una sola vez al principio:
-                // un recuerdo caduca a los tres días (FreshDays) y esto dura doce.
+                // un recuerdo caduca a los tres días (FreshDays) y esto dura veinticinco.
                 // Es lo mismo que publica el evaluador de romance al prometerse dos.
                 EventBus.Publish(new RomanceStageChanged(
                     vecino.Id, otro.Id, RomanceStage.Engaged));

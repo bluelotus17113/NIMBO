@@ -41,7 +41,13 @@ for agente in "$@"; do
   # cero y `[` recibía «0\n0». No llegó a romper nada —la comparación fallaba y el
   # agente entraba igual, que es el lado bueno del error— pero es la clase de fallo
   # que espera a que haya prisa.
-  while [ "$(pgrep -f 'opencode run' | wc -l)" -ge "$tanda" ]; do
+  # Y el patrón va **anclado**. `pgrep -f 'opencode run'` compara contra la línea de
+  # orden entera de todos los procesos, y la de un guion que lleva esa cadena escrita
+  # dentro se cuenta a sí misma: un vigilante en línea se quedó bloqueado creyendo que
+  # había tres agentes cuando solo había uno, porque se veía a sí mismo dos veces. Con
+  # `^opencode run` solo cuentan los de verdad. Es el mismo tropiezo que el `pgrep -x
+  # Unity` que en PlayMode da un falso «murió» porque el proceso se llama otra cosa.
+  while [ "$(pgrep -f '^opencode run' | wc -l)" -ge "$tanda" ]; do
     sleep 30
   done
 

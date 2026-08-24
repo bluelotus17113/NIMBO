@@ -31,6 +31,14 @@ namespace Nimbo.UI.Chronicle
         private readonly ScrollView _list;
         private readonly Label _headline;
 
+        /// <summary>
+        /// Lo que mandó la última vez que se levantó la lista. El ciclo lento de
+        /// UiRoot llama a <see cref="Refresh"/> con el panel abierto; sin firma se
+        /// reconstruiría cada 0,4 s para enseñar siempre lo mismo, que es justo lo
+        /// que hacía que la ficha se borrara sus propios mensajes.
+        /// </summary>
+        private string _signature;
+
         public ChroniclePanel()
         {
             Root = UiTheme.Card("cronica");
@@ -59,9 +67,57 @@ namespace Nimbo.UI.Chronicle
         {
             Root.style.display = DisplayStyle.Flex;
             Rebuild();
+
+            // Lo pintado queda firmado: si no entra nada nuevo, el primer Refresh no
+            // reconstruye por sorpresa lo que acaba de levantarse.
+            _signature = Firma();
         }
 
         public void Hide() => Root.style.display = DisplayStyle.None;
+
+        /// <summary>
+        /// Refresco barato: firma el número de líneas y el día, y solo reconstruye
+        /// si cambió algo.
+        /// </summary>
+        /// <remarks>
+        /// Dos cosas dejan la crónica vieja mientras se mira: que entre una línea
+        /// nueva y que amanezca —lo que ayer decía «Hoy» tiene que decir «Ayer»
+        /// aunque no haya pasado nada—. Por eso el día entra en la firma junto al
+        /// recuento. La última línea va también, por si algún día la crónica deja de
+        /// ser de solo añadir: es lo único que distingue dos listas de igual longitud.
+        /// </remarks>
+        public void Refresh()
+        {
+            if (!ServiceRegistry.TryGet<IChronicleService>(out _))
+            {
+                _signature = null;
+                return;
+            }
+
+            string candidata = Firma();
+            if (candidata == _signature) return;
+            _signature = candidata;
+            Rebuild();
+        }
+
+        /// <summary>Lo que dicta el estado del servicio y del reloj, en una cadena.</summary>
+        private string Firma()
+        {
+            if (!ServiceRegistry.TryGet<IChronicleService>(out var chronicle))
+                return "";
+
+            var entries = chronicle.Entries;
+            int today = ServiceRegistry.TryGet<GameClock>(out var clock) ? clock.Day : 0;
+
+            string firma = $"{entries.Count}|{today}";
+            if (entries.Count > 0)
+            {
+                var ultima = entries[entries.Count - 1];
+                firma += $"|{ultima.Day}|{ultima.Text}";
+            }
+
+            return firma;
+        }
 
         private void Rebuild()
         {

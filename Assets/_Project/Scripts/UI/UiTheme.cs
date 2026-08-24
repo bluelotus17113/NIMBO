@@ -293,5 +293,40 @@ namespace Nimbo.UI
             SetRadius(pill, RadiusPill);
             return pill;
         }
+
+        // ═══════════════════════════════════════════════════════════════════
+        //  Texto — la voz del juego también es tema
+        // ═══════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// «minuto» o «minutos» según la cantidad. El plural se decide aquí y en
+        /// ningún otro sitio.
+        /// </summary>
+        /// <remarks>
+        /// «hace 1 minutos» salió de escribir el condicional a mano: al sexto sitio
+        /// le sale bien y al séptimo se olvida. Si algún día hay que doblar el juego,
+        /// este es el único lugar donde el español manda.
+        /// </remarks>
+        public static string Plural(int cantidad, string singular, string plural = null) =>
+            cantidad == 1 ? singular : (plural ?? singular + "s");
+
+        /// <summary>
+        /// Cuánto queda para algo, con las palabras del juego. Un plazo en cristiano.
+        /// </summary>
+        /// <remarks>
+        /// Los tramos comparan **minutos** y no horas redondeadas: redondear antes de
+        /// comparar hacía que con 61-89 minutos dijera «menos de una hora», y quien
+        /// se fía pierde el encargo. El redondeo a horas llega después, y solo para
+        /// elegir la palabra («unas N horas»), que ahí un minuto arriba o abajo no
+        /// cambia lo que el jugador necesita saber.
+        /// </remarks>
+        public static string Plazo(long minutosRestantes)
+        {
+            if (minutosRestantes <= 0) return "Se le ha pasado el momento.";
+            if (minutosRestantes < 60) return "Queda menos de una hora.";
+
+            int horas = Mathf.RoundToInt(minutosRestantes / 60f);
+            return horas <= 1 ? "Queda sobre una hora." : $"Quedan unas {horas} horas.";
+        }
     }
 }

@@ -1,4 +1,5 @@
 using Nimbo.Core.Events;
+using Nimbo.Core.Services;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -204,13 +205,7 @@ namespace Nimbo.UI.Menu
             // Escape es el único mando del menú. El proyecto va con el sistema de
             // entrada antiguo (activeInputHandler: 0), así que Keyboard.current no
             // existe aquí y tiene que ser Input.GetKeyDown.
-            if (_gameRunning && Input.GetKeyDown(KeyCode.Escape))
-            {
-                if (_screen == Screen.Hidden) EventBus.Publish(new GamePaused(true));
-                else if (_screen == Screen.Options) Show(_optionsCameFrom);
-                else if (_screen == Screen.Creator) Show(Screen.Title);
-                else EventBus.Publish(new GamePaused(false));
-            }
+            if (_gameRunning && Input.GetKeyDown(GameKeys.Pause)) HandleEscape();
 
             if (_screen == Screen.Hidden || _gameRunning) return;
 
@@ -226,6 +221,36 @@ namespace Nimbo.UI.Menu
                 if (_cloudX[i] > width) _cloudX[i] = -_cloudWidth[i];
                 _cloudElements[i].style.left = _cloudX[i];
             }
+        }
+
+        /// <summary>
+        /// Lo que hace Escape según dónde se esté. Público para que la prueba de
+        /// juego pueda «pulsarlo»: con el sistema de entrada antiguo no se puede
+        /// inyectar una tecla, y lo que se quiere probar es la decisión, no el
+        /// cable del teclado.
+        /// </summary>
+        /// <remarks>
+        /// El orden es de capas, de arriba a abajo. Si el menú está enseñando algo,
+        /// la tecla es suya —volver, reanudar—: es la capa que se ve, y robarle
+        /// Escape para cerrar paneles que él tapa sería pausar por debajo sin
+        /// decirlo. Solo cuando el menú está apartado pasa la mano a la capa de
+        /// juego, que cierra UNA cosa de las que tenga abiertas; y solo cuando
+        /// tampoco queda nada ahí, abre la pausa.
+        /// </remarks>
+        public void HandleEscape()
+        {
+            if (_screen == Screen.Hidden)
+            {
+                // Sin nadie registrado en el contrato —el enganche de UiRoot aún
+                // sin aplicar— o sin nada abierto, Escape abre la pausa: el
+                // comportamiento de siempre, que no se pierde mientras tanto.
+                if (!ServiceRegistry.TryGet<IEscapeCloser>(out var closer) ||
+                    !closer.CloseTopPanel())
+                    EventBus.Publish(new GamePaused(true));
+            }
+            else if (_screen == Screen.Options) Show(_optionsCameFrom);
+            else if (_screen == Screen.Creator) Show(Screen.Title);
+            else EventBus.Publish(new GamePaused(false));
         }
     }
 }
