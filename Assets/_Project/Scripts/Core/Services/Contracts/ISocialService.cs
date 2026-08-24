@@ -111,6 +111,26 @@ namespace Nimbo.Core.Services.Contracts
         /// </remarks>
         bool PlayerInteract(string islanderId, SocialInteraction interaction);
 
+        /// <summary>
+        /// Lo que ese vecino te cuenta de lo de estos días al hablarle, o <c>null</c> si
+        /// hoy no trae nada.
+        /// </summary>
+        /// <remarks>
+        /// **Por qué esto es un miembro del contrato y no una llamada directa.** Quien
+        /// pinta la conversación es la ficha del habitante, que vive en `Nimbo.UI`, y
+        /// `Nimbo.UI` no referencia `Nimbo.Social` — comprobado en el asmdef, que solo
+        /// trae Data, Core, Player, TMP e InputSystem. Sin esta puerta el recuerdo se
+        /// queda escrito y probado del lado de dentro sin forma de llegar al jugador,
+        /// que es exactamente la enfermedad de §18 y la razón de ser de esta carpeta.
+        ///
+        /// Devuelve <c>null</c> y no cadena vacía a propósito: «hoy no cuenta nada» es
+        /// un caso normal y frecuente —el dado de la personalidad va dentro y hay tope
+        /// de una historia por vecino y día—, así que quien llame tiene que decidir qué
+        /// enseñar en su lugar. Un <c>string.Empty</c> se colaría en el cartel sin que
+        /// nadie lo notara.
+        /// </remarks>
+        string RecallLine(string islanderId);
+
         /// <summary>Qué impide declararse, o <c>Ok</c> si nada.</summary>
         CourtshipRefusal CanConfess(string islanderId);
 

@@ -242,8 +242,14 @@ namespace Nimbo.Game.Bootstrap
             // Con la lista de triángulos de la partida: duran seis días, así que tienen
             // que sobrevivir a cerrar el juego. Uno que solo viviera en memoria se
             // resolvería solo al cargar, sin que nadie lo viera.
+            // Y con las banderas de la partida, que es donde el vecino anota lo que ya te
+            // ha contado. Sin ellas todo funciona igual salvo al reabrir el juego: la
+            // sesión nueva no sabría que ayer te contó lo de la riña y podría repetírtelo
+            // mientras la historia siga fresca. Un vecino que repite es peor que uno que
+            // calla, porque delata que no se acuerda de verdad.
             _social = new SocialService(registry, personalities, _simulation, factory,
-                                        _clock, _socialConfig, _save.Triangles, _save.Weddings);
+                                        _clock, _socialConfig, _save.Triangles, _save.Weddings,
+                                        _save.Flags);
 
             var housing = new HousingService(furniture, _save, registry);
 

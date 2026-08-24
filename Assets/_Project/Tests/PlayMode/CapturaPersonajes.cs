@@ -61,6 +61,22 @@ namespace Nimbo.PlayTests
             yield return null;
             yield return Foto(camera, "personajes_perfil.png", 1400, 640);
 
+            // Y desde abajo, mirando hacia arriba. Este encuadre es el que faltaba y el
+            // que destapó los dos defectos que arregló nimbo-chibi: el casquete del pelo
+            // era una campana **sin cerrar**, así que desde debajo del ala se veía el
+            // borde en canto —papel, no pelo— porque `Nimbo/Toon` hace `Cull Back` y al
+            // otro lado no hay malla; y la cara era un parche con su propia curvatura
+            // separado 4 mm del cráneo, cuyo contorno rectangular se recortaba contra la
+            // silueta justo en los ángulos rasantes como éste.
+            //
+            // Los dos se veían solo desde aquí. De frente y de perfil los muñecos ya
+            // salían bien en agosto, que es exactamente por qué el defecto duró tanto:
+            // el capturador no tenía ojos donde estaba el problema.
+            camera.transform.SetPositionAndRotation(new Vector3(0f, 0.14f, -3.2f),
+                                                    Quaternion.Euler(-16f, 0f, 0f));
+            yield return null;
+            yield return Foto(camera, "personajes_desde_abajo.png", 1400, 640);
+
             Assert.Pass();
         }
 

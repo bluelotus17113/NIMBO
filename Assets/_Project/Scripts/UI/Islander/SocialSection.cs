@@ -167,9 +167,21 @@ namespace Nimbo.UI.Islander
                 // hoy. Los límites diarios existen para que no se pueda subir una
                 // amistad a tope repitiendo «charlar» cuarenta veces seguidas.
                 if (!social.PlayerInteract(_islanderId, gesture.Interaction))
+                {
                     Say("Por hoy ya está bien. Mañana más.");
+                }
                 else
-                    Say("");
+                {
+                    // Y aquí es donde el vecino te menciona lo de ayer. `RecallLine`
+                    // devuelve null casi siempre —hay dado de personalidad y tope de una
+                    // historia por vecino y día—, y entonces esto vuelve a ser el `Say("")`
+                    // de antes: la charla que no trae nada limpia el aviso en vez de dejar
+                    // colgada la frase de la charla anterior.
+                    //
+                    // El aviso aguanta los refrescos de 0,4 s mientras no cambies de
+                    // persona ni de día (líneas 108-115), así que da tiempo a leerlo.
+                    Say(social.RecallLine(_islanderId) ?? "");
+                }
             });
 
             button.style.marginRight = 6;

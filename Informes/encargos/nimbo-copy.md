@@ -28,6 +28,37 @@ madera»). Tres pantallas, tres nombres, el mismo objeto.
 **4. Doble título en el minijuego.** `MinigamePanel.cs:54-59`: `_title` y `_headline` son
 los dos `UiTheme.Title` (20 px negrita) uno detrás de otro.
 
+**5. Un identificador interno saliendo por la boca de un vecino.** Lo encontré yo esta
+mañana montando la prueba de la memoria conversacional, y es el peor de los cinco porque
+llega al jugador por dos sitios a la vez. `NewsBoard.cs:282-288` escribe las tres
+plantillas del edificio nuevo con el **id crudo**:
+
+    $"¡Nuevo edificio disponible: {evt.BuildingId}!",
+    $"La isla crece: {evt.BuildingId} ya está abierto.",
+    $"Se inaugura {evt.BuildingId}. ¡A estrenarlo!",
+
+Medido en la isla de verdad, un vecino me dijo textualmente:
+
+    Andan contando por ahí: ¡Nuevo edificio disponible: zona_tienda_muebles!
+
+Y el nombre bueno existe: `IslandLayout.cs:56` declara ese mismo id con
+`DisplayName = "Tienda de muebles"`. Las dos vías son la Crónica y, desde anoche, la boca
+de los vecinos (`ConversationRecall` reparte texto de la crónica tal cual).
+
+**El arreglo no es de tu carpeta y por eso hay que pensarlo, no parchearlo.** `NewsBoard`
+vive en `Nimbo.Events`, que solo referencia `Nimbo.Data` y `Nimbo.Core`: no ve
+`Nimbo.Island`, donde está `IslandLayout`. Hay dos salidas y quiero tu opinión razonada
+en el informe, con la que elijas aplicada si cae dentro de lo tuyo y **descrita para el
+orquestador si no**:
+
+- Que el evento `BuildingUnlocked` lleve el nombre bonito además del id, puesto por quien
+  lo publica, que sí lo sabe. Más datos en el evento, cero contratos nuevos.
+- Un miembro en un contrato de Core que traduzca id de zona a nombre. Más superficie, pero
+  lo arregla para todo el que tenga el mismo problema después.
+
+Mira antes si hay más sitios que impriman ids crudos: `rg '\{evt\.[A-Za-z]*Id\}'` sobre
+`Scripts/` es la búsqueda, y lo que salga va en el informe aunque no lo toques.
+
 # Tu carpeta
 
 `Assets/_Project/Scripts/UI/Menu/SaveSummary.cs`, `UI/Requests/**`,
