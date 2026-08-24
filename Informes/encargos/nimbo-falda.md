@@ -95,7 +95,7 @@ verdad** antes de darlo por bueno.
 Te imprime el recuento y los nombres de las que fallen. Puede tardar en darte el turno:
 **espera**. Si te dice que no pudo correr, **no digas que las pruebas pasaron**.
 
-La línea base viva es **514 pruebas de editor y 92 de juego, cero en rojo, 2 y 9 saltadas**.
+La línea base viva es **588 pruebas de editor y 142 de juego, cero en rojo, 2 y 10 saltadas**.
 Si tu cambio baja de ahí, lo has roto.
 
 ## Lo que no se toca, nunca

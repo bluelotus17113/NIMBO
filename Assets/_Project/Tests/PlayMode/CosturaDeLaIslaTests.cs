@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Nimbo.Art.PlayerView;
 using Nimbo.Core.Events;
 using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
@@ -23,8 +24,9 @@ namespace Nimbo.PlayTests
     /// Un solo recorrido, el que haría un jugador que arranca la isla y vive un
     /// minuto: la cámara le encuadra de tercera persona, la isla cierra por debajo,
     /// los botones responden al tema, la tienda tiene surtido y compra de verdad,
-    /// la ficha se abre desde la fila de abajo con la vida social a la vista, y lo
-    /// sembrado del catálogo sale dibujado con su silueta y no con la genérica.
+    /// la ficha se abre desde la fila de abajo con la vida social a la vista, lo
+    /// sembrado del catálogo sale dibujado con su silueta y no con la genérica, y
+    /// el árbol de la plaza le contesta en pantalla cuando se pone delante.
     ///
     /// Si un eslabón falla aquí, las pruebas unitarias de cada pieza pueden seguir
     /// en verde para siempre: es exactamente cómo las tiendas pasaron semanas
@@ -180,6 +182,12 @@ namespace Nimbo.PlayTests
             Assert.That(textosFicha, Does.Contain("Qué le gusta"),
                 "los gustos de regalo no salen en la ficha");
 
+            // Se cierra como se abrió —mismo botón— para dejar el paso siguiente
+            // en mundo despejado: el árbol se mira de pie en la plaza, no con la
+            // ficha del vecino encima.
+            yield return Pulsar(botonVecino, $"el botón del vecino {vecino} (para cerrar)");
+            yield return null;
+
             // ══ 6. cultivos (nimbo-cultivos): lo del catálogo sale con su silueta ═
             //
             // Siembro por el servicio real lo primero del catálogo real y exijo
@@ -226,6 +234,75 @@ namespace Nimbo.PlayTests
             Assert.That(nombresEsperados.Length, Is.GreaterThanOrEqualTo(2),
                 "la primera silueta del catálogo solo tiene una pieza: eso es la " +
                 "planta genérica con otro nombre");
+
+            // ══ 7. árbol (el enganche aplicado a mano sobre seis ficheros) ═══════
+            //
+            // GameEvents, GameBootstrap, PlayerInteractor, WorldView, UiRoot y el
+            // contrato ITreeService los cruzó el orquestador en una sola pasada,
+            // así que ninguna prueba de las piezas nuevas es dueña de esa unión.
+            // ArbolEnLaIslaTests ya mira cartel y pulsación; aquí se recorre el
+            // tramo que queda sin dueño: servicio → TreeSpoke → toast visible.
+            Assert.IsTrue(ServiceRegistry.TryGet(out Island.NimboTree arbol),
+                "nadie registró el Árbol Nimbo");
+            Assert.IsTrue(ServiceRegistry.TryGet(out Core.Time.GameClock reloj),
+                "nadie registró el reloj");
+
+            // Nada debería habérselo llevado, pero la compra de antes pudo
+            // desbloquear un logro y su carta ocupa la cola del toast: el texto se
+            // espera con plazo (EsperaCartel) y no al fotograma siguiente.
+            if (!arbol.CanTalkToday)
+            {
+                int hastaManana = (24 - reloj.Hour + 8) % 24 * 60 - reloj.Minute;
+                if (hastaManana <= 0) hastaManana += 24 * 60;
+                reloj.Advance(hastaManana);
+            }
+            Assert.IsTrue(arbol.CanTalkToday,
+                "no hubo forma de que el árbol amaneciera disponible");
+
+            var interactor = Object.FindFirstObjectByType<PlayerInteractor>();
+            Assert.IsNotNull(interactor, "no hay interactuador en el protagonista");
+
+            var mundo = Object.FindFirstObjectByType<Art.World.WorldView>();
+            Assert.IsNotNull(mundo, "no hay isla levantada");
+
+            // Al este del tronco, a cinco metros: dentro del alcance del cartel y
+            // fuera del colisionador del pie. Mismo sitio que ArbolEnLaIslaTests.
+            yield return ApuntarAlArbol(interactor, mundo, censo);
+
+            // Act es privada porque es la única tecla de acción del juego, pero es
+            // exactamente lo que el jugador dispara.
+            var act = typeof(PlayerInteractor).GetMethod("Act",
+                System.Reflection.BindingFlags.NonPublic |
+                System.Reflection.BindingFlags.Instance);
+            Assert.IsNotNull(act, "no encuentro Act en el interactuador");
+            act.Invoke(interactor, null);
+
+            yield return EsperaCartel("El Árbol Nimbo",
+                "el árbol contestó pero su título no apareció en pantalla: falta " +
+                "UiRoot escuchando TreeSpoke o el toast pintando lo empujado");
+
+            // El segundo intento del mismo día también tiene que verse: un árbol
+            // que se niega en silencio se lee como un árbol roto (NimboTree publica
+            // el rechazo igual que el regalo). Y se reapunta antes de pulsar: la
+            // primera corrida de esta cadena se puso roja porque, mientras el
+            // primer cartel esperaba su turno en la cola del toast, un vecino
+            // paseó de vuelta hasta la plaza y su cartel le ganó al del árbol.
+            yield return ApuntarAlArbol(interactor, mundo, censo);
+            act.Invoke(interactor, null);
+
+            yield return EsperaCartel("Vuelve mañana",
+                "el segundo intento no enseñó el «ya ha hablado hoy»: o el servicio " +
+                "se calla al negarse, o ese texto tampoco llega a la interfaz");
+
+            // ══ 8. avisos (bloqueos): la franja vive en el documento real ════════
+            //
+            // GateNoticeHost se autoinstala vía RuntimeInitializeOnLoadMethod: si
+            // alguien cambia cómo carga la escena, desaparece sin romper nada ni
+            // dar error. Aquí solo se exige que esté colgada; qué lee lo miden
+            // AvisosEnLaIslaTests.
+            Assert.IsNotNull(ElementoPorNombre(GateNotice.RootName),
+                "la franja de avisos de bloqueo no está montada en ningún documento: " +
+                "el host que se autoinstala no llegó a vivir");
         }
 
         // ── ayudas ──────────────────────────────────────────────────────────────
@@ -359,6 +436,93 @@ namespace Nimbo.PlayTests
             var cerrar = Boton("Cerrar");
             if (cerrar != null && cerrar.worldBound.width > 1f)
                 yield return Pulsar(cerrar, "el botón Cerrar de la tienda");
+        }
+
+        /// <summary>
+        /// Espera a que algún texto en pantalla diga eso, con plazo generoso.
+        /// </summary>
+        /// <remarks>
+        /// La cola del toast saca una carta por vuelta y aguanta 3,55 s por carta
+        /// (AchievementToast): los logros que la compra de antes pudo desbloquear
+        /// van delante del árbol. Afirmar en el fotograma siguiente sería una
+        /// carrera contra una cola ajena, no una comprobación de la costura.
+        /// </remarks>
+        /// <summary>
+        /// Espera a que un cartel diga eso. El plazo cubre la cola del toast.
+        /// </summary>
+        /// <remarks>
+        /// **Cuarenta segundos y no quince, y el número se puede razonar.** El toast
+        /// enseña los avisos de uno en uno, 3,2 s cada uno (AchievementToast), y esta
+        /// prueba corre con la isla viva: mientras el cartel del árbol espera su turno,
+        /// los vecinos que pasean por la plaza van metiendo los suyos por delante. Con
+        /// quince segundos el aviso del árbol llegaba cuarto y la prueba se ponía roja
+        /// sin que nada estuviera mal.
+        ///
+        /// No es «subir el plazo hasta que pase», que es como se tapan las pruebas
+        /// inestables: cuarenta segundos son doce turnos de cola, y por delante del
+        /// árbol no puede haber doce avisos en el rato que dura esta prueba.
+        /// </remarks>
+        private static IEnumerator EsperaCartel(string fragmento, string mensaje)
+        {
+            float plazo = 40f;
+            while (plazo > 0f)
+            {
+                foreach (var texto in Textos())
+                    if (texto.Contains(fragmento)) yield break;
+
+                plazo -= Time.unscaledDeltaTime;
+                yield return null;
+            }
+            Assert.Fail(mensaje);
+        }
+
+        /// <summary>
+        /// Lleva al protagonista a un punto, de verdad: con el CharacterController
+        /// encendido se come el cambio de posición. Lo descubrió
+        /// MinijuegosEnLaIslaTests y lo usa ArbolEnLaIslaTests.
+        /// </summary>
+        private static void Teletransportar(Transform who, Vector3 to)
+        {
+            var controller = who.GetComponent<CharacterController>();
+
+            if (controller != null) controller.enabled = false;
+            who.position = to;
+            if (controller != null) controller.enabled = true;
+        }
+
+        /// <summary>
+        /// Deja al protagonista con el Árbol Nimbo en el cartel y espera a que lo
+        /// esté de verdad.
+        /// </summary>
+        /// <remarks>
+        /// No basta teletransportarlo y confiar: los vecinos pasean por la plaza —
+        /// donde está el árbol— y el cartel de una persona siempre gana al de un
+        /// objeto, así que entre pulsación y pulsación el objetivo se lo puede
+        /// haber llevado alguien que volvió a pasar por ahí. Por eso manda a todos
+        /// lejos CADA vez y espera al recálculo del objetivo en vez de darle un
+        /// fotograma fijo.
+        /// </remarks>
+        private static IEnumerator ApuntarAlArbol(PlayerInteractor interactor,
+                                                  Art.World.WorldView mundo,
+                                                  IIslanderRegistry censo)
+        {
+            var lejos = Data.World.Archipelago.HomeCentre + Vector3.forward * 10f;
+            foreach (var cadaUno in censo.All)
+                if (mundo.TryGetIslander(cadaUno.Id, out var cuerpo))
+                    cuerpo.position = lejos;
+
+            Teletransportar(interactor.transform, new Vector3(5f, 2f, 0f));
+            interactor.transform.rotation = Quaternion.LookRotation(Vector3.left);
+
+            float plazo = 3f;   // «el objetivo se recalcula despacio» (PlayerInteractor)
+            while (interactor.Kind != TargetKind.Tree && plazo > 0f)
+            {
+                plazo -= Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            Assert.AreEqual(TargetKind.Tree, interactor.Kind,
+                $"delante del árbol el cartel ofrece otra cosa: «{interactor.Prompt}»");
         }
 
         private static Button Boton(string texto)

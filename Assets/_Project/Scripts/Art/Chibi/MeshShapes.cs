@@ -59,7 +59,7 @@ namespace Nimbo.Art.Chibi
         }
 
         /// <summary>
-        /// Un casquete: la parte de arriba de una esfera, sin cerrar por abajo.
+        /// Un casquete: la parte de arriba de una esfera, cerrado por abajo con un disco.
         /// </summary>
         /// <param name="coverage">
         /// Cuánta esfera se conserva, de 0 a 1. <c>0.5</c> es media esfera exacta;
@@ -70,6 +70,14 @@ namespace Nimbo.Art.Chibi
         /// cara y tapaba los ojos y la boca — todos los habitantes parecían llevar
         /// pasamontañas. Un casquete solo cubre cráneo y nuca, que es lo que hace el
         /// pelo de verdad.
+        ///
+        /// Cerrado por abajo a propósito. Desde que la cámara va a la altura de los
+        /// ojos se ve mucho casquete desde abajo —el vecino de delante, el interior
+        /// de una capucha— y un cacillo abierto enseña su borde en canto, como papel:
+        /// la malla de un lado no tiene nada detrás. El disco reutiliza el último
+        /// anillo como borde en vez de duplicarlo, así que cerrar cuesta
+        /// <c>segments</c> triángulos y un vértice: 20 por casquete de pelo, frente
+        /// a los 400 que ya traía la campana.
         /// </remarks>
         public static Mesh SphericalCap(int segments = 18, int rings = 10, float coverage = 0.55f)
         {
@@ -108,6 +116,23 @@ namespace Nimbo.Art.Chibi
 
                 triangles.Add(a); triangles.Add(b); triangles.Add(a + 1);
                 triangles.Add(a + 1); triangles.Add(b); triangles.Add(b + 1);
+            }
+
+            // El disco del fondo: un vértice central y un abanico contra el último
+            // anillo, que hace de borde sin duplicar ni un vértice. Mismo orden que
+            // la tapa inferior de Cylinder para que mire hacia fuera —hacia abajo—
+            // y no se vea del revés desde abajo.
+            int centro = vertices.Count;
+            vertices.Add(new Vector3(0f, Mathf.Cos(maxPhi), 0f) * 0.5f);
+            normals.Add(Vector3.down);
+            uv.Add(new Vector2(0.5f, 0.5f));
+
+            int borde = rings * stride;
+            for (int seg = 0; seg < segments; seg++)
+            {
+                triangles.Add(centro);
+                triangles.Add(borde + seg + 1);
+                triangles.Add(borde + seg);
             }
 
             return Build("casquete", vertices, normals, uv, triangles);

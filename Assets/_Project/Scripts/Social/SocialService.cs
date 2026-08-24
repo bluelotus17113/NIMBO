@@ -6,6 +6,7 @@ using Nimbo.Core.Services.Contracts;
 using Nimbo.Core.Time;
 using Nimbo.Data.Islanders;
 using Nimbo.Data.Social;
+using Nimbo.Social.Memory;
 using Nimbo.Social.Relationships;
 using Nimbo.Social.Romance;
 using UnityEngine;
@@ -37,6 +38,9 @@ namespace Nimbo.Social
 
         private readonly SpouseChores _chores;
 
+        /// <summary>Lo que los vecinos cuentan de memoria al hablar con ellos.</summary>
+        private readonly ConversationRecall _recall;
+
         /// <summary>Las bodas apuntadas de la partida. La tuya se guarda con las suyas.</summary>
         private readonly List<WeddingBooking> _weddings;
 
@@ -49,11 +53,17 @@ namespace Nimbo.Social
         /// arranque a otro. Sin ella se llevan en memoria: las pruebas montan el social
         /// sin partida y no tienen por qué enterarse.
         /// </param>
+        /// <param name="memoryFlags">
+        /// Las banderas de la partida, para que el «ya te lo contó» de los recuerdos
+        /// sobreviva a cerrar el juego. Sin ellas se llevan en memoria de sesión; mismo
+        /// pacto que los triángulos.
+        /// </param>
         public SocialService(IIslanderRegistry registry, IPersonalityService personalities,
                              ISimulationService simulation, IIslanderFactory factory,
                              GameClock clock, SocialConfig config,
                              List<LoveTriangle> triangles = null,
-                             List<WeddingBooking> weddings = null)
+                             List<WeddingBooking> weddings = null,
+                             List<string> memoryFlags = null)
         {
             _registry = registry;
             _personalities = personalities;
@@ -67,6 +77,7 @@ namespace Nimbo.Social
             _triangles = new LoveTriangles(registry, personalities, simulation, config, triangles);
             _courtship = new Courtship(registry, config, _triangles);
             _chores = new SpouseChores(registry);
+            _recall = new ConversationRecall(registry, clock, memoryFlags);
             _weddings = weddings;
 
             EventBus.Subscribe<DayPassed>(OnDayPassed);
@@ -74,6 +85,23 @@ namespace Nimbo.Social
 
         /// <summary>Los triángulos abiertos. Los lee la ficha del vecino y la crónica.</summary>
         public LoveTriangles Triangles => _triangles;
+
+        /// <summary>El recuerdo conversacional, por si alguien quiere mirar sin tirar el dado.</summary>
+        public ConversationRecall Recall => _recall;
+
+        /// <summary>
+        /// Lo que ese vecino te contaría de memoria al hablarle hoy, o null si hoy no
+        /// trae nada entre manos.
+        /// </summary>
+        /// <remarks>
+        /// Lee la crónica que ya existe —no guarda suceso nuevo alguno— y decide con
+        /// tres filtros: frescura (tres días), verdad presente (la riña compuesta ya no
+        /// se cuenta) y «ya te lo conté». Quien pinte la conversación llama aquí después
+        /// de una charla y enseña lo que vuelva, que a veces será nada: el dado de la
+        /// personalidad va dentro.
+        /// </remarks>
+        public string RecallLine(string islanderId) =>
+            _recall.TryGetRecall(islanderId, out string line) ? line : null;
 
         public void Dispose() => EventBus.Unsubscribe<DayPassed>(OnDayPassed);
 

@@ -35,17 +35,18 @@ esté bien: significa que el agente no sabe lo que hizo.
 **1. ¿Compila y pasan las pruebas?** Es la puerta. Si no compila, RECHAZADO y ya está.
 
 El orquestador ya corrió las dos suites sobre el árbol entero y dejó el resultado en
-`Informes/pruebas/revision-EditMode.xml` y `revision-PlayMode.xml`. **Léelos en vez de
-volver a correrlo todo**: hay seis verificadores y una sola cola de Unity. Corre tú una
-suite solo si necesitas un filtro concreto para probar algo que sospechas.
+`Informes/pruebas/todo-edit-EditMode.xml` y `todo-play-PlayMode.xml`. **Léelos en vez de
+volver a correrlo todo**: hay varios verificadores y una sola cola de Unity. Corre tú una
+suite solo si necesitas un filtro concreto para probar algo que sospechas, y entonces con
+el envoltorio y nunca a mano:
 
-    flock /tmp/nimbo-unity.lock unity -batchmode -quit \
-      -projectPath /home/vaknadesu/Proyectos/isla-nimbo \
-      -runTests -testPlatform EditMode \
-      -testResults /tmp/nimbo-verif-$$.xml -logFile /tmp/nimbo-verif-$$.log
+    Tools/agentes/unity.sh PlayMode verif-<aQuiénRevisas> "NombreDeLaPrueba"
 
-Compara con la línea base: **514 de editor, 92 de juego, cero en rojo.** Menos pruebas
-que antes también es RECHAZADO: alguien borró una.
+Compara con la línea base: **588 de editor, 142 de juego, cero en rojo.** Menos pruebas
+que antes es RECHAZADO —alguien borró una— **salvo que lo que falte sea una herramienta
+de diagnóstico desechable**, que sí se escriben y se borran a propósito: se reconocen
+porque su `[Explicit]` dice «herramienta, no una prueba». Si baja el número, di **qué**
+prueba concreta falta; «bajó de 142 a 141» sin nombre no es un defecto verificado.
 
 **2. ¿Se ha salido de su carpeta?** Cada agente tiene una carpeta asignada. Un fichero
 tocado fuera de ella es un choque con otro agente esperando a pasar. RECHAZADO, y di
@@ -106,19 +107,23 @@ la prueba. Lo de si se siente bien lo decide el usuario mirándolo.
 
 ## Cómo se compila y se prueba, y es obligatorio
 
-Unity solo deja **un** proceso dentro del proyecto. Si dos entran a la vez, uno se queda
-con un lockfile huérfano y el otro cree que compiló. Por eso toda orden de Unity va
-envuelta en `flock`, que hace la cola sola:
+Unity solo deja **un** proceso dentro del proyecto, y además hay una carrera conocida:
+cuando el anterior suelta el cerrojo pero todavía se está cerrando, el siguiente entra, ve
+el lockfile del proyecto y **sale con éxito sin ejecutar nada**. Dos agentes ya lo
+sufrieron sin darse cuenta. Por eso no lances Unity a mano: usa el envoltorio, que hace la
+cola, espera a que el anterior se cierre del todo y **comprueba que el XML existe de
+verdad** antes de darlo por bueno.
 
-    flock /tmp/nimbo-unity.lock unity -batchmode -quit \
-      -projectPath /home/vaknadesu/Proyectos/isla-nimbo \
-      -runTests -testPlatform EditMode \
-      -testResults /tmp/nimbo-<tuNombre>.xml -logFile /tmp/nimbo-<tuNombre>.log
+    Tools/agentes/unity.sh EditMode <tuNombre>
+    Tools/agentes/unity.sh PlayMode <tuNombre>
+    Tools/agentes/unity.sh PlayMode <tuNombre> "NombreDeLaPrueba"
 
-Puede tardar en darte el turno. **Espera; no lo saltes, no uses `-nographics` ni borres
-ningún lockfile.** Si algo se queda colgado, dilo en el informe y sigue.
+Te imprime el recuento y los nombres de las que fallen. Puede tardar en darte el turno —
+espera hasta veinte minutos y te avisa de cuánto esperó. **No lo saltes, no lances `unity`
+a mano, no uses `-quit` (mata el runner antes de que arranque) y no borres ningún
+lockfile.** Si te dice que no pudo correr, **no digas que las pruebas pasaron**.
 
-La línea base viva es **514 pruebas de editor y 92 de juego, cero en rojo, 2 y 9 saltadas**.
+La línea base viva es **588 pruebas de editor y 142 de juego, cero en rojo, 2 y 10 saltadas**.
 Si tu cambio baja de ahí, lo has roto.
 
 ## Lo que no se toca, nunca

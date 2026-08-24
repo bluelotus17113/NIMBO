@@ -500,16 +500,43 @@ namespace Nimbo.Art.Chibi
         /// sobre la esfera. Así la textura no se estira por los polos de la esfera,
         /// que es lo que le pasa a un ojo dibujado en una UV esférica.
         /// </summary>
+        /// <remarks>
+        /// Desde que la cámara va a la altura de los ojos este parche se ve de canto
+        /// a todas horas, y dos defectos que desde arriba jamás se notaban salieron a
+        /// cada paso: el parche llevaba SU propia curvatura —una aproximación con el
+        /// alto comprimido a ojo— y flotaba 4 mm por delante de la mejilla, así que
+        /// en los ángulos rasantes su borde se recortaba contra la cabeza o asomaba
+        /// más allá de la silueta; y al recalcular sus normales, plano y cráneo
+        /// sombreaban distinto y el rectángulo se marcaba sobre la cara.
+        ///
+        /// Los dos arreglos son geométricos y no añaden ni un triángulo. La
+        /// superficie ahora es la del elipsoide de la cabeza de verdad, cada vértice
+        /// se separa a lo largo de la normal DEL ELIPSOIDE, y esa separación se
+        /// invierte en el borde para hundirlo bajo la piel: el contorno desaparece
+        /// dentro del cráneo desde cualquier ángulo, como el tatuaje de una decal.
+        /// Y las normales son las del elipsoide, con lo que cara y mejilla sombrean
+        /// como una sola superficie.
+        /// </remarks>
         private static Mesh BuildFaceQuad(float headCentre, float headWidth, float headHeight)
         {
             const int columns = 8, rows = 8;
+            const float lift = 0.004f;  // holgura en el centro, para no pelear en el z-buffer
+            const float dive = 0.006f;  // hundimiento del borde: mayor que la holgura
+
+            // Semiejes de la cabeza: la esfera base trae radio 0,5 y la matriz del
+            // cuerpo la convierte en este elipsoide. La ventana de la cara cabe
+            // entera dentro de su huella —(0,74)² + (0,62)² ≈ 0,93 < 1— para que
+            // hasta las esquinas del borde tengan superficie donde esconderse.
+            float ax = headWidth * 0.5f;
+            float ay = headHeight * 0.5f;
+            float az = headWidth * 0.47f;
+            float halfW = headWidth * 0.37f;
+            float halfH = headHeight * 0.31f;
+
             var vertices = new Vector3[(columns + 1) * (rows + 1)];
+            var normals = new Vector3[vertices.Length];
             var uv = new Vector2[vertices.Length];
             var triangles = new int[columns * rows * 6];
-
-            float halfW = headWidth * 0.40f;
-            float halfH = headHeight * 0.34f;
-            float radius = headWidth * 0.5f;
 
             for (int y = 0; y <= rows; y++)
             for (int x = 0; x <= columns; x++)
@@ -518,11 +545,25 @@ namespace Nimbo.Art.Chibi
                 float px = Mathf.Lerp(-halfW, halfW, u);
                 float py = Mathf.Lerp(-halfH, halfH, v);
 
-                // Se curva hacia dentro por los bordes para seguir el cráneo, y se
-                // separa un pelín para que no pelee con la esfera en el z-buffer.
-                float bulge = Mathf.Sqrt(Mathf.Max(0f, radius * radius - px * px - py * py * 0.6f));
+                // Punto del elipsoide de la cabeza que cae bajo esta (px, py).
+                float dentro = 1f - (px * px) / (ax * ax) - (py * py) / (ay * ay);
+                float pz = az * Mathf.Sqrt(Mathf.Max(0f, dentro));
+
+                // Normal del elipsoide: el gradiente de (x/a)² + (y/b)² + (z/c)².
+                var normal = new Vector3(px / (ax * ax), py / (ay * ay),
+                                         pz / (az * az)).normalized;
+
+                // En el centro flota lo justo; hacia el borde la holgura se invierte
+                // y se mete bajo la piel, para que el contorno no se vea nunca, ni
+                // de canto. El radio es el de la ventana, no el del elipsoide: es lo
+                // que separa «el centro de la cara» de «el borde del parche».
+                float borde = Mathf.Sqrt((px / halfW) * (px / halfW)
+                                       + (py / halfH) * (py / halfH));
+                float offset = Mathf.Lerp(lift, -dive, Mathf.SmoothStep(0.5f, 1f, borde));
+
                 int i = y * (columns + 1) + x;
-                vertices[i] = new Vector3(px, headCentre + py, bulge + 0.004f);
+                vertices[i] = new Vector3(px, headCentre + py, pz) + normal * offset;
+                normals[i] = normal;
                 uv[i] = new Vector2(u, v);
             }
 
@@ -539,8 +580,11 @@ namespace Nimbo.Art.Chibi
             var mesh = new Mesh { name = "chibi_cara" };
             mesh.vertices = vertices;
             mesh.uv = uv;
+            // Normales propias, NO recalculadas: son las del elipsoide de la cabeza,
+            // y RecalculateNormals las promediaría planas por vértice compartido,
+            // despegando otra vez el sombreado de la cara del del cráneo.
+            mesh.normals = normals;
             mesh.triangles = triangles;
-            mesh.RecalculateNormals();
             mesh.RecalculateBounds();
             return mesh;
         }

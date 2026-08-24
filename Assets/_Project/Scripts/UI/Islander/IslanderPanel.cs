@@ -34,6 +34,7 @@ namespace Nimbo.UI.Islander
         private readonly HomeSection _home = new HomeSection();
         private readonly SocialSection _social = new SocialSection();
         private readonly TastesSection _tastes = new TastesSection();
+        private readonly AgendaSection _agenda = new AgendaSection();
         private readonly IslandSocialCard _socialMap = new IslandSocialCard();
         private readonly VisualElement _requests;
         private readonly VisualElement _relationships;
@@ -103,6 +104,13 @@ namespace Nimbo.UI.Islander
             // hacerle —darle algo— y la que estaba sin nombre en toda la interfaz.
             _scroll.Add(_social.Root);
             _scroll.Add(_tastes.Root);
+
+            // La agenda va aquí, con el grupo de contexto vital y por delante del
+            // trabajo y la casa: «qué hará hoy» se lee antes que su empleo. No sube
+            // más porque peticiones, gestos y gustos son decisiones, y esto es solo
+            // contexto; la ficha tiene scroll, así que empujar no esconde nada.
+            _scroll.Add(_agenda.Root);
+
             _scroll.Add(_job.Root);
             _scroll.Add(_home.Root);
 
@@ -165,6 +173,7 @@ namespace Nimbo.UI.Islander
             RefreshRequests(islander);
             _social.Refresh(_islanderId);
             _tastes.Refresh(_islanderId);
+            _agenda.Refresh(_islanderId);
             _job.Refresh(_islanderId);
             _home.Refresh(_islanderId);
             RefreshRelationships(islander, registry);

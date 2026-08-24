@@ -1,6 +1,6 @@
 # Isla Nimbo — Documento de Diseño de Juego (GDD)
 
-> **Versión:** 2.0 — 2026-08-17
+> **Versión:** 2.1 — 2026-08-23
 > **Motor:** Unity 6000.5.5f1, URP
 > **Arquitectura:** `Docs/00_ARQUITECTURA.md` manda sobre este documento.
 > **Giro:** `Docs/04_ALDEA.md` manda sobre este en lo que se contradigan. La v2.0
@@ -13,6 +13,14 @@ lleva desde entonces yendo por otro lado, pero el GDD seguía midiendo el juego
 viejo: su lista de alcance no mencionaba ni una vez huerto, recolección, crafteo,
 inventario ni protagonista. La v2.0 arregla eso. Secciones nuevas: §12 a §16.
 Secciones reescritas: §1, §8.4 y el alcance (ahora §17).
+
+**Qué cambió de la v2.0 a la v2.1.** Solo estado; cero diseño. La flota nocturna del
+23 al 24 de agosto arregló las tiendas y enchufó el Árbol Nimbo —las dos marcas que el
+analista había cazado mintiendo—, dejó el creador y las relaciones con la marca honesta
+(`[~]`: el código no hacía lo que decían), midió los números de catálogo en vez de
+recordarlos (80 muebles, 60 prendas, 44 recetas) y reconoció lo que esa noche se hizo
+de verdad: acabados de vivienda y ropa que se ve puesta. §18 estrena tres formas nuevas
+de mentirse, sacadas de los veredictos de la ola.
 
 ---
 
@@ -556,6 +564,22 @@ El Árbol Nimbo es el corazón de la isla. Crece con el nivel de isla: empieza
 como un brote (nivel 1) y llega a árbol gigante con hojas doradas (nivel 10).
 Una vez al día, el jugador puede "hablar con el Árbol" y recibir una pista,
 un chiste o un objeto aleatorio.
+
+**Hecho.** Estuvo meses escrito y apagado: `TryTalk` no lo llamaba nadie y el árbol
+dibujado era una malla fija que no crecía. Hoy hay cartel con tecla a menos de 6 m del
+tronco, y el cartel distingue sin pulsar si queda regalo hoy (`PlayerInteractor.cs:478-490`);
+la respuesta viaja por el bus (`TreeSpoke`) hasta la interfaz, que vive en otro
+ensamblado (`PlayerInteractor.cs:886-893`, `NimboTree.cs:126-128`). Y la malla escala
+con el nivel de isla con la misma fórmula que el servicio — escrita dos veces porque
+`Nimbo.Art` no ve `Nimbo.Island`, y atadas por una prueba que compara las dos copias
+nivel por nivel (`WorldView.cs:151-153`; `ArbolNimboTests.LaEscalaDelArteSigueALaDelServicio`).
+
+Lo que da al hablar, todo saliendo de la semilla del día para que no cambie al reabrir
+el juego (`NimboTree.cs:121`): monedas que escalan con el tamaño del árbol y con la
+racha de días seguidos (de ×1,0 a ×1,5; `NimboTree.cs:93`), un objeto de comida al
+alcance del nivel actual, un chiste en rotación — y la pista, que es su función de
+verdad: señala a quien peor está de ánimo, que es como el árbol te dice a quién tienes
+abandonado (`NimboTree.cs:187-199`).
 
 ---
 
@@ -1445,20 +1469,40 @@ pasan los tests y no existen en el juego.
 
 - [x] Arquitectura base (EventBus, ServiceRegistry, guardado, reloj, RNG).
 - [x] 1 isla flotante (Nimbo) con 10 zonas.
-- [x] Creador de personajes completo (cuerpo, cara, voz, ropa, personalidad).
+- [~] Creador de personajes: cuerpo, cara, personalidad y nombre, completos
+      (`CreatorPanel.cs:235-276`). Faltan las pestañas de voz y de ropa: la voz existe
+      como dato y sintetizador —se sortea en `IslanderFactory.cs:41` y se habla en
+      `AudioDirector.cs:361`— pero el jugador no la elige nunca; la ropa equipada ya
+      se renderiza (§17.2) y tampoco se elige al crear.
 - [x] 12 isleños máximo en la isla.
 - [x] Sistema de necesidades: hambre, energía, higiene y social. Ocio y vejiga se cayeron — el ánimo es derivado y no una necesidad más, y la vejiga no aporta decisiones al jugador, solo ruido.
 - [x] Los 16 tipos de personalidad con comportamientos diferenciados.
 - [x] Agenda diaria autónoma por isleño.
 - [x] Modo construcción de vivienda (rejilla, muebles, paredes, suelos).
-- [x] 40 muebles del catálogo base + pool de 200 en tienda rotatoria.
-- [x] Sistema de relaciones con los 10 niveles y 9 estados.
-- [x] Economía con monedas, tiendas, trabajo y balance diario.
+- [x] Tienda de muebles rotatoria sobre un catálogo real de 80 piezas, 3 disponibles
+      desde nivel 1 (`catalogo_muebles.json`). El «40 base + pool de 200» que decía
+      aquí era una cifra de diseño anterior al catálogo; el número medido manda.
+- [~] Sistema de relaciones, funcionando y probado — pero con otro modelo que la tabla
+      §8.2: la amistad tiene 5 niveles (`FriendshipStage`, `RelationshipRecord.cs:6-13`,
+      de Stranger a BestFriend) y los «estados» viven repartidos entre `RomanceStage` y
+      `ConflictStage` (`RelationshipRecord.cs:23-32`), no en una lista única de 9.
+      Queda decidir si el código sube hacia la tabla o la tabla baja hacia el código;
+      mientras tanto la marca no puede ser `[x]`.
+- [x] Economía con monedas, tiendas, trabajo y balance diario. *La v2.0 lo daba por
+      hecho y estaba roto por la costura: los botones pasaban ids de zona que el
+      catálogo de tiendas no conocía, así que no se podía comprar nada — ni semillas,
+      ni muebles, ni ropa. Arreglado haciendo que el catálogo hable el idioma del plano
+      (`ShopDefinition.cs:50-58`, los mismos ids que `IslandLayout.cs:44,60,68` y
+      `UiRoot.cs:237-239`) y cruzado por `TiendasEnLaIslaTests`, que compra de verdad
+      pulsando los botones de la barra sobre la escena cargada.*
 - [x] 3 minijuegos (cocina, pesca, ritmo), con su servicio, su pantalla y un sitio
       en el mundo cada uno (§9.2). La caña se fabrica a mano.
 - [x] Eventos: sucesos diarios, sueños, conciertos, noticias, festivales. Encendidos
       desde el arranque; el tablón alimenta además la Crónica (§13.3).
-- [x] El Árbol Nimbo funcional.
+- [x] El Árbol Nimbo funcional. *También estuvo escrito y apagado: `TryTalk` sin un
+      solo llamador y una malla fija de 26 m que no leía el crecimiento. Ahora hay
+      cartel y tecla delante del tronco (`PlayerInteractor.cs:478-490`, `:886-893`) y
+      el árbol dibujado escala con el nivel de isla (`WorldView.cs:151-153`). Ver §9.3.*
 - [x] Semana de juego estructurada (lunes a domingo con bonos).
 - [x] Guardado y carga de partida (JSON versionado, copia atómica).
 - [x] UI: HUD, ficha, tienda, creador, construcción y menú principal (con pausa y ajustes).
@@ -1505,7 +1549,7 @@ de la v1.0 y es la mitad del juego de hoy:
 - [x] Mochila con huecos, herramientas y objeto en mano.
 - [x] Recolección: 16 tipos de nodo, 120 en el mundo, herramienta requerida, reposición.
 - [x] Huerto: labrar, sembrar, regar, crecer, recoger. 12 cultivos.
-- [x] Crafteo: 36 recetas y mesas de trabajo.
+- [x] Crafteo: 44 recetas y mesas de trabajo.
 - [x] Venta por el cajón de envíos.
 - [x] Casa propia con interior amueblable, y la aldea al otro lado del puente.
 - [x] **Progresión del protagonista: las cinco vías, la curva y los desbloqueos (§12).**
@@ -1626,7 +1670,18 @@ de la v1.0 y es la mitad del juego de hoy:
 
 ### 17.2 `[IMPORTANTE]` — El juego cojea sin esto
 
-- [x] 8 prendas base + pool de 150 en tienda de ropa rotatoria.
+- [x] Tienda de ropa rotatoria: 60 prendas en catálogo (`catalogo_ropa.json`). El
+      «8 base + pool de 150» era otra cifra de diseño anterior al catálogo real.
+- [x] Acabados de vivienda: 40 papeles y suelos con precio (`catalogo_acabados.json`),
+      elegibles desde Amueblar (`FurnishPanel.TryApplyFinish`, `FurnishPanel.cs:238`) y
+      pintados de verdad en el interior (`InteriorView`). Los ids por defecto existen
+      en el catálogo — antes arrancaban con dos ids que no existían en ningún sitio, y
+      `SetWallpaper` no tenía un solo llamador.
+- [~] Armario: la ropa equipada se ve en el muñeco (`IslanderView.cs:63` y `:110-112`
+      leen `EquippedOutfit`) y los vecinos se cambian solos cada día
+      (`WardrobeService.cs:81`), pero elegir tú qué se pone cada cual no existe:
+      `Wear`, `FavouriteOf` y `WardrobeOf` siguen sin un solo llamador fuera del
+      servicio.
 - [x] 40 peinados: 32 de salida y 8 que se ganan subiendo el nivel de isla.
 - [ ] Conjuntos de muebles temáticos (rústico, moderno, japonés).
 - [ ] Eventos de "visita misteriosa" y "expedición".
@@ -1727,8 +1782,36 @@ no fallan, se ven mal, y ningún test puede mirarlas.**
   un dato está falseado a propósito, todas las reglas que se apoyan en que fuera
   verdadero dejan de valer**, y no hay aviso: siguen compilando.
 
+Y la ola nocturna del 23 al 24 añadió tres más, todas de la misma familia: **escrito
+donde nadie ejecuta.**
+
+- **El comentario que promete una prueba.** El informe del árbol destinaba a
+  `WorldView.cs` un comentario que decía «ArbolNimboTests vigila que las dos partes no
+  se separen», y la prueba no existía: un grep de `GrowthScale` sobre `Tests/` daba
+  cero resultados. La escribió después el orquestador a mano. Ningún test lo delata
+  porque los comentarios no compilan: una red de seguridad escrita en palabras protege
+  exactamente lo mismo que ninguna, y quien cambie la constante confiando en ella no
+  tendrá aviso. Se caza antes de pegar: toda frase que diga «hay una prueba» se
+  verifica con grep en el mismo cambio — o se escribe la prueba.
+- **El número despegado de su fórmula.** El techo de la racha del árbol decía «×1,5 al
+  quinto» cuando la fórmula de debajo da ×1,4 al quinto y ×1,5 al sexto
+  (`NimboTree.cs:93`); los chistes decían «al tercero ya es más probable repetir que
+  estrenar» cuando con seis opciones eso llega en la quinta tirada. Los dos siguen ahí
+  hoy. Tampoco esto lo ve ningún test: el comentario no se ejecuta, y el número falso
+  es justo el que leerá quien ajuste la constante sin saber qué rompe. Se caza igual
+  que el anterior: todo número de comentario tiene que salir derivado de la línea de
+  abajo; si no puedes derivarlo, o sobra o está mal.
+- **La evidencia citada, sobrescrita por quien la cita.** El informe de cámara citaba
+  `Informes/pruebas/camara-PlayMode.xml` como fuente de su corrida completa; sus
+  propias capturas de foto corrieron después con la misma etiqueta y pisaron el XML —
+  el fichero citado contiene ahora una corrida de una sola prueba. Nadie lo vio porque
+  el fichero existe, tiene forma de resultados y hasta la etiqueta correcta: solo la
+  fecha de dentro delata que es otra corrida. Se caza separando etiquetas —la
+  herramienta de capturas corre con etiqueta propia («falda-captura», no «falda»)— y
+  no reutilizando una etiqueta cuyo XML sigue vivo.
+
 ---
 
-> **Fin del GDD v2.0.** Este documento lo escribe el agente de diseño y lo
+> **Fin del GDD v2.1.** Este documento lo escribe el agente de diseño y lo
 > aprueba el orquestador. Los números son puntos de partida; se ajustan con
 > datos de playtest.

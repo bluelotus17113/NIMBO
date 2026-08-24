@@ -6,17 +6,21 @@ Costura de Isla Nimbo — comprobación repetible de referencias por nombre.
 Uso:  python3 /tmp/opencode/costura_nombres.py [raiz_del_proyecto]
 
 Comprueba, sobre el árbol actual:
-  1. ids de zona (IslandLayout) contra todo literal "zona_*" del código
-  2. ids de tienda (ShopDefinition.All) contra IslandLayout.ShopId y UiRoot.Show(...)
-  3. seedIds del catálogo de cultivos contra el switch de FarmView.LookFor
-  4. catalogId de todos los catálogos JSON contra literales escritos a mano en C#
-     (ids que aparecen en el código y no existen en ningún catálogo)
-  5. ids de receta, logro, evento de aldea, nodo de recolección
-  6. nombres buscados con GameObject.Find / transform.Find contra los nombres
-     que alguien crea realmente
-  7. propiedades de shader usadas desde C# contra los bloques Properties de .shader
-  8. eventos del EventBus: struct en GameEvents.cs vs Publish/Subscribe
-  9. servicios: TryGet<T>/Get<T> vs Register<T>
+   1. ids de zona (IslandLayout) contra todo literal "zona_*" del código
+   2. ids de tienda (ShopDefinition.All) contra IslandLayout.ShopId y UiRoot.Show(...)
+   3. seedIds del catálogo de cultivos contra el switch de FarmView.LookFor
+   4. catalogId de todos los catálogos JSON contra literales escritos a mano en C#
+      (ids que aparecen en el código y no existen en ningún catálogo)
+   5. ids de receta, logro, evento de aldea, nodo de recolección
+   6. nombres buscados con GameObject.Find / transform.Find contra los nombres
+      que alguien crea realmente
+   7. propiedades de shader usadas desde C# contra los bloques Properties de .shader
+   8. eventos del EventBus: struct en GameEvents.cs vs Publish/Subscribe
+   9. servicios: TryGet<T>/Get<T> vs Register<T>
+  10. datos que el arte lee del JSON y fallaría en silencio: baseColor de
+      catalogo_acabados.json (InteriorView la pinta magenta si no parsea) y
+      slot/palette de catalogo_ropa.json (OutfitLook se queda «sin prenda» o
+      sortea un color por hash si no parsea)
 
 Salida: lista de costuras rotas con fichero:línea. Código de salida 0 si todo
 encaja, 1 si hay alguna rota.
@@ -149,8 +153,11 @@ for fname in os.listdir(CONFIG):
                 ids_catalogo.setdefault(it[clave], []).append(fname)
 
 # literales tipo prefijo_id en C#: candidatas a id de objeto
-PATRON_ID = re.compile(r'"((?:food|furniture|decor|clothing|tool|material|resource|'
-                       r'gift|recipe|logro|node|drop|acabado|wallpaper|flooring)[a-z0-9_]*)"')
+# wall_/floor_/cloth_ entraron con acabados y ropa: RoomLayout.DefaultWallpaper y
+# DefaultFloor son literales de código que tienen que existir en catalogo_acabados.json
+PATRON_ID = re.compile(r'"((?:food|furniture|decor|clothing|cloth|tool|material|resource|'
+                       r'gift|recipe|logro|node|drop|acabado|wallpaper|flooring|'
+                       r'wall|floor)[a-z0-9_]*)"')
 EXCLUIR_FICHEROS = ("FarmView.cs", "ShopDefinition.cs", "IslandLayout.cs")
 for p, text in CS.items():
     if "/Tests/" in p or any(p.endswith(x) for x in EXCLUIR_FICHEROS):
@@ -166,7 +173,9 @@ for p, text in CS.items():
         if ctx.lstrip().startswith("///") or ctx.lstrip().startswith("//"):
             continue
         # prefijos y etiquetas de función no son ids: StartsWith/Replace/== con tag
-        if re.search(r'(StartsWith|EndsWith|Replace|Function\s*==|function\s*==|kind\s*==)\s*\(?\s*"', ctx):
+        # (surface es el campo «wall/floor» de catalogo_acabados.json, no un id)
+        if re.search(r'(StartsWith|EndsWith|Replace|Function\s*==|function\s*==|kind\s*==)\s*\(?\s*"', ctx) \
+                or re.search(r'[Ss]urface\s*[!=]=\s*"', ctx):
             continue
         # nombres de elemento de interfaz (UiTheme.Card("x"), Add("x")) no son ids de catálogo
         if re.search(r'UiTheme\.\w+\(\s*$', ctx[:m.start()]) or \
@@ -285,6 +294,33 @@ for p, text in CS.items():
 
 servicios_huerfanos = sorted(set(pedidos) - set(registrados))
 registros_sin_pedido = sorted(set(registrados) - set(pedidos))
+
+# ── 10. datos que el arte lee del JSON y falla en silencio ──────────────────
+# InteriorView.FinishColours descarta sin ruido todo baseColor que no parsea y
+# luego pinta magenta (InteriorView.Get); OutfitLook.ColourOf sortea un color por
+# hash del id si el hex de la paleta no parsea, y OutfitLook.From se queda
+# «sin prenda» con cualquier slot que no sea outfit/hat. Nada de eso lanza.
+HEX = re.compile(r'^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$')
+
+acabados = json.load(open(os.path.join(CONFIG, "catalogo_acabados.json"), encoding="utf-8"))
+for it in acabados.get("items", []):
+    color = it.get("baseColor")
+    if not color or not HEX.match(color):
+        rotas.append(("ACABADO-COLOR",
+                      f"catalogo_acabados.json: '{it.get('catalogId')}' tiene "
+                      f"baseColor '{color}' — InteriorView lo pintaría magenta"))
+ropa = json.load(open(os.path.join(CONFIG, "catalogo_ropa.json"), encoding="utf-8"))
+SLOTS_QUE_EL_ARTE_ENTIENDE = {"outfit", "hat", "accessory"}
+for it in ropa.get("items", []):
+    if it.get("slot") not in SLOTS_QUE_EL_ARTE_ENTIENDE:
+        rotas.append(("ROPA-SLOT",
+                      f"catalogo_ropa.json: '{it.get('catalogId')}' tiene slot "
+                      f"'{it.get('slot')}' — OutfitLook.From la deja «sin prenda»"))
+    for color in it.get("palette") or []:
+        if not HEX.match(color):
+            rotas.append(("ROPA-COLOR",
+                          f"catalogo_ropa.json: '{it.get('catalogId')}' lleva el color "
+                          f"'{color}' — OutfitLook lo sustituiría por un hash del id"))
 
 # ── informe ─────────────────────────────────────────────────────────────────
 print("=" * 72)

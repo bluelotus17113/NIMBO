@@ -1,5 +1,6 @@
 using System.Collections;
 using System.IO;
+using Nimbo.Art.Chibi;
 using Nimbo.Core.Events;
 using NUnit.Framework;
 using UnityEngine;
@@ -121,7 +122,54 @@ namespace Nimbo.PlayTests
                 seguimiento.enabled = false;
             }
 
+            // El vecino de espaldas y desde abajo: el ángulo que delata un casquete
+            // de pelo sin cerrar —el borde en canto solo se ve desde abajo— o una
+            // cara despegada del cráneo. Desde arriba jamás se nota, y por eso este
+            // encuadre no retrata un escenario sino a un habitante: lo saca del
+            // censo, lo planta en un sitio escrito del prado y lo fotografía desde
+            // donde la cámara de tercera persona acaba mirando a los vecinos.
+            yield return RetrataVecinoDeEspaldas(camera, sufijo);
+
             Assert.Pass();
+        }
+
+        private static IEnumerator RetrataVecinoDeEspaldas(Camera camera, string sufijo)
+        {
+            IslanderView vista = null;
+            foreach (var candidata in Object.FindObjectsByType<IslanderView>(
+                         FindObjectsSortMode.None))
+            {
+                vista = candidata;
+                break;
+            }
+            if (vista == null) yield break;   // sin vecinos no hay retrato que tomar
+
+            // Sitio escrito en el prado, el mismo rodal que retrata «flores_a_ras».
+            // La altura no va escrita: la isla curva y una Y fija flotaría o se
+            // enterraría, así que la da el prado de verdad con un rayo hacia abajo.
+            const float x = 50f, z = -11f;
+            if (!Physics.Raycast(new Vector3(x, 40f, z), Vector3.down, out var suelo, 80f))
+                yield break;
+
+            // PlaceAt también fija su destino: el vecino se queda quieto. Es un
+            // retrato, no una caza.
+            vista.PlaceAt(suelo.point);
+            vista.transform.rotation = Quaternion.Euler(0f, 37f, 0f);
+
+            // Detrás y abajo: a 35 cm del prado —media pantorrilla— y a 1,7 m de los
+            // talones, mirando hacia la cabeza. Es el ángulo bajo el que un cacillo
+            // abierto enseña su borde como papel y una cara flotante se recorta
+            // contra el cráneo; con el pelo cerrado y la cara pegada, lo que se ve
+            // es la nuca y el interior del pelo, que es lo que debe verse.
+            Vector3 detras = -vista.transform.forward;
+            Vector3 camaraEn = suelo.point + detras * 1.7f + Vector3.up * 0.35f;
+            Vector3 cabeza = suelo.point + Vector3.up * 1.05f;
+            camera.transform.SetPositionAndRotation(
+                camaraEn, Quaternion.LookRotation((cabeza - camaraEn).normalized, Vector3.up));
+
+            yield return null;
+            yield return null;
+            yield return Foto(camera, $"estilo_vecino_de_espaldas_{sufijo}.png");
         }
 
         private static IEnumerator Foto(Camera camera, string nombre)
