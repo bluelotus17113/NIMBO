@@ -75,9 +75,17 @@ namespace Nimbo.Tests
         [Test]
         public void ElCasqueteEstaCerradoPorAbajo()
         {
-            // Coberturas reales: el pelo corto y la capucha, los dos extremos de lo
-            // que se usa en ChibiMeshBuilder.
-            foreach (var coverage in new[] { 0.44f, 0.62f })
+            // Las cinco coberturas que se usan de verdad en ChibiMeshBuilder: rapado
+            // 0,34 (:355), pelo 0,44 (:356) y 0,52 (:357), gorro 0,55 (:302) y capucha
+            // 0,62 (:260).
+            //
+            // Estaban puestas solo dos, con un comentario que las llamaba «los dos
+            // extremos» — y el extremo bajo de verdad, el rapado, no se probaba. Lo cazó
+            // el verificador. La topología del cierre no depende de la cobertura, así que
+            // la aserción no ganaba ni perdía fuerza; lo que había era un comentario que
+            // mentía sobre su propio alcance, que es peor que no tenerlo: el que venga a
+            // añadir un peinado nuevo lo lee y cree que ya está cubierto.
+            foreach (var coverage in new[] { 0.34f, 0.44f, 0.52f, 0.55f, 0.62f })
             {
                 var cap = MeshShapes.SphericalCap(20, 10, coverage);
                 try

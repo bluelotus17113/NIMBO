@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Nimbo.Core.Events;
+using Nimbo.Core.Services;
 using Nimbo.Core.Services.Contracts;
 using Nimbo.Core.Time;
 using Nimbo.Core.Util;
@@ -91,7 +92,50 @@ namespace Nimbo.Simulation.Behaviour
                 return;
             }
 
+            if (VaALaFiesta(islander)) return;
+
             WanderByPersonality(islander);
+        }
+
+        /// <summary>
+        /// Si hay fiesta puesta y a este no le urge nada, se acerca a donde pasa.
+        /// </summary>
+        /// <remarks>
+        /// Es lo que llena la plaza, y sin ello un festival de 1.200 monedas cambiaba la
+        /// música y el decorado y **no cambiaba a nadie**: el sorteo de encuentros es por
+        /// zona (<see cref="RunChanceEncounters"/>), así que la gente que sigue de paseo
+        /// por la tienda ni se cruza. La fiesta se pagaba y no daba público.
+        ///
+        /// Va **al final** de la escalera y no antes: el que tiene sueño se va a dormir
+        /// aunque haya verbena, y el que está muerto de hambre come. Una fiesta que
+        /// atropella las necesidades convierte a los vecinos en figurantes.
+        ///
+        /// Y comprueba que la zona esté abierta aunque el planificador no deje empezar un
+        /// evento con su zona cerrada. Este repo ya se comió una vez tres eventos que
+        /// pedían una zona inexistente y por eso no ocurrían nunca, sin excepción ni
+        /// aviso: cuando el coste de preguntar es una llamada, se pregunta.
+        ///
+        /// **Lo que esto deja cojo, dicho aquí para que no se pierda.**
+        /// <c>AgendaProjection.Haunt</c> (Nimbo.UI) proyecta el día del vecino copiando la
+        /// precedencia de <see cref="WanderByPersonality"/>, y ahora hay un escalón por
+        /// encima que no conoce: con fiesta puesta la ficha sigue diciendo que le
+        /// encontrarás en su sitio de siempre y estará en la plaza. No es una costura
+        /// rota —nadie referencia un nombre que no existe— sino una ficha que se queda
+        /// desfasada las horas que dura un festival, que es de las tres o cuatro veces al
+        /// mes. Se arregla leyendo <c>ActiveEventZoneId</c> también desde la agenda, y eso
+        /// es carril de quien lleve la ficha, no de aquí.
+        /// </remarks>
+        private bool VaALaFiesta(IslanderData islander)
+        {
+            if (!ServiceRegistry.TryGet<IVillageEvents>(out var fiestas)) return false;
+
+            string zona = fiestas.ActiveEventZoneId;
+            if (string.IsNullOrEmpty(zona)) return false;
+            if (!_island.IsUnlocked(zona)) return false;
+
+            _island.SendTo(islander.Id, zona);
+            islander.Activity = IslanderActivity.Socializing;
+            return true;
         }
 
         private void Wake(IslanderData islander)

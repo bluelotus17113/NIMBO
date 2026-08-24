@@ -13,7 +13,9 @@ using Nimbo.Island;
 using Nimbo.Island.Zones;
 using Nimbo.Personality.Runtime;
 using Nimbo.Player;
+using Nimbo.Data.Islanders;
 using Nimbo.Simulation;
+using Nimbo.Simulation.Behaviour;
 using Nimbo.Simulation.Needs;
 using Nimbo.Social;
 using NUnit.Framework;
@@ -307,6 +309,145 @@ namespace Nimbo.Tests
             Celebrar();
 
             Assert.That(ContarFlechazos(), Is.Zero);
+        }
+
+        // ── que la fiesta llene la plaza ─────────────────────────────────────
+
+        /// <summary>
+        /// Con fiesta puesta, el vecino que no tiene nada urgente se acerca a donde pasa.
+        /// </summary>
+        /// <remarks>
+        /// Es la otra mitad de lo que se paga. El decorado ya se pone
+        /// (<c>FiestaDecoradaEnLaIslaTests</c>) y la música ya cambia
+        /// (<c>AudioDirector</c>), pero hasta esta costura **nadie iba**: el sorteo de
+        /// encuentros es por zona, así que un festival de 1.200 monedas —cuatro veces lo
+        /// que cuesta una merienda— dejaba a los vecinos paseando por la tienda sin
+        /// cruzarse. Se pagaba el escenario y no había público.
+        ///
+        /// Se comprueba con la escalera entera del cerebro por encima, con las necesidades
+        /// puestas a saciadas a mano: lo que se afirma es que la fiesta gana **al paseo**,
+        /// no al sueño ni al hambre. Eso lo fija la prueba de al lado.
+        /// </remarks>
+        [Test]
+        public void ConFiestaPuestaLosVecinosSeAcercanADondePasa()
+        {
+            string zona = MontarUnaFiestaConSitio();
+
+            Assert.IsTrue(ServiceRegistry.TryGet<IIslandService>(out var isla));
+            Assert.IsTrue(ServiceRegistry.TryGet<IPersonalityService>(out var caracteres));
+
+            var cerebro = new IslanderBrain(_registry, isla, caracteres, _social, _clock);
+            try
+            {
+                var vecino = _registry.All[0];
+                vecino.CurrentZoneId = "";
+                Saciar(vecino);
+
+                cerebro.Decide(vecino);
+
+                Assert.That(vecino.CurrentZoneId, Is.EqualTo(zona),
+                    "hay fiesta y el vecino no tiene nada urgente que hacer, y aun así se " +
+                    "fue a pasear a otro sitio: la fiesta se paga y no da público");
+                Assert.That(vecino.Activity, Is.EqualTo(IslanderActivity.Socializing),
+                    "está en la plaza de la fiesta pero no cuenta como que esté con gente");
+            }
+            finally { cerebro.Dispose(); }
+        }
+
+        /// <summary>Pero la fiesta no atropella lo que de verdad urge.</summary>
+        /// <remarks>
+        /// Sin esto, «acercar gente a la fiesta» convierte a los vecinos en figurantes que
+        /// aguantan de pie sin dormir ni comer mientras dure el festival, y entonces la
+        /// simulación de necesidades deja de significar nada las horas que más se mira.
+        /// La fiesta va **al final** de la escalera y esta prueba es lo que lo sujeta.
+        /// </remarks>
+        [Test]
+        public void LaFiestaNoLeQuitaElHambreANadie()
+        {
+            string zona = MontarUnaFiestaConSitio();
+
+            Assert.IsTrue(ServiceRegistry.TryGet<IIslandService>(out var isla));
+            Assert.IsTrue(ServiceRegistry.TryGet<IPersonalityService>(out var caracteres));
+
+            var cerebro = new IslanderBrain(_registry, isla, caracteres, _social, _clock);
+            try
+            {
+                var vecino = _registry.All[0];
+                vecino.CurrentZoneId = "";
+                Saciar(vecino);
+                vecino.Needs.Hunger = 0f;   // muerto de hambre
+
+                cerebro.Decide(vecino);
+
+                Assert.That(vecino.CurrentZoneId, Is.Not.EqualTo(zona),
+                    "se fue a la verbena con el hambre a cero: la fiesta se ha colado por " +
+                    "delante de las necesidades en la escalera de Decide");
+                Assert.That(vecino.Activity, Is.EqualTo(IslanderActivity.Eating),
+                    "con el hambre a cero lo que toca es ir a comer");
+            }
+            finally { cerebro.Dispose(); }
+        }
+
+        /// <summary>
+        /// Monta la primera fiesta del calendario que pida un sitio, y lo devuelve.
+        /// </summary>
+        /// <remarks>
+        /// Se busca en el calendario en vez de escribir el id a mano porque los eventos con
+        /// zona son justo los que ya se rompieron una vez (los tres que pedían «stage» y
+        /// «plaza_central»): un id fijo aquí volvería a envejecer igual. Y de paso, si
+        /// algún día ninguno pide sitio, esta prueba lo dice en vez de dar verde vacía.
+        /// </remarks>
+        private string MontarUnaFiestaConSitio()
+        {
+            // Siete y no cinco: los eventos que piden sitio son los festivales, y los
+            // festivales piden Aldea 7 (lo fija LosFestivalesPidenAldeaSiete). Con cinco
+            // este bucle no encontraría ninguno y la prueba se caería por la puerta
+            // equivocada, diciendo «no hay eventos con zona» cuando los hay.
+            SubirAldea(7);
+
+            Assert.IsTrue(ServiceRegistry.TryGet<IIslandService>(out var isla));
+
+            var negativas = new List<string>();
+            foreach (var def in EventCalendar.All)
+            {
+                if (string.IsNullOrEmpty(def.RequiredZone)) continue;
+
+                // Se abre el sitio por la puerta pública, que es lo que hace el juego al
+                // construirlo. Sin esto ningún evento con zona se puede montar en una isla
+                // recién nacida y la prueba se caía diciendo que no existen, cuando lo que
+                // pasaba es que el escenario todavía no estaba levantado.
+                if (!isla.IsUnlocked(def.RequiredZone)) isla.Unlock(def.RequiredZone);
+
+                var puede = _fiestas.CanHost(def.Id);
+                if (puede != HostRefusal.Ok)
+                {
+                    negativas.Add($"{def.Id}→{puede}");
+                    continue;
+                }
+
+                Assert.That(_fiestas.Host(def.Id), Is.True, $"no pude montar «{def.Id}»");
+                Assert.That(_fiestas.ActiveEventZoneId, Is.EqualTo(def.RequiredZone),
+                    "el servicio no está diciendo dónde pasa la fiesta que acaba de " +
+                    "montar: quien quiera acercar gente no tiene a dónde mandarla");
+                return def.RequiredZone;
+            }
+
+            // La lista de negativas va en el mensaje a propósito: la primera versión de
+            // esto solo decía «no hay ninguno» y no había forma de saber si faltaba nivel,
+            // monedas o sitio sin volver a correr la suite con prints.
+            Assert.Fail("no pude montar ni un evento con zona. Me dijeron que no: " +
+                        string.Join(", ", negativas));
+            return null;
+        }
+
+        /// <summary>Necesidades llenas: nada le urge, así que le toca decidir de verdad.</summary>
+        private static void Saciar(IslanderData vecino)
+        {
+            vecino.Activity = IslanderActivity.Idle;
+            vecino.Needs.Hunger = 100f;
+            vecino.Needs.Energy = 100f;
+            vecino.Needs.Social = 100f;
+            vecino.Needs.Hygiene = 100f;
         }
 
         // ── utilidades ───────────────────────────────────────────────────────

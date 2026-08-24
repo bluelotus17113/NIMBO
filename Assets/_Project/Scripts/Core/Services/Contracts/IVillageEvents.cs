@@ -55,5 +55,16 @@ namespace Nimbo.Core.Services.Contracts
 
         /// <summary>Lo que hay puesto ahora mismo, o vacío.</summary>
         string ActiveEventId { get; }
+
+        /// <summary>La zona donde pasa lo que hay puesto ahora mismo, o vacío.</summary>
+        /// <remarks>
+        /// La necesita quien quiera acercar gente o mirar hacia allí, y hoy esa respuesta
+        /// solo existe dentro de `Nimbo.Events` —es la `RequiredZone` de la definición—.
+        /// Por contrato, como el resto de preguntas entre módulos.
+        ///
+        /// Puede venir vacía con una fiesta puesta: hay eventos que no piden zona. Quien
+        /// la lea tiene que tratarlo, no dar por hecho que si hay fiesta hay sitio.
+        /// </remarks>
+        string ActiveEventZoneId { get; }
     }
 }

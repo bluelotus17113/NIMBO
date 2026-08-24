@@ -51,6 +51,8 @@ namespace Nimbo.Events.Scheduling
 
         public string ActiveEventId => _scheduler.ActiveEvent?.Id ?? "";
 
+        public string ActiveEventZoneId => _scheduler.ActiveEvent?.RequiredZone ?? "";
+
         public HostRefusal CanHost(string eventId)
         {
             var def = EventCalendar.ById(eventId);
