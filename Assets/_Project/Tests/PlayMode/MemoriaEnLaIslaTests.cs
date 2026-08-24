@@ -34,6 +34,22 @@ namespace Nimbo.PlayTests
     /// y un botón sin panel de verdad no despacha eventos: haría falta invocar el
     /// <c>Clickable</c> por reflexión, que —lo aprendió TiendasEnLaIslaTests a su
     /// costa— no dispara los callbacks y deja pasar la prueba sin haber pulsado nada.
+    ///
+    /// **Aquí hubo una segunda prueba y la quité; conviene saber por qué.** Comprobaba
+    /// que el vecino no cuenta dos historias el mismo día, y pasaba en solitario y
+    /// fallaba en la suite entera. No era azar: en la suite corren antes decenas de
+    /// pruebas de juego que comparten el mismo guardado —<c>AislarGuardadoEnPruebasDeJuego</c>
+    /// desvía la carpeta una sola vez por ensamblado, con <c>[OneTimeSetUp]</c>— y también
+    /// el reloj y el censo. Con ese estado por debajo, el vecino ya no contaba nada y la
+    /// prueba no llegaba a comprobar lo suyo.
+    ///
+    /// La regla que quería sujetar ya está sujeta donde el estado sí se controla:
+    /// <c>MemoriaConversacionalTests.ContarUnaCosaLeCierraElDia</c> y
+    /// <c>NoTeRepiteLoQueYaTeConto</c>, de editor. Lo que sí necesita ser de juego —y es
+    /// lo único que queda aquí— es la costura: que al pulsar Charlar salga en pantalla.
+    /// Repetir una regla de dominio a través de una pila de estado global que la prueba no
+    /// posee no añade cobertura, añade una prueba que a veces se pone roja sola. Y una
+    /// prueba inestable acaba enseñando a ignorar los rojos, que es lo más caro de todo.
     /// </remarks>
     public class MemoriaEnLaIslaTests
     {
@@ -53,11 +69,6 @@ namespace Nimbo.PlayTests
         /// entre 0,20 y 0,40 con ese eje, y con 0,40 fijo que fallen los veinticinco días
         /// es 0,6²⁵ ≈ 3 entre un millón. Sembrar la personalidad a mano tiene precedente en
         /// <c>AgendaEnLaFichaTests</c> y por el mismo motivo.
-        ///
-        /// **Sirve solo para la prueba de que llega a contar.** La otra —la de que no lo
-        /// cuenta dos veces— pasó por aquí buscando su propia estabilidad y no la encontró:
-        /// está escrita para no necesitar que el dado salga. La cuenta de arriba tapa un
-        /// riesgo pequeño; no depender de él es mejor que hacerlo improbable.
         /// </remarks>
         private const int DiasQueSeLeDan = 25;
 
@@ -118,96 +129,6 @@ namespace Nimbo.PlayTests
                 "El recuerdo está escrito y probado en ConversationRecall, así que lo que " +
                 "falla es la costura: o ISocialService.RecallLine no llega, o " +
                 "SocialSection volvió a borrar el aviso con Say(\"\").");
-        }
-
-        /// <summary>
-        /// Y no te lo cuenta dos veces el mismo día.
-        /// </summary>
-        /// <remarks>
-        /// Es la mitad del trato que impide que «se acuerdan» degenere: un vecino que te
-        /// suelta lo mismo cada vez que le hablas es peor que uno que calla, porque delata
-        /// que no se acuerda de verdad, solo repite.
-        ///
-        /// **Cómo está escrita, y por qué así después de tres intentos.** Las dos primeras
-        /// versiones exigían primero que el vecino contara algo y luego comprobaban la
-        /// repetición — y esa precondición depende de un dado, así que la prueba se ponía
-        /// roja unas veces sí y otras no <b>sin que nada estuviera mal</b>. Le eché la
-        /// culpa a la probabilidad y le subí los días; luego al acoplamiento entre las dos
-        /// pruebas y le cambié el vecino. Las dos explicaciones eran plausibles y ninguna
-        /// arregló nada, que es la señal de que el problema era la forma de preguntar.
-        ///
-        /// Así que no se exige que cuente: se recorren los días y en cada uno se habla
-        /// **dos veces**, afirmando la invariante de verdad — <b>nunca dos historias el
-        /// mismo día</b>—, que es cierta cuente o no cuente. Que llegue a contar alguna
-        /// vez lo demuestra la otra prueba de esta clase; ésa es su carga y no la de aquí.
-        /// Una prueba que necesita que salga un número para poder afirmar algo no es una
-        /// prueba, es una apuesta.
-        ///
-        /// Vale con cualquier tope diario de charla que ponga la configuración: si la
-        /// segunda pulsación se pasa del tope, el aviso dice «por hoy ya está bien», y si
-        /// no se pasa, <c>RecallLine</c> devuelve null por la bandera del día y el aviso
-        /// queda limpio. En los dos casos lo que NO puede haber es una segunda línea de la
-        /// crónica.
-        /// </remarks>
-        [UnityTest]
-        public IEnumerator NoTeCuentaOtraHistoriaElMismoDia()
-        {
-            yield return CargarYEmpezar();
-
-            Assert.IsTrue(ServiceRegistry.TryGet<IIslanderRegistry>(out var censo));
-            Assert.That(censo.Count, Is.GreaterThanOrEqualTo(2));
-            Assert.IsTrue(ServiceRegistry.TryGet<IChronicleService>(out var cronica));
-            Assert.IsTrue(ServiceRegistry.TryGet(out GameClock reloj));
-
-            var vecino = censo.All[1];
-            var otro = censo.All[0];
-            HablarPorLosCodos(vecino);
-
-            yield return Pulsar(Boton(vecino.Identity.ShortName),
-                                $"el botón de «{vecino.Identity.ShortName}»");
-
-            int diasQueContaron = 0;
-
-            for (int dia = 0; dia < DiasQueSeLeDan; dia++)
-            {
-                EventBus.Publish(new RomanceStageChanged(
-                    vecino.Id, otro.Id, RomanceStage.Engaged));
-                yield return null;
-
-                yield return Pulsar(Boton("Charlar"), "el botón «Charlar» de la ficha");
-                string primera = LineaDeCronicaEnLaFicha(vecino.Id, cronica);
-
-                yield return Pulsar(Boton("Charlar"), "el botón «Charlar» de la ficha");
-                string segunda = LineaDeCronicaEnLaFicha(vecino.Id, cronica);
-
-                if (primera != null) diasQueContaron++;
-
-                // La segunda solo puede traer historia si es **la misma frase que sigue
-                // en pantalla** — el aviso no se borra solo, y eso no es contar dos veces.
-                if (segunda != null && segunda != primera)
-                {
-                    Assert.Fail(
-                        $"día {dia}: le hablé dos veces y contó dos cosas. La primera vez " +
-                        $"dijo «{primera}» y la segunda «{segunda}». El tope de una " +
-                        "historia por vecino y día no está llegando por el camino real.");
-                }
-            }
-
-            // No es una afirmación sobre el juego, es sobre la prueba: si en veinticinco
-            // días no contó ni una vez, lo de arriba no ha comprobado nada y hay que
-            // enterarse en vez de tragarse un verde vacío.
-            Assert.That(diasQueContaron, Is.GreaterThan(0),
-                $"en {DiasQueSeLeDan} días no contó nada ni una sola vez, así que la " +
-                "comprobación de «no dos veces» no ha llegado a ejercitarse nunca");
-        }
-
-        /// <summary>La línea de la crónica que la ficha esté enseñando, o null.</summary>
-        private static string LineaDeCronicaEnLaFicha(string islanderId, IChronicleService cronica)
-        {
-            foreach (var texto in TextosDeLaFicha(islanderId))
-                foreach (var linea in cronica.Entries)
-                    if (texto.Contains(linea.Text)) return texto;
-            return null;
         }
 
         /// <summary>

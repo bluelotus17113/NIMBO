@@ -23,7 +23,7 @@ namespace Nimbo.UI
     /// de errores en el primer fotograma de cada partida.
     /// </remarks>
     [RequireComponent(typeof(UIDocument))]
-    public sealed class UiRoot : MonoBehaviour
+    public sealed class UiRoot : MonoBehaviour, Menu.IEscapeCloser
     {
         [Tooltip("Cada cuántos segundos reales se refrescan las barras y las listas.")]
         [SerializeField, Range(0.1f, 2f)] private float _refreshInterval = 0.4f;
@@ -78,6 +78,7 @@ namespace Nimbo.UI
             _hotbar?.Unsubscribe();
             _fade?.Unsubscribe();
             _hud?.Dispose();
+            ServiceRegistry.Unregister<Menu.IEscapeCloser>();
             _shop?.Dispose();
         }
 
@@ -217,6 +218,10 @@ namespace Nimbo.UI
 
             RebuildStrip();
             _mounted = true;
+
+            // Escape lo lee MainMenuView, que es la capa de arriba; aquí solo se ofrece
+            // «cierra lo que tengas abierto». Así hay un único dueño de la tecla.
+            ServiceRegistry.Register<Menu.IEscapeCloser>(this);
         }
 
         /// <summary>
@@ -622,6 +627,69 @@ namespace Nimbo.UI
             _shipping.IsShowing || _map.IsShowing || _build.IsShowing ||
             _furnish.IsShowing || _creator.IsShowing || _chronicle.IsShowing;
 
+        /// <summary>
+        /// Cierra una cosa de las que estén abiertas: primero el modo activo, que ha
+        /// apagado toda la demás interfaz; después el panel pintado más arriba, que es
+        /// el último que se montó en <see cref="Mount"/>. False si no había nada.
+        /// </summary>
+        /// <remarks>
+        /// **Una pulsación, un cierre.** La mochila y el mapa pueden estar abiertos a la
+        /// vez porque son ventanas independientes, y Escape no es «limpiar la pantalla»
+        /// sino «sácame de donde estoy». Cerrarlo todo de golpe deja al jugador sin saber
+        /// qué acaba de pasar.
+        ///
+        /// Nunca lee la tecla él mismo: la lee `MainMenuView`, y si aquí no queda nada
+        /// que cerrar es ella quien abre la pausa. De ahí sale la regla que evita el
+        /// choque clásico —Escape cerrando un panel *y* pausando a la vez—: hay un solo
+        /// dueño de la tecla y esto es solo lo que le ofrece la capa de juego.
+        ///
+        /// El orden es el inverso al del montaje, porque en UI Toolkit el último hermano
+        /// pinta encima: el último de esta lista que esté abierto es el que el jugador
+        /// tiene delante.
+        /// </remarks>
+        public bool CloseTopPanel()
+        {
+            if (_furnishMode)
+            {
+                EventBus.Publish(new FurnishModeChanged(false));
+                return true;
+            }
+
+            if (_buildMode)
+            {
+                EventBus.Publish(new BuildModeChanged(false));
+                return true;
+            }
+
+            if (_furnish.IsShowing) { _furnish.Hide(); return true; }
+            if (_build.IsShowing) { _build.Hide(); return true; }
+            if (_map.IsShowing) { _map.Hide(); return true; }
+            if (_shipping.IsShowing) { _shipping.Hide(); return true; }
+            if (_craft.IsShowing) { _craft.Hide(); return true; }
+            if (_bag.IsShowing) { _bag.Hide(); return true; }
+            if (_events.IsShowing) { _events.Hide(); return true; }
+            if (_skills.IsShowing) { _skills.Hide(); return true; }
+            if (_minigame.IsShowing) { _minigame.Hide(); return true; }
+            if (_board.IsShowing) { _board.Hide(); return true; }
+            if (_chronicle.IsShowing) { _chronicle.Hide(); return true; }
+            if (_achievements.IsShowing) { _achievements.Hide(); return true; }
+            if (_decor.IsShowing) { _decor.Hide(); return true; }
+            if (_shop.IsShowing) { _shop.Hide(); return true; }
+            if (_creator.IsShowing) { _creator.Hide(); return true; }
+
+            // La ficha va la última porque se montó la primera, y su cierre avisa a la
+            // cámara igual que hace Toggle: sin eso Escape la cierra y la cámara se queda
+            // mirando a nadie.
+            if (_panel.IsShowing)
+            {
+                _panel.Hide();
+                EventBus.Publish(new IslanderFocused(""));
+                return true;
+            }
+
+            return false;
+        }
+
         private bool _pointerWasNeeded;
 
         /// <summary>
@@ -666,21 +734,21 @@ namespace Nimbo.UI
 
             // Tab abre y cierra la mochila. Es la tecla que todo el mundo prueba
             // primero en un juego con inventario.
-            if (Input.GetKeyDown(KeyCode.Tab))
+            if (Input.GetKeyDown(Menu.GameKeys.Bag))
             {
                 if (_bag.IsShowing) _bag.Hide(); else _bag.Show();
             }
 
             // M de mapa. Con dos islas y un puente, saber de qué lado estás pasa a ser
             // una pregunta de verdad y merece su tecla.
-            if (Input.GetKeyDown(KeyCode.M))
+            if (Input.GetKeyDown(Menu.GameKeys.Map))
             {
                 if (_map.IsShowing) _map.Hide(); else _map.Show();
             }
 
             // B de amueblar, y solo dentro de casa: fuera esa tecla no hace nada en vez
             // de abrir un menú que no se puede usar.
-            if (Input.GetKeyDown(KeyCode.B) && (_indoors || _furnishMode))
+            if (Input.GetKeyDown(Menu.GameKeys.Furnish) && (_indoors || _furnishMode))
                 EventBus.Publish(new FurnishModeChanged(!_furnishMode));
 
             // Las listas y las barras a ritmo lento: nadie nota que una barra de
@@ -704,6 +772,23 @@ namespace Nimbo.UI
             // Y el menú de muebles, que va restando de lo que te queda a cada silla
             // que pones y sumando a cada una que recoges.
             if (_furnish.IsShowing) _furnish.Rebuild();
+
+            // Los cinco paneles que se quedaban mintiendo mientras los mirabas: un
+            // encargo que caduca, un logro que se desbloquea, una fiesta que empieza.
+            // Cada uno firma lo que ha pintado y solo reconstruye si la firma cambió,
+            // así que esto no redibuja cinco listas cada 0,4 s — compara cinco cadenas.
+            //
+            // Existían los cinco `Refresh()` y **no los llamaba nadie**. El comentario de
+            // `RequestBoardPanel._signature` llegó a decir que «el ciclo lento de UiRoot
+            // llama a Refresh cada 0,4 s» cuando era falso: lo cazó el verificador de
+            // nimbo-copy leyendo un mecanismo que su autor daba por enchufado. Es la
+            // enfermedad de §18 en su forma más barata de cometer — el que escribe el
+            // panel no es el que escribe la llamada.
+            if (_board.IsShowing) _board.Refresh();
+            if (_achievements.IsShowing) _achievements.Refresh();
+            if (_chronicle.IsShowing) _chronicle.Refresh();
+            if (_events.IsShowing) _events.Refresh();
+            if (_skills.IsShowing) _skills.Refresh();
 
             // Lo elegido en el menú viaja hasta quien dibuja el fantasma. Se busca por
             // reflexión igual que el interactor: el que pinta vive en Nimbo.Art, que

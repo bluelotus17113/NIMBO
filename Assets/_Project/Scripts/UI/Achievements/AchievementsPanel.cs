@@ -73,8 +73,16 @@ namespace Nimbo.UI.Achievements
 
         /// <summary>Cambia el filtro y repinta la fila para que se vea cuál está activo.</summary>
         /// <remarks>
-        /// Público porque es el mismo gesto que el chip: lo usan los clics y cualquier
-        /// atajo futuro que quiera dejar la lista ya filtrada al abrirla.
+        /// **Público porque lo conduce una prueba**, no por un atajo futuro. El comentario
+        /// original decía «y cualquier atajo futuro que quiera dejar la lista ya filtrada
+        /// al abrirla», un uso que nadie ha pedido; el verificador marcó con razón que eso
+        /// no justifica ampliar la superficie del panel, y yo lo cerré sin mirar quién
+        /// llamaba. `FiltrosVisiblesTests.cs:41,57,59` llama, y el proyecto entero dejó de
+        /// compilar — Unity sale sin ejecutar una prueba y sin escribir XML, que es el
+        /// fallo silencioso de siempre con otra cara.
+        ///
+        /// La lección va aquí y no en el mensaje del commit: **buscar llamadores incluye
+        /// `Tests/`**. Un `rg` sobre `Scripts/` da cero y parece que nadie lo usa.
         /// </remarks>
         public void SetFilter(AchievementKind? kind)
         {
