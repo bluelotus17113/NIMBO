@@ -47,3 +47,8 @@ sysinfo.txt
 /mono_crash.*.blob
 Informes/pruebas/
 Informes/borradores/
+
+# Herramientas del agente: ajustes de esta máquina y, sobre todo, los worktrees
+# —2,3 GB de copias completas del proyecto—. Los encargos de la flota sí van
+# dentro del repositorio, en Informes/ y Tools/agentes/.
+.claude/
