@@ -77,18 +77,7 @@ namespace Nimbo.PlayTests
                 $"sin botón no hay forma de organizar nada. Botones: {string.Join(", ", textos)}");
         }
 
-        private static List<string> TextosDeBotones()
-        {
-            var textos = new List<string>();
-
-            foreach (var document in Object.FindObjectsByType<UIDocument>(
-                         FindObjectsSortMode.None))
-            {
-                if (document.rootVisualElement == null) continue;
-                Recorrer(document.rootVisualElement, textos);
-            }
-            return textos;
-        }
+        private static List<string> TextosDeBotones() => Pulsables.Textos();
 
         private static void Recorrer(VisualElement element, List<string> textos)
         {

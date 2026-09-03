@@ -171,7 +171,7 @@ namespace Nimbo.PlayTests
         /// sobre un rectángulo de cero sería disparar a quien caiga en ese punto. Son
         /// los mismos cuidados de <see cref="TiendasEnLaIslaTests"/> con sus botones.
         /// </remarks>
-        private static IEnumerator PulsarCuandoSeVea(Button boton, string queEra)
+        private static IEnumerator PulsarCuandoSeVea(VisualElement boton, string queEra)
         {
             Assert.That(boton, Is.Not.Null, $"no encontré {queEra} en la interfaz");
 
@@ -206,7 +206,7 @@ namespace Nimbo.PlayTests
         /// Pulsa el botón con una secuencia real de puntero: mover, apretar, soltar.
         /// Mismo camino que <see cref="TiendasEnLaIslaTests"/>, que lo pagó.
         /// </summary>
-        private static IEnumerator Pulsar(Button boton, string queEra)
+        private static IEnumerator Pulsar(VisualElement boton, string queEra)
         {
             Assert.That(boton, Is.Not.Null, $"no encontré {queEra} en la interfaz");
 

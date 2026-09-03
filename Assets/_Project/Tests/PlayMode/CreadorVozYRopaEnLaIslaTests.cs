@@ -228,7 +228,7 @@ namespace Nimbo.PlayTests
         /// reflexión sobre Clickable no dispara callbacks; hacen falta PointerMove,
         /// PointerDown y PointerUp con su fotograma entre cada uno.
         /// </remarks>
-        private static IEnumerator PulsarALaVista(Button boton, string queEra)
+        private static IEnumerator PulsarALaVista(VisualElement boton, string queEra)
         {
             Assert.That(boton, Is.Not.Null, $"no encontré {queEra} en la interfaz");
 
@@ -272,7 +272,7 @@ namespace Nimbo.PlayTests
         /// él. Si un botón quedara entero fuera, se cae aquí con el motivo y no con
         /// un clic perdido sin explicación.
         /// </remarks>
-        private static Vector2 PuntoAlcanzable(Button boton, VisualElement raiz,
+        private static Vector2 PuntoAlcanzable(VisualElement boton, VisualElement raiz,
                                                string queEra)
         {
             var b = boton.worldBound;
@@ -296,7 +296,7 @@ namespace Nimbo.PlayTests
             return !float.IsNaN(ancho) && ancho > 0f;
         }
 
-        private static IEnumerator Pulsar(Button boton, string queEra)
+        private static IEnumerator Pulsar(VisualElement boton, string queEra)
         {
             Assert.That(boton, Is.Not.Null, $"no encontré {queEra} en la interfaz");
 
@@ -327,31 +327,8 @@ namespace Nimbo.PlayTests
             yield return null;
         }
 
-        private static Button Boton(string texto)
-        {
-            foreach (var document in Object.FindObjectsByType<UIDocument>(
-                         FindObjectsSortMode.None))
-            {
-                if (document.rootVisualElement == null) continue;
+        private static VisualElement Boton(string texto) => Pulsables.Buscar(texto);
 
-                var encontrado = Buscar(document.rootVisualElement, texto);
-                if (encontrado != null) return encontrado;
-            }
-            return null;
-        }
-
-        private static Button Buscar(VisualElement element, string texto)
-        {
-            if (element is Button button && button.text == texto &&
-                button.enabledInHierarchy) return button;
-
-            for (int i = 0; i < element.childCount; i++)
-            {
-                var hijo = Buscar(element[i], texto);
-                if (hijo != null) return hijo;
-            }
-            return null;
-        }
 
         /// <summary>
         /// Los textos de los botones de la tarjeta de ropa del creador.

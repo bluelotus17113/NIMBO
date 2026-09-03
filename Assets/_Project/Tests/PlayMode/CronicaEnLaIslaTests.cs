@@ -63,7 +63,7 @@ namespace Nimbo.PlayTests
         {
             yield return CargarYEmpezar();
 
-            var textos = TextosDeBotones();
+            var textos = Pulsables.Textos();
 
             Assert.That(textos, Is.Not.Empty, "no encuentro la barra de acciones");
             Assert.That(textos, Does.Contain("Crónica"),
@@ -114,34 +114,5 @@ namespace Nimbo.PlayTests
                 "jugador no tiene por dónde enterarse");
         }
 
-        /// <summary>
-        /// El texto de todos los botones que hay en pantalla.
-        /// </summary>
-        /// <remarks>
-        /// Se recorre el árbol de la interfaz en vez de buscar el panel por código: lo
-        /// que se quiere saber es si el jugador tiene dónde pulsar, y eso solo lo
-        /// contesta lo que está montado de verdad en el documento.
-        /// </remarks>
-        private static List<string> TextosDeBotones()
-        {
-            var textos = new List<string>();
-
-            foreach (var document in Object.FindObjectsByType<UIDocument>(
-                         FindObjectsSortMode.None))
-            {
-                if (document.rootVisualElement == null) continue;
-                Recorrer(document.rootVisualElement, textos);
-            }
-            return textos;
-        }
-
-        private static void Recorrer(VisualElement element, List<string> textos)
-        {
-            if (element is Button button && !string.IsNullOrEmpty(button.text))
-                textos.Add(button.text);
-
-            for (int i = 0; i < element.childCount; i++)
-                Recorrer(element[i], textos);
-        }
     }
 }

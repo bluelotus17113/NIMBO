@@ -182,7 +182,7 @@ namespace Nimbo.PlayTests
         /// clic se pierde sin excepción. Hacen falta PointerMove, PointerDown y
         /// PointerUp con un fotograma entre medias para que el estado pseudo asiente.
         /// </remarks>
-        private static IEnumerator Pulsar(Button boton, string queEra)
+        private static IEnumerator Pulsar(VisualElement boton, string queEra)
         {
             Assert.That(boton, Is.Not.Null, $"no encontré {queEra} en la interfaz");
 
@@ -213,18 +213,7 @@ namespace Nimbo.PlayTests
             yield return null;
         }
 
-        private static Button Boton(string texto)
-        {
-            foreach (var document in Object.FindObjectsByType<UIDocument>(
-                         FindObjectsSortMode.None))
-            {
-                if (document.rootVisualElement == null) continue;
-
-                var encontrado = BuscarBoton(document.rootVisualElement, texto);
-                if (encontrado != null) return encontrado;
-            }
-            return null;
-        }
+        private static VisualElement Boton(string texto) => Pulsables.Buscar(texto);
 
         private static Button BuscarBoton(VisualElement element, string texto)
         {

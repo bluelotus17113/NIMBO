@@ -180,7 +180,7 @@ namespace Nimbo.PlayTests
         /// <c>PointerUp</c>, con un fotograma entre cada uno para que el estado
         /// pseudo (:hover, :active) asiente. Mismo camino que TemaEnLaIslaTests.
         /// </remarks>
-        private static IEnumerator Pulsar(Button boton, string queEra)
+        private static IEnumerator Pulsar(VisualElement boton, string queEra)
         {
             Assert.That(boton, Is.Not.Null, $"no encontré {queEra} en la interfaz");
 
@@ -225,30 +225,8 @@ namespace Nimbo.PlayTests
         }
 
         /// <summary>El botón con ese texto exacto, buscando en toda la interfaz.</summary>
-        private static Button Boton(string texto)
-        {
-            foreach (var document in Object.FindObjectsByType<UIDocument>(
-                         FindObjectsSortMode.None))
-            {
-                if (document.rootVisualElement == null) continue;
+        private static VisualElement Boton(string texto) => Pulsables.Buscar(texto);
 
-                var encontrado = Buscar(document.rootVisualElement, texto);
-                if (encontrado != null) return encontrado;
-            }
-            return null;
-        }
-
-        private static Button Buscar(VisualElement element, string texto)
-        {
-            if (element is Button button && button.text == texto) return button;
-
-            for (int i = 0; i < element.childCount; i++)
-            {
-                var hijo = Buscar(element[i], texto);
-                if (hijo != null) return hijo;
-            }
-            return null;
-        }
 
         private static List<Button> BotonesComprables()
         {

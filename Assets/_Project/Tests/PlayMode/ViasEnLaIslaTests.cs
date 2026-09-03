@@ -153,18 +153,7 @@ namespace Nimbo.PlayTests
                 Recorrer(element[i], textos);
         }
 
-        private static List<string> TextosDeBotones()
-        {
-            var textos = new List<string>();
-
-            foreach (var document in Object.FindObjectsByType<UIDocument>(
-                         FindObjectsSortMode.None))
-            {
-                if (document.rootVisualElement == null) continue;
-                RecorrerBotones(document.rootVisualElement, textos);
-            }
-            return textos;
-        }
+        private static List<string> TextosDeBotones() => Pulsables.Textos();
 
         private static void RecorrerBotones(VisualElement element, List<string> textos)
         {
