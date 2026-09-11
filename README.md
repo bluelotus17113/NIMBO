@@ -29,6 +29,15 @@ construye por código en tiempo de ejecución.**
 La geometría tiene sus propias pruebas (`MeshShapeTests.cs`), igual que el audio
 (`AudioTests.cs`). El arte aquí es código, y se trata como código.
 
+> **Esto es un andamio, no el destino.** El arte generado —y buena parte de lo que
+> sostiene— está pensado para ser reemplazado por trabajo manual. Sirve como base para
+> ver qué necesita el juego de verdad antes de comprometerse con assets hechos a mano:
+> qué siluetas funcionan, qué escala se lee bien, cuánta variación hace falta. Decidir
+> eso con el juego en marcha sale mucho más barato que decidirlo modelando.
+>
+> Es también la razón de la frontera de `Nimbo.Art` que se describe más abajo: cuando
+> llegue el arte manual, entra por el mismo sitio por donde hoy entra el generado.
+
 <p>
   <img src="Capturas/caras.png" width="49%" alt="Caras generadas por código">
   <img src="Capturas/edificios_tres_cuartos.png" width="49%" alt="Edificios procedurales">
